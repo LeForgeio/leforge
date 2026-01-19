@@ -16,10 +16,10 @@
   
   "image": {
     "repository": "flowforge/math-service",
-    "tag": "1.0.0"
+    "tag": "latest"
   },
   
-  "port": 4002,
+  "port": 3002,
   "basePath": "/api/v1/math",
   
   "healthCheck": {
