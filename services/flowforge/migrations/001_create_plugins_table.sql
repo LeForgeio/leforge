@@ -119,6 +119,9 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- Drop trigger if exists (for idempotent migrations)
+DROP TRIGGER IF EXISTS trigger_plugins_updated_at ON plugins;
+
 CREATE TRIGGER trigger_plugins_updated_at
   BEFORE UPDATE ON plugins
   FOR EACH ROW
