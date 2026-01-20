@@ -10,11 +10,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.1.0] - 2026-01-19
 
 ### Added
+
 - Local development workflow with remote Docker backend support
 - `.env.development.local` configuration for proxying to Docker services
 - New ESLint flat config (`eslint.config.js`) for ESLint v9
 
 ### Changed
+
 - **React** upgraded from 18.2.0 to 19.2.3
 - **React DOM** upgraded from 18.2.0 to 19.2.3
 - **react-router-dom** upgraded from 6.21.1 to 7.12.0
@@ -27,18 +29,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Vite config updated to use `@tailwindcss/vite` plugin
 
 ### Removed
+
 - `postcss.config.js` (no longer needed with Tailwind v4 Vite plugin)
 - `tailwind.config.js` (migrated to CSS-first config in `index.css`)
 - Old ESLint packages (`@typescript-eslint/eslint-plugin`, `@typescript-eslint/parser`)
 
 ### Fixed
+
 - Component-during-render issue in Layout.tsx (changed `NavContent` component to `navContent` JSX variable)
 - Empty interface linting errors in `input.tsx` and `textarea.tsx` (converted to type aliases)
 - React error #31 in Marketplace.tsx (sources array was being rendered directly instead of `.length`)
 
 ## [1.0.0] - 2026-01-19
 
-### Added
+### Features
+
 - Initial FlowForge platform release
 - ForgeHook plugin system with marketplace
 - Docker-based plugin management
@@ -51,6 +56,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - API key management
 
 ### Services
+
 - **crypto-service**: Encryption, hashing, JWT operations
 - **data-transform-service**: JSON/XML/CSV transformations
 - **image-service**: Image processing and manipulation
@@ -61,6 +67,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **vector-service**: Vector embeddings and search
 
 ### Infrastructure
+
 - PostgreSQL database with migrations
 - Redis caching layer
 - Kong API Gateway integration
