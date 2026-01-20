@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-01-20
+
+### Added
+
+- Plugin update system with version tracking and rollback support
+- Migration 004: version tracking columns and `plugin_update_history` table
+- Update dialog with online update and file upload options
+- Plugin update history dialog with rollback functionality
+- API endpoints: `POST /update`, `POST /update/upload`, `POST /rollback`, `GET /updates`
+
+### Changed
+
+- Dashboard now uses installed plugins instead of hardcoded service list
+- Dashboard health polling only runs for plugins that are actually running
+
+### Fixed
+
+- Dashboard no longer polls health endpoints for stopped plugins (ERR_CONNECTION_REFUSED errors)
+
 ## [1.1.0] - 2026-01-19
 
 ### Added

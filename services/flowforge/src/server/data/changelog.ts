@@ -18,6 +18,17 @@ export interface Release {
 
 export const changelog: Release[] = [
   {
+    version: '1.2.0',
+    date: '2026-01-20',
+    changes: [
+      { type: 'feature', description: 'Plugin update system with version tracking and rollback support' },
+      { type: 'feature', description: 'Update dialog with online update and file upload options' },
+      { type: 'feature', description: 'Plugin update history with rollback functionality' },
+      { type: 'improvement', description: 'Dashboard uses installed plugins instead of hardcoded list' },
+      { type: 'fix', description: 'Dashboard only polls health for running plugins' },
+    ],
+  },
+  {
     version: '1.1.0',
     date: '2026-01-19',
     changes: [
