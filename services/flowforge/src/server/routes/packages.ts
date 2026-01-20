@@ -66,18 +66,24 @@ export async function packageRoutes(fastify: FastifyInstance) {
         const manifestPath = path.join(packageDir, 'manifest.json');
         await writeFile(manifestPath, JSON.stringify(plugin.manifest, null, 2));
 
-        // 2. Export Docker image
-        const imageName = `${plugin.manifest.image.repository}:${plugin.manifest.image.tag || 'latest'}`;
-        const imageTarPath = path.join(packageDir, 'image.tar');
+        // Check if this is a container plugin that can export an image
+        if (!plugin.manifest.image?.repository) {
+          // Embedded plugins don't have Docker images
+          logger.info({ pluginId }, 'Skipping image export for embedded plugin');
+        } else {
+          // 2. Export Docker image for container plugins
+          const imageName = `${plugin.manifest.image.repository}:${plugin.manifest.image.tag || 'latest'}`;
+          const imageTarPath = path.join(packageDir, 'image.tar');
 
-        logger.debug({ imageName }, 'Exporting Docker image');
+          logger.debug({ imageName }, 'Exporting Docker image');
 
-        // Use dockerode to get image and save it
-        const dockerClient = (dockerService as any).docker;
-        const image = dockerClient.getImage(imageName);
+          // Use dockerode to get image and save it
+          const dockerClient = (dockerService as any).docker;
+          const image = dockerClient.getImage(imageName);
 
-        const imageStream = await image.get();
-        await pipeline(imageStream, createWriteStream(imageTarPath));
+          const imageStream = await image.get();
+          await pipeline(imageStream, createWriteStream(imageTarPath));
+        }
 
         // 3. Write README
         const readmePath = path.join(packageDir, 'README.md');

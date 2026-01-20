@@ -126,15 +126,19 @@ export class DatabaseService {
   async createPlugin(plugin: PluginInstance): Promise<void> {
     const query = `
       INSERT INTO plugins (
-        id, forgehook_id, manifest, status, container_id, container_name,
-        host_port, config, environment, installed_at
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+        id, forgehook_id, manifest, status, runtime_type, container_id, container_name,
+        host_port, module_code, module_exports, module_loaded, config, environment, installed_at
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
       ON CONFLICT (forgehook_id) DO UPDATE SET
         manifest = EXCLUDED.manifest,
         status = EXCLUDED.status,
+        runtime_type = EXCLUDED.runtime_type,
         container_id = EXCLUDED.container_id,
         container_name = EXCLUDED.container_name,
         host_port = EXCLUDED.host_port,
+        module_code = EXCLUDED.module_code,
+        module_exports = EXCLUDED.module_exports,
+        module_loaded = EXCLUDED.module_loaded,
         config = EXCLUDED.config,
         environment = EXCLUDED.environment,
         updated_at = NOW()
@@ -145,9 +149,13 @@ export class DatabaseService {
       plugin.forgehookId,
       JSON.stringify(plugin.manifest),
       plugin.status,
+      plugin.runtime || 'container',
       plugin.containerId || null,
-      plugin.containerName,
-      plugin.hostPort,
+      plugin.containerName || null,
+      plugin.hostPort || null,
+      null, // module_code - stored separately
+      plugin.moduleExports || null,
+      plugin.moduleLoaded || false,
       JSON.stringify(plugin.config),
       JSON.stringify(plugin.environment),
       plugin.installedAt,
@@ -426,6 +434,7 @@ export class DatabaseService {
       forgehookId: row.forgehook_id,
       manifest: row.manifest,
       status: row.status,
+      runtime: row.runtime_type || 'container',
       containerId: row.container_id,
       containerName: row.container_name,
       hostPort: row.host_port,
@@ -437,6 +446,8 @@ export class DatabaseService {
       lastHealthCheck: row.last_health_check ? new Date(row.last_health_check) : undefined,
       healthStatus: row.health_status,
       error: row.error,
+      moduleLoaded: row.module_loaded,
+      moduleExports: row.module_exports,
     };
   }
 

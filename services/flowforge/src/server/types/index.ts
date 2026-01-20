@@ -1,5 +1,7 @@
 // ForgeHook Manifest Types
 
+export type PluginRuntime = 'container' | 'embedded';
+
 export interface ForgeHookManifest {
   id: string;
   name: string;
@@ -17,15 +19,27 @@ export interface ForgeHookManifest {
   category?: ForgeHookCategory;
   tags?: string[];
 
-  image: {
+  // Runtime type - defaults to 'container' for backward compatibility
+  runtime?: PluginRuntime;
+
+  // Container-based plugin fields (required when runtime === 'container')
+  image?: {
     repository: string;
     tag?: string;
     digest?: string;
   };
 
-  port: number;
+  port?: number;
   hostPort?: number;
   basePath?: string;
+
+  // Embedded plugin fields (required when runtime === 'embedded')
+  embedded?: {
+    entrypoint: string;      // Main JS file (e.g., "index.js")
+    exports: string[];       // Exported function names
+    timeout?: number;        // Execution timeout in ms (default: 5000)
+    memoryLimit?: number;    // Memory limit in MB (default: 128)
+  };
 
   healthCheck?: {
     path?: string;
@@ -123,9 +137,12 @@ export interface PluginInstance {
   forgehookId: string;
   manifest: ForgeHookManifest;
   status: PluginStatus;
+  runtime: PluginRuntime;
+  // Container-specific fields
   containerId?: string;
-  containerName: string;
-  hostPort: number;
+  containerName?: string;
+  hostPort?: number;
+  // Common fields
   config: Record<string, unknown>;
   environment: Record<string, string>;
   installedAt: Date;
@@ -135,6 +152,9 @@ export interface PluginInstance {
   healthStatus?: 'healthy' | 'unhealthy' | 'unknown';
   error?: string;
   logs?: string[];
+  // Embedded-specific fields
+  moduleLoaded?: boolean;
+  moduleExports?: string[];
 }
 
 // Plugin Events
@@ -254,9 +274,49 @@ export interface GitHubInstallRequest {
 // Package (.fhk) Types
 export interface ForgeHookPackage {
   manifest: ForgeHookManifest;
-  imageData?: Buffer; // Docker image tar
-  imageName: string;
+  imageData?: Buffer; // Docker image tar (for container plugins)
+  moduleCode?: string; // Bundled JS code (for embedded plugins)
+  imageName?: string;
   checksum: string;
   createdAt: Date;
   createdBy?: string;
+}
+
+// Embedded Plugin Types
+export interface EmbeddedPluginModule {
+  pluginId: string;
+  exports: Map<string, EmbeddedFunction>;
+  loadedAt: Date;
+  lastInvoked?: Date;
+  invocationCount: number;
+}
+
+export interface EmbeddedFunction {
+  name: string;
+  description?: string;
+  parameters?: Record<string, EmbeddedFunctionParam>;
+  returns?: string;
+  handler: (input: unknown, context: EmbeddedExecutionContext) => Promise<unknown>;
+}
+
+export interface EmbeddedFunctionParam {
+  type: 'string' | 'number' | 'boolean' | 'object' | 'array';
+  description?: string;
+  required?: boolean;
+  default?: unknown;
+}
+
+export interface EmbeddedExecutionContext {
+  pluginId: string;
+  functionName: string;
+  requestId: string;
+  timeout: number;
+  config: Record<string, unknown>;
+}
+
+export interface EmbeddedInvocationResult {
+  success: boolean;
+  result?: unknown;
+  error?: string;
+  executionTime: number;
 }

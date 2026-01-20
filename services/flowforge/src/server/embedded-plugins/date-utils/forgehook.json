@@ -1,0 +1,115 @@
+{
+  "id": "date-utils",
+  "name": "Date Utilities",
+  "version": "1.0.0",
+  "description": "Lightweight date and time manipulation utilities including formatting, parsing, relative time, timezone conversion, and date math. Runs embedded without Docker overhead.",
+  "author": {
+    "name": "FlowForge",
+    "url": "https://github.com/danstoll/flowforge"
+  },
+  "license": "MIT",
+  "repository": "https://github.com/danstoll/forgehooks-registry",
+  "icon": "https://raw.githubusercontent.com/danstoll/forgehooks-registry/master/icons/date-utils.svg",
+  "category": "utility",
+  "tags": ["date", "time", "datetime", "format", "parse", "timezone", "utility", "embedded"],
+
+  "runtime": "embedded",
+  "embedded": {
+    "entrypoint": "index.js",
+    "exports": [
+      "format",
+      "parse",
+      "now",
+      "toISO",
+      "toUnix",
+      "fromUnix",
+      "relativeTime",
+      "addDays",
+      "addHours",
+      "addMinutes",
+      "addMonths",
+      "addYears",
+      "diff",
+      "startOf",
+      "endOf",
+      "isValid",
+      "isBefore",
+      "isAfter",
+      "isBetween",
+      "getWeekday",
+      "getDaysInMonth"
+    ],
+    "timeout": 1000,
+    "memoryLimit": 32
+  },
+
+  "endpoints": [
+    {
+      "method": "POST",
+      "path": "/format",
+      "description": "Format a date to string"
+    },
+    {
+      "method": "POST",
+      "path": "/parse",
+      "description": "Parse a date string"
+    },
+    {
+      "method": "GET",
+      "path": "/now",
+      "description": "Get current date/time"
+    },
+    {
+      "method": "POST",
+      "path": "/relativeTime",
+      "description": "Get human-readable relative time"
+    },
+    {
+      "method": "POST",
+      "path": "/addDays",
+      "description": "Add days to a date"
+    },
+    {
+      "method": "POST",
+      "path": "/diff",
+      "description": "Calculate difference between two dates"
+    },
+    {
+      "method": "POST",
+      "path": "/startOf",
+      "description": "Get start of day/week/month/year"
+    },
+    {
+      "method": "POST",
+      "path": "/endOf",
+      "description": "Get end of day/week/month/year"
+    }
+  ],
+
+  "config": {
+    "schema": {
+      "type": "object",
+      "properties": {
+        "defaultFormat": {
+          "type": "string",
+          "default": "YYYY-MM-DD HH:mm:ss",
+          "description": "Default date format pattern"
+        },
+        "defaultTimezone": {
+          "type": "string",
+          "default": "UTC",
+          "description": "Default timezone"
+        }
+      }
+    },
+    "defaults": {
+      "defaultFormat": "YYYY-MM-DD HH:mm:ss",
+      "defaultTimezone": "UTC"
+    }
+  },
+
+  "resources": {
+    "memory": "32Mi",
+    "cpu": "0.1"
+  }
+}

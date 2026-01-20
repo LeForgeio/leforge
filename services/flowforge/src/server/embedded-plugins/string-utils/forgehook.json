@@ -1,0 +1,126 @@
+{
+  "id": "string-utils",
+  "name": "String Utilities",
+  "version": "1.0.0",
+  "description": "Lightweight string manipulation utilities including slugify, camelCase, truncate, sanitize HTML, and more. Runs embedded without Docker overhead.",
+  "author": {
+    "name": "FlowForge",
+    "url": "https://github.com/danstoll/flowforge"
+  },
+  "license": "MIT",
+  "repository": "https://github.com/danstoll/forgehooks-registry",
+  "icon": "https://raw.githubusercontent.com/danstoll/forgehooks-registry/master/icons/string-utils.svg",
+  "category": "utility",
+  "tags": ["string", "text", "utility", "slugify", "camelcase", "sanitize", "embedded"],
+
+  "runtime": "embedded",
+  "embedded": {
+    "entrypoint": "index.js",
+    "exports": [
+      "slugify",
+      "camelCase",
+      "pascalCase",
+      "snakeCase",
+      "kebabCase",
+      "truncate",
+      "sanitizeHtml",
+      "escapeHtml",
+      "unescapeHtml",
+      "capitalize",
+      "titleCase",
+      "wordCount",
+      "reverse",
+      "padLeft",
+      "padRight",
+      "removeWhitespace",
+      "normalizeWhitespace"
+    ],
+    "timeout": 1000,
+    "memoryLimit": 32
+  },
+
+  "endpoints": [
+    {
+      "method": "POST",
+      "path": "/slugify",
+      "description": "Convert string to URL-friendly slug"
+    },
+    {
+      "method": "POST",
+      "path": "/camelCase",
+      "description": "Convert string to camelCase"
+    },
+    {
+      "method": "POST",
+      "path": "/pascalCase",
+      "description": "Convert string to PascalCase"
+    },
+    {
+      "method": "POST",
+      "path": "/snakeCase",
+      "description": "Convert string to snake_case"
+    },
+    {
+      "method": "POST",
+      "path": "/kebabCase",
+      "description": "Convert string to kebab-case"
+    },
+    {
+      "method": "POST",
+      "path": "/truncate",
+      "description": "Truncate string to specified length"
+    },
+    {
+      "method": "POST",
+      "path": "/sanitizeHtml",
+      "description": "Remove HTML tags from string"
+    },
+    {
+      "method": "POST",
+      "path": "/escapeHtml",
+      "description": "Escape HTML special characters"
+    },
+    {
+      "method": "POST",
+      "path": "/capitalize",
+      "description": "Capitalize first letter"
+    },
+    {
+      "method": "POST",
+      "path": "/titleCase",
+      "description": "Convert to Title Case"
+    },
+    {
+      "method": "POST",
+      "path": "/wordCount",
+      "description": "Count words in string"
+    }
+  ],
+
+  "config": {
+    "schema": {
+      "type": "object",
+      "properties": {
+        "defaultTruncateLength": {
+          "type": "number",
+          "default": 100,
+          "description": "Default length for truncate operation"
+        },
+        "truncateSuffix": {
+          "type": "string",
+          "default": "...",
+          "description": "Suffix to append when truncating"
+        }
+      }
+    },
+    "defaults": {
+      "defaultTruncateLength": 100,
+      "truncateSuffix": "..."
+    }
+  },
+
+  "resources": {
+    "memory": "32Mi",
+    "cpu": "0.1"
+  }
+}

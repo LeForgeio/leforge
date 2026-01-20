@@ -13,8 +13,10 @@ import { registryRoutes } from './routes/registry.js';
 import { marketplaceRoutes } from './routes/marketplace.js';
 import { packageRoutes } from './routes/packages.js';
 import { changelogRoutes } from './routes/changelog.js';
+import { pluginInvokeRoutes } from './routes/plugin-invoke.js';
 import { dockerService } from './services/docker.service.js';
 import { marketplaceService } from './services/marketplace.service.js';
+import { embeddedPluginService } from './services/embedded-plugin.service.js';
 
 export async function buildApp(): Promise<FastifyInstance> {
   const app = Fastify({
@@ -121,9 +123,13 @@ export async function buildApp(): Promise<FastifyInstance> {
   await app.register(marketplaceRoutes);
   await app.register(packageRoutes);
   await app.register(changelogRoutes);
+  await app.register(pluginInvokeRoutes, { prefix: '/api/v1' });
 
   // Initialize marketplace service
   await marketplaceService.initialize();
+
+  // Initialize embedded plugin service (load any installed embedded plugins)
+  logger.info('Initializing embedded plugin service');
 
   // WebSocket for real-time events
   app.register(async function (fastify) {

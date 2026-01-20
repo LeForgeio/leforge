@@ -38,7 +38,7 @@ export async function pluginRoutes(fastify: FastifyInstance) {
       name: plugin.manifest.name,
       version: plugin.manifest.version,
       status: plugin.status,
-      hostPort: plugin.hostPort,
+      hostPort: plugin.hostPort ?? 0,
       healthStatus: plugin.healthStatus,
       error: plugin.error,
       endpoints: plugin.manifest.endpoints,

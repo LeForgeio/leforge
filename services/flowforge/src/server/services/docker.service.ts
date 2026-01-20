@@ -44,7 +44,9 @@ export class DockerService extends EventEmitter {
 
       for (const plugin of plugins) {
         this.plugins.set(plugin.id, plugin);
-        this.usedPorts.add(plugin.hostPort);
+        if (plugin.hostPort) {
+          this.usedPorts.add(plugin.hostPort);
+        }
       }
 
       await this.syncWithDocker();
@@ -156,6 +158,7 @@ export class DockerService extends EventEmitter {
           endpoints: [],
         },
         status: info.State.Running ? 'running' : 'stopped',
+        runtime: 'container',
         containerId: containerInfo.Id,
         containerName,
         hostPort: parseInt(hostPort, 10),
@@ -167,7 +170,9 @@ export class DockerService extends EventEmitter {
 
       await databaseService.createPlugin(plugin);
       this.plugins.set(plugin.id, plugin);
-      this.usedPorts.add(plugin.hostPort);
+      if (plugin.hostPort) {
+        this.usedPorts.add(plugin.hostPort);
+      }
 
       logger.info({ pluginId: plugin.id, forgehookId }, 'Adopted orphaned container');
 
@@ -331,6 +336,7 @@ export class DockerService extends EventEmitter {
       forgehookId: manifest.id,
       manifest,
       status: 'installing',
+      runtime: 'container',
       containerName,
       hostPort: manifest.hostPort || await this.findAvailablePort(),
       config: request.config || {},
@@ -344,6 +350,10 @@ export class DockerService extends EventEmitter {
 
     try {
       await this.ensureNetwork(config.plugins.networkName);
+
+      if (!manifest.image) {
+        throw new Error('Container plugins require image configuration');
+      }
 
       const imageRef = `${manifest.image.repository}:${manifest.image.tag || 'latest'}`;
       if (!await this.imageExists(manifest.image.repository, manifest.image.tag)) {
@@ -569,7 +579,9 @@ export class DockerService extends EventEmitter {
         }
       }
 
-      this.releasePort(plugin.hostPort);
+      if (plugin.hostPort) {
+        this.releasePort(plugin.hostPort);
+      }
       this.plugins.delete(pluginId);
       await databaseService.deletePlugin(pluginId);
 
