@@ -345,8 +345,8 @@ export class DockerService extends EventEmitter {
     };
 
     this.plugins.set(pluginId, plugin);
-    this.emitEvent('plugin:installing', pluginId);
     await databaseService.createPlugin(plugin);
+    this.emitEvent('plugin:installing', pluginId);
 
     try {
       await this.ensureNetwork(config.plugins.networkName);
