@@ -132,6 +132,8 @@ CREATE TRIGGER trigger_plugins_updated_at
 -- ============================================================================
 
 -- Function to get plugin by forgehook_id
+DROP FUNCTION IF EXISTS get_plugin_by_forgehook_id(VARCHAR);
+
 CREATE OR REPLACE FUNCTION get_plugin_by_forgehook_id(p_forgehook_id VARCHAR)
 RETURNS TABLE (
   id UUID,
