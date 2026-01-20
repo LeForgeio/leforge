@@ -1,5 +1,7 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { dockerService } from '../services/docker.service.js';
+import { embeddedPluginService } from '../services/embedded-plugin.service.js';
+import { databaseService } from '../services/database.service.js';
 import { logger } from '../utils/logger.js';
 import { ForgeHookManifest, PluginResponse } from '../types/index.js';
 
@@ -23,6 +25,19 @@ interface ConfigureBody {
 
 interface LogsQuery {
   tail?: number;
+}
+
+interface UpdateBody {
+  // Online update
+  bundleUrl?: string;      // For embedded plugins
+  imageTag?: string;       // For container plugins
+  manifest?: ForgeHookManifest;
+}
+
+interface UpdateUploadBody {
+  // Offline update - file content
+  moduleCode?: string;     // For embedded plugins (base64 or raw JS)
+  manifest?: ForgeHookManifest;
 }
 
 export async function pluginRoutes(fastify: FastifyInstance) {
@@ -385,6 +400,267 @@ export async function pluginRoutes(fastify: FastifyInstance) {
         environment: plugin.environment,
         message: 'Configuration updated. Restart plugin to apply changes.',
       });
+    }
+  );
+
+  // ============================================================================
+  // Update Plugin (Online)
+  // ============================================================================
+  fastify.post<{ Params: PluginParams; Body: UpdateBody }>(
+    '/api/v1/plugins/:pluginId/update',
+    async (request, reply) => {
+      const { pluginId } = request.params;
+      const { bundleUrl, imageTag, manifest } = request.body;
+
+      // Check if plugin exists
+      const dbPlugin = await databaseService.getPlugin(pluginId);
+      if (!dbPlugin) {
+        return reply.status(404).send({
+          error: {
+            code: 'PLUGIN_NOT_FOUND',
+            message: `Plugin ${pluginId} not found`,
+          },
+        });
+      }
+
+      try {
+        let updatedPlugin;
+
+        if (dbPlugin.runtime === 'embedded') {
+          // Embedded plugin update
+          if (!bundleUrl && !manifest) {
+            return reply.status(400).send({
+              error: {
+                code: 'VALIDATION_ERROR',
+                message: 'bundleUrl or manifest with bundleUrl is required for embedded plugins',
+              },
+            });
+          }
+
+          const updateBundleUrl = bundleUrl || dbPlugin.bundleUrl;
+          if (!updateBundleUrl) {
+            return reply.status(400).send({
+              error: {
+                code: 'VALIDATION_ERROR',
+                message: 'No bundle URL available for update',
+              },
+            });
+          }
+
+          updatedPlugin = await embeddedPluginService.updatePlugin(pluginId, {
+            bundleUrl: updateBundleUrl,
+            newManifest: manifest,
+          });
+
+        } else {
+          // Container plugin update
+          if (!imageTag && !manifest?.image?.tag) {
+            return reply.status(400).send({
+              error: {
+                code: 'VALIDATION_ERROR',
+                message: 'imageTag is required for container plugins',
+              },
+            });
+          }
+
+          updatedPlugin = await dockerService.updatePlugin(pluginId, {
+            newImageTag: imageTag,
+            newManifest: manifest,
+          });
+        }
+
+        return reply.send({
+          id: updatedPlugin.id,
+          forgehookId: updatedPlugin.forgehookId,
+          name: updatedPlugin.manifest.name,
+          version: updatedPlugin.manifest.version,
+          previousVersion: dbPlugin.installedVersion,
+          status: updatedPlugin.status,
+          message: 'Plugin updated successfully',
+        });
+
+      } catch (error) {
+        logger.error({ pluginId, error }, 'Plugin update failed');
+        return reply.status(500).send({
+          error: {
+            code: 'UPDATE_FAILED',
+            message: error instanceof Error ? error.message : 'Update failed',
+          },
+        });
+      }
+    }
+  );
+
+  // ============================================================================
+  // Update Plugin (Offline/Upload)
+  // ============================================================================
+  fastify.post<{ Params: PluginParams; Body: UpdateUploadBody }>(
+    '/api/v1/plugins/:pluginId/update/upload',
+    async (request, reply) => {
+      const { pluginId } = request.params;
+      const { moduleCode, manifest } = request.body;
+
+      // Check if plugin exists
+      const dbPlugin = await databaseService.getPlugin(pluginId);
+      if (!dbPlugin) {
+        return reply.status(404).send({
+          error: {
+            code: 'PLUGIN_NOT_FOUND',
+            message: `Plugin ${pluginId} not found`,
+          },
+        });
+      }
+
+      try {
+        let updatedPlugin;
+
+        if (dbPlugin.runtime === 'embedded') {
+          // Embedded plugin - accept JS code directly
+          if (!moduleCode) {
+            return reply.status(400).send({
+              error: {
+                code: 'VALIDATION_ERROR',
+                message: 'moduleCode is required for embedded plugin upload',
+              },
+            });
+          }
+
+          // Decode if base64
+          let code = moduleCode;
+          if (moduleCode.match(/^[A-Za-z0-9+/]+=*$/)) {
+            try {
+              code = Buffer.from(moduleCode, 'base64').toString('utf-8');
+            } catch {
+              // Not base64, use as-is
+            }
+          }
+
+          updatedPlugin = await embeddedPluginService.updatePlugin(pluginId, {
+            moduleCode: code,
+            newManifest: manifest,
+          });
+
+        } else {
+          // Container plugin - would need tar file upload
+          // For now, require multipart form data for container image uploads
+          return reply.status(400).send({
+            error: {
+              code: 'NOT_IMPLEMENTED',
+              message: 'Container image upload requires multipart form data. Use POST /api/v1/plugins/:pluginId/update/image instead.',
+            },
+          });
+        }
+
+        return reply.send({
+          id: updatedPlugin.id,
+          forgehookId: updatedPlugin.forgehookId,
+          name: updatedPlugin.manifest.name,
+          version: updatedPlugin.manifest.version,
+          previousVersion: dbPlugin.installedVersion,
+          status: updatedPlugin.status,
+          message: 'Plugin updated successfully via upload',
+        });
+
+      } catch (error) {
+        logger.error({ pluginId, error }, 'Plugin upload update failed');
+        return reply.status(500).send({
+          error: {
+            code: 'UPDATE_FAILED',
+            message: error instanceof Error ? error.message : 'Update failed',
+          },
+        });
+      }
+    }
+  );
+
+  // ============================================================================
+  // Rollback Plugin
+  // ============================================================================
+  fastify.post<{ Params: PluginParams }>(
+    '/api/v1/plugins/:pluginId/rollback',
+    async (request, reply) => {
+      const { pluginId } = request.params;
+
+      // Check if plugin exists
+      const dbPlugin = await databaseService.getPlugin(pluginId);
+      if (!dbPlugin) {
+        return reply.status(404).send({
+          error: {
+            code: 'PLUGIN_NOT_FOUND',
+            message: `Plugin ${pluginId} not found`,
+          },
+        });
+      }
+
+      try {
+        let rolledBackPlugin;
+
+        if (dbPlugin.runtime === 'embedded') {
+          rolledBackPlugin = await embeddedPluginService.rollbackPlugin(pluginId);
+        } else {
+          rolledBackPlugin = await dockerService.rollbackPlugin(pluginId);
+        }
+
+        return reply.send({
+          id: rolledBackPlugin.id,
+          forgehookId: rolledBackPlugin.forgehookId,
+          name: rolledBackPlugin.manifest.name,
+          version: rolledBackPlugin.manifest.version,
+          status: rolledBackPlugin.status,
+          message: 'Plugin rolled back successfully',
+        });
+
+      } catch (error) {
+        logger.error({ pluginId, error }, 'Plugin rollback failed');
+        return reply.status(500).send({
+          error: {
+            code: 'ROLLBACK_FAILED',
+            message: error instanceof Error ? error.message : 'Rollback failed',
+          },
+        });
+      }
+    }
+  );
+
+  // ============================================================================
+  // Get Plugin Update History
+  // ============================================================================
+  fastify.get<{ Params: PluginParams }>(
+    '/api/v1/plugins/:pluginId/updates',
+    async (request, reply) => {
+      const { pluginId } = request.params;
+
+      // Check if plugin exists
+      const dbPlugin = await databaseService.getPlugin(pluginId);
+      if (!dbPlugin) {
+        return reply.status(404).send({
+          error: {
+            code: 'PLUGIN_NOT_FOUND',
+            message: `Plugin ${pluginId} not found`,
+          },
+        });
+      }
+
+      try {
+        const history = await databaseService.getPluginUpdateHistory(pluginId);
+
+        return reply.send({
+          pluginId,
+          currentVersion: dbPlugin.installedVersion || dbPlugin.manifest.version,
+          previousVersion: dbPlugin.previousVersion,
+          canRollback: !!dbPlugin.previousVersion,
+          history,
+        });
+
+      } catch (error) {
+        logger.error({ pluginId, error }, 'Failed to get update history');
+        return reply.status(500).send({
+          error: {
+            code: 'HISTORY_FAILED',
+            message: error instanceof Error ? error.message : 'Failed to get history',
+          },
+        });
+      }
     }
   );
 }

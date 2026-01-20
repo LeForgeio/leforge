@@ -185,6 +185,14 @@ export class DatabaseService {
       error: string | null;
       config: Record<string, unknown>;
       environment: Record<string, string>;
+      manifest: unknown;
+      moduleCode: string | null;
+      installedVersion: string | null;
+      previousVersion: string | null;
+      previousModuleCode: string | null;
+      previousImageTag: string | null;
+      bundleUrl: string | null;
+      lastUpdatedAt: Date | null;
     }>
   ): Promise<void> {
     const fields: string[] = [];
@@ -227,6 +235,38 @@ export class DatabaseService {
     if (updates.environment !== undefined) {
       fields.push(`environment = $${paramIndex++}`);
       values.push(JSON.stringify(updates.environment));
+    }
+    if (updates.manifest !== undefined) {
+      fields.push(`manifest = $${paramIndex++}`);
+      values.push(JSON.stringify(updates.manifest));
+    }
+    if (updates.moduleCode !== undefined) {
+      fields.push(`module_code = $${paramIndex++}`);
+      values.push(updates.moduleCode);
+    }
+    if (updates.installedVersion !== undefined) {
+      fields.push(`installed_version = $${paramIndex++}`);
+      values.push(updates.installedVersion);
+    }
+    if (updates.previousVersion !== undefined) {
+      fields.push(`previous_version = $${paramIndex++}`);
+      values.push(updates.previousVersion);
+    }
+    if (updates.previousModuleCode !== undefined) {
+      fields.push(`previous_module_code = $${paramIndex++}`);
+      values.push(updates.previousModuleCode);
+    }
+    if (updates.previousImageTag !== undefined) {
+      fields.push(`previous_image_tag = $${paramIndex++}`);
+      values.push(updates.previousImageTag);
+    }
+    if (updates.bundleUrl !== undefined) {
+      fields.push(`bundle_url = $${paramIndex++}`);
+      values.push(updates.bundleUrl);
+    }
+    if (updates.lastUpdatedAt !== undefined) {
+      fields.push(`last_updated_at = $${paramIndex++}`);
+      values.push(updates.lastUpdatedAt);
     }
 
     if (fields.length === 0) {
@@ -422,6 +462,81 @@ export class DatabaseService {
   }
 
   // ==========================================================================
+  // Plugin Update History
+  // ==========================================================================
+
+  /**
+   * Log plugin update attempt
+   */
+  async logUpdateHistory(
+    pluginId: string,
+    fromVersion: string | null,
+    toVersion: string,
+    updateType: 'online' | 'upload' | 'rollback',
+    success: boolean,
+    errorMessage?: string
+  ): Promise<void> {
+    const query = `
+      INSERT INTO plugin_update_history (
+        plugin_id, from_version, to_version, update_type, success, error_message, completed_at
+      ) VALUES ($1, $2, $3, $4, $5, $6, NOW())
+    `;
+
+    try {
+      await this.pool.query(query, [
+        pluginId,
+        fromVersion,
+        toVersion,
+        updateType,
+        success,
+        errorMessage || null,
+      ]);
+      logger.debug({ pluginId, fromVersion, toVersion, success }, 'Plugin update logged');
+    } catch (error) {
+      logger.warn({ error, pluginId }, 'Failed to log plugin update history');
+    }
+  }
+
+  /**
+   * Get plugin update history
+   */
+  async getPluginUpdateHistory(
+    pluginId: string,
+    limit: number = 20
+  ): Promise<Array<{
+    fromVersion: string | null;
+    toVersion: string;
+    updateType: string;
+    success: boolean;
+    errorMessage: string | null;
+    startedAt: Date;
+    completedAt: Date | null;
+  }>> {
+    const query = `
+      SELECT * FROM plugin_update_history
+      WHERE plugin_id = $1
+      ORDER BY started_at DESC
+      LIMIT $2
+    `;
+
+    try {
+      const result = await this.pool.query(query, [pluginId, limit]);
+      return result.rows.map((row) => ({
+        fromVersion: row.from_version,
+        toVersion: row.to_version,
+        updateType: row.update_type,
+        success: row.success,
+        errorMessage: row.error_message,
+        startedAt: new Date(row.started_at),
+        completedAt: row.completed_at ? new Date(row.completed_at) : null,
+      }));
+    } catch (error) {
+      logger.error({ error, pluginId }, 'Failed to get plugin update history');
+      return [];
+    }
+  }
+
+  // ==========================================================================
   // Utilities
   // ==========================================================================
 
@@ -448,6 +563,11 @@ export class DatabaseService {
       error: row.error,
       moduleLoaded: row.module_loaded,
       moduleExports: row.module_exports,
+      moduleCode: row.module_code,
+      installedVersion: row.installed_version,
+      previousVersion: row.previous_version,
+      bundleUrl: row.bundle_url,
+      lastUpdatedAt: row.last_updated_at ? new Date(row.last_updated_at) : undefined,
     };
   }
 

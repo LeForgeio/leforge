@@ -73,6 +73,7 @@ export interface InstalledPlugin {
   version: string;
   description?: string;
   status: PluginStatus;
+  runtime?: 'container' | 'embedded';
   hostPort?: number;
   assignedPort?: number;
   containerId?: string;
@@ -90,6 +91,10 @@ export interface InstalledPlugin {
   installedAt: string;
   startedAt?: string;
   endpoints?: ForgeHookEndpoint[];
+  installedVersion?: string;
+  previousVersion?: string;
+  bundleUrl?: string;
+  lastUpdatedAt?: string;
 }
 
 export interface PluginListResponse {

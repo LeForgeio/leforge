@@ -155,6 +155,12 @@ export interface PluginInstance {
   // Embedded-specific fields
   moduleLoaded?: boolean;
   moduleExports?: string[];
+  moduleCode?: string;
+  // Version tracking fields
+  installedVersion?: string;
+  previousVersion?: string;
+  bundleUrl?: string;
+  lastUpdatedAt?: Date;
 }
 
 // Plugin Events
@@ -169,7 +175,9 @@ export type PluginEventType =
   | 'plugin:health'
   | 'plugin:logs'
   | 'plugin:uninstalling'
-  | 'plugin:uninstalled';
+  | 'plugin:uninstalled'
+  | 'plugin:updating'
+  | 'plugin:updated';
 
 export interface PluginEvent {
   type: PluginEventType;

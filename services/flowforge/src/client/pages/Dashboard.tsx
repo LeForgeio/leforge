@@ -1,9 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { 
-  Activity, CheckCircle, XCircle, Clock, Zap, Server, Database, Shield, 
+  Activity, CheckCircle, XCircle, Clock, Zap, Server, Database,
   TrendingUp, ArrowRight, ExternalLink, FileText, Calculator,
-  Lock, Image as ImageIcon, Brain, Cpu
+  Lock, Image as ImageIcon, Brain, Cpu, Package, Square
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
 import { Button } from '../components/ui/button';
@@ -11,18 +11,20 @@ import { Badge } from '../components/ui/badge';
 import { ScrollArea } from '../components/ui/scroll-area';
 import { Skeleton } from '../components/ui/skeleton';
 import { usePlaygroundStore, RequestHistoryItem } from '../store';
+import { useInstalledPlugins } from '../hooks/usePlugins';
 import { cn } from '../lib/utils';
 
-const services = [
-  { id: 'crypto', name: 'Crypto Service', port: 4001, icon: Lock, description: 'Hashing, encryption, JWT' },
-  { id: 'math', name: 'Math Service', port: 5001, icon: Calculator, description: 'Calculations, statistics' },
-  { id: 'llm', name: 'LLM Service', port: 4002, icon: Brain, description: 'AI completions' },
-  { id: 'vector', name: 'Vector Service', port: 4003, icon: Database, description: 'Vector search' },
-  { id: 'pdf', name: 'PDF Service', port: 4004, icon: FileText, description: 'PDF manipulation' },
-  { id: 'ocr', name: 'OCR Service', port: 4005, icon: Activity, description: 'Text extraction' },
-  { id: 'image', name: 'Image Service', port: 4006, icon: ImageIcon, description: 'Image processing' },
-  { id: 'data', name: 'Data Transform', port: 4007, icon: Cpu, description: 'Data conversion' },
-];
+// Icon mapping for plugin categories/types
+const categoryIcons: Record<string, React.ElementType> = {
+  security: Lock,
+  ai: Brain,
+  data: Database,
+  media: ImageIcon,
+  utility: Cpu,
+  math: Calculator,
+  pdf: FileText,
+  default: Package,
+};
 
 const quickActions = [
   { label: 'Hash Text', service: 'crypto', endpoint: '/hash', icon: Lock },
@@ -58,21 +60,56 @@ async function checkHealth(port: number) {
   }
 }
 
-function ServiceHealthCard({ service }: { service: typeof services[0] }) {
-  const { data, isLoading, isError } = useQuery({
-    queryKey: ['health', service.id],
-    queryFn: () => checkHealth(service.port),
+interface PluginHealthCardProps {
+  plugin: {
+    id: string;
+    name?: string;
+    forgehookId: string;
+    status: string;
+    assignedPort?: number;
+    manifest?: {
+      name?: string;
+      category?: string;
+      description?: string;
+      version?: string;
+    };
+  };
+}
+
+function PluginHealthCard({ plugin }: PluginHealthCardProps) {
+  const isRunning = plugin.status === 'running';
+  const port = plugin.assignedPort;
+  
+  // Only poll health if plugin is running and has a port
+  const { data, isLoading } = useQuery({
+    queryKey: ['health', plugin.id],
+    queryFn: () => checkHealth(port!),
     refetchInterval: 30000,
     retry: false,
+    enabled: isRunning && !!port, // Only fetch if running
   });
 
-  const Icon = service.icon;
-  const status = isLoading ? 'loading' : (!data || isError) ? 'offline' : 'online';
+  const category = plugin.manifest?.category || 'default';
+  const Icon = categoryIcons[category] || categoryIcons.default;
+  const pluginName = plugin.manifest?.name || plugin.name || plugin.forgehookId;
+  
+  // Determine status based on plugin state
+  let status: 'loading' | 'offline' | 'online' | 'stopped';
+  if (!isRunning) {
+    status = 'stopped';
+  } else if (isLoading) {
+    status = 'loading';
+  } else if (!data) {
+    status = 'offline';
+  } else {
+    status = 'online';
+  }
   
   const statusConfig = {
     loading: { color: 'text-yellow-500', bg: 'bg-yellow-500/10', icon: Clock, label: 'Checking...' },
-    offline: { color: 'text-red-500', bg: 'bg-red-500/10', icon: XCircle, label: 'Offline' },
+    offline: { color: 'text-red-500', bg: 'bg-red-500/10', icon: XCircle, label: 'Unhealthy' },
     online: { color: 'text-green-500', bg: 'bg-green-500/10', icon: CheckCircle, label: 'Online' },
+    stopped: { color: 'text-gray-500', bg: 'bg-gray-500/10', icon: Square, label: 'Stopped' },
   };
 
   const config = statusConfig[status];
@@ -86,8 +123,10 @@ function ServiceHealthCard({ service }: { service: typeof services[0] }) {
             <Icon className="w-5 h-5 text-primary" />
           </div>
           <div>
-            <CardTitle className="text-base">{service.name}</CardTitle>
-            <p className="text-xs text-muted-foreground">Port {service.port}</p>
+            <CardTitle className="text-base truncate max-w-[140px]">{pluginName}</CardTitle>
+            <p className="text-xs text-muted-foreground">
+              {port ? `Port ${port}` : 'Embedded'}
+            </p>
           </div>
         </div>
         <div className={cn('flex items-center gap-1', config.color)}>
@@ -96,16 +135,18 @@ function ServiceHealthCard({ service }: { service: typeof services[0] }) {
         </div>
       </CardHeader>
       <CardContent className="space-y-3">
-        <p className="text-sm text-muted-foreground">{service.description}</p>
+        <p className="text-sm text-muted-foreground line-clamp-2">
+          {plugin.manifest?.description || 'No description'}
+        </p>
         <div className="flex items-center justify-between">
-          {data?.version && (
-            <Badge variant="outline" className="text-xs">v{data.version}</Badge>
+          {(data?.version || plugin.manifest?.version) && (
+            <Badge variant="outline" className="text-xs">v{data?.version || plugin.manifest?.version}</Badge>
           )}
           <Link 
-            to={`/playground?service=${service.id}`}
+            to={`/plugins`}
             className="text-xs text-primary hover:underline opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1"
           >
-            Test <ArrowRight className="w-3 h-3" />
+            Manage <ArrowRight className="w-3 h-3" />
           </Link>
         </div>
       </CardContent>
@@ -268,6 +309,7 @@ function QuickActions() {
 
 export default function Dashboard() {
   const { requestHistory } = usePlaygroundStore();
+  const { data: pluginsData, isLoading: pluginsLoading } = useInstalledPlugins();
   
   // Calculate stats from request history
   const todayStart = new Date();
@@ -286,6 +328,9 @@ export default function Dashboard() {
     ? Math.round((todayRequests.filter((req: RequestHistoryItem) => req.status >= 200 && req.status < 300).length / todayRequests.length) * 100)
     : 100);
 
+  const plugins = pluginsData?.plugins || [];
+  const runningCount = plugins.filter(p => p.status === 'running').length;
+
   return (
     <div>
       <div className="mb-8">
@@ -296,14 +341,16 @@ export default function Dashboard() {
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <StatsCard 
-          title="Total Services" 
-          value={services.length} 
-          icon={Server}
+          title="Installed Plugins" 
+          value={pluginsLoading ? '--' : plugins.length} 
+          icon={Package}
+          loading={pluginsLoading}
         />
         <StatsCard 
-          title="API Gateway" 
-          value="Active" 
-          icon={Shield}
+          title="Running" 
+          value={pluginsLoading ? '--' : runningCount} 
+          icon={Server}
+          loading={pluginsLoading}
         />
         <StatsCard 
           title="Requests Today" 
@@ -330,20 +377,54 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Services Grid */}
+      {/* Plugins Grid */}
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-semibold">Service Health</h2>
-        <Link to="/services">
+        <h2 className="text-xl font-semibold">Plugin Health</h2>
+        <Link to="/plugins">
           <Button variant="ghost" size="sm">
             View All <ArrowRight className="w-4 h-4 ml-1" />
           </Button>
         </Link>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {services.map((service) => (
-          <ServiceHealthCard key={service.id} service={service} />
-        ))}
-      </div>
+      {pluginsLoading ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map((i) => (
+            <Card key={i} className="animate-pulse">
+              <CardHeader className="pb-2">
+                <div className="flex items-center gap-3">
+                  <Skeleton className="w-9 h-9 rounded-lg" />
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-3 w-16" />
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-4 w-full" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : plugins.length === 0 ? (
+        <Card>
+          <CardContent className="py-12 text-center">
+            <Package className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+            <h3 className="font-semibold">No plugins installed</h3>
+            <p className="text-muted-foreground mb-4">
+              Install plugins from the marketplace to get started.
+            </p>
+            <Link to="/marketplace">
+              <Button>Browse Marketplace</Button>
+            </Link>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {plugins.map((plugin) => (
+            <PluginHealthCard key={plugin.id} plugin={plugin} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

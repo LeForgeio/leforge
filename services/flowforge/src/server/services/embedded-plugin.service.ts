@@ -378,6 +378,226 @@ export class EmbeddedPluginService extends EventEmitter {
     logger.info({ pluginId }, 'Embedded plugin stopped');
   }
 
+  /**
+   * Update an embedded plugin with new code
+   * Supports both online (fetch from URL) and offline (direct code upload)
+   */
+  async updatePlugin(
+    pluginId: string,
+    options: {
+      moduleCode?: string;          // Direct code upload (offline)
+      bundleUrl?: string;           // URL to fetch code from (online)
+      newManifest?: ForgeHookManifest;
+    }
+  ): Promise<PluginInstance> {
+    const plugin = await databaseService.getPlugin(pluginId);
+    if (!plugin) {
+      throw new Error(`Plugin ${pluginId} not found`);
+    }
+
+    if (plugin.runtime !== 'embedded') {
+      throw new Error(`Plugin ${pluginId} is not an embedded plugin`);
+    }
+
+    const currentVersion = plugin.installedVersion || plugin.manifest.version;
+    let newModuleCode: string;
+    let newManifest = options.newManifest || plugin.manifest;
+    const updateType: 'online' | 'upload' = options.bundleUrl ? 'online' : 'upload';
+
+    logger.info({ pluginId, currentVersion, updateType }, 'Updating embedded plugin');
+
+    try {
+      // Get the new module code
+      if (options.moduleCode) {
+        // Offline update - code provided directly
+        newModuleCode = options.moduleCode;
+      } else if (options.bundleUrl) {
+        // Online update - fetch from URL
+        const response = await fetch(options.bundleUrl);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch bundle: ${response.status} ${response.statusText}`);
+        }
+        newModuleCode = await response.text();
+      } else {
+        throw new Error('Either moduleCode or bundleUrl must be provided');
+      }
+
+      // Save current state for rollback
+      const previousModuleCode = plugin.moduleCode || null;
+      const previousVersion = currentVersion;
+
+      // Update database with backup info before making changes
+      await databaseService.updatePlugin(pluginId, {
+        status: 'installing',
+        previousVersion,
+        previousModuleCode,
+        bundleUrl: options.bundleUrl || plugin.bundleUrl || null,
+      });
+
+      // Unload current module
+      await this.unloadPlugin(plugin.forgehookId);
+
+      // Load new module
+      await this.loadPlugin(plugin.forgehookId, newManifest, newModuleCode);
+
+      const newVersion = newManifest.version;
+
+      // Update database with new version info
+      await databaseService.updatePlugin(pluginId, {
+        status: 'running',
+        manifest: newManifest,
+        moduleCode: newModuleCode,
+        installedVersion: newVersion,
+        lastUpdatedAt: new Date(),
+        startedAt: new Date(),
+        healthStatus: 'healthy',
+        error: null,
+      });
+
+      // Log update history
+      await databaseService.logUpdateHistory(
+        pluginId,
+        previousVersion,
+        newVersion,
+        updateType,
+        true
+      );
+
+      logger.info(
+        { pluginId, previousVersion, newVersion, updateType },
+        'Embedded plugin updated successfully'
+      );
+
+      // Return updated plugin
+      return (await databaseService.getPlugin(pluginId))!;
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Update failed';
+      
+      logger.error({ error, pluginId }, 'Failed to update embedded plugin');
+
+      // Log failed update
+      await databaseService.logUpdateHistory(
+        pluginId,
+        currentVersion,
+        options.newManifest?.version || 'unknown',
+        updateType,
+        false,
+        errorMessage
+      );
+
+      // Try to restore previous state
+      try {
+        if (plugin.moduleCode) {
+          await this.loadPlugin(plugin.forgehookId, plugin.manifest, plugin.moduleCode);
+          await databaseService.updatePlugin(pluginId, {
+            status: 'running',
+            error: `Update failed, restored previous version: ${errorMessage}`,
+          });
+        } else {
+          await databaseService.updatePlugin(pluginId, {
+            status: 'error',
+            error: errorMessage,
+          });
+        }
+      } catch (restoreError) {
+        logger.error({ error: restoreError, pluginId }, 'Failed to restore plugin after update failure');
+        await databaseService.updatePlugin(pluginId, {
+          status: 'error',
+          error: `Update failed and restoration failed: ${errorMessage}`,
+        });
+      }
+
+      throw error;
+    }
+  }
+
+  /**
+   * Rollback an embedded plugin to previous version
+   */
+  async rollbackPlugin(pluginId: string): Promise<PluginInstance> {
+    const plugin = await databaseService.getPlugin(pluginId);
+    if (!plugin) {
+      throw new Error(`Plugin ${pluginId} not found`);
+    }
+
+    if (plugin.runtime !== 'embedded') {
+      throw new Error(`Plugin ${pluginId} is not an embedded plugin`);
+    }
+
+    // Get previous code from database - need to query directly since it's not in PluginInstance
+    const result = await databaseService.query(
+      'SELECT previous_module_code, previous_version FROM plugins WHERE id = $1',
+      [pluginId]
+    );
+
+    const previousModuleCode = result.rows[0]?.previous_module_code;
+    const previousVersion = result.rows[0]?.previous_version;
+
+    if (!previousModuleCode || !previousVersion) {
+      throw new Error('No previous version available for rollback');
+    }
+
+    const currentVersion = plugin.installedVersion || plugin.manifest.version;
+
+    logger.info({ pluginId, currentVersion, previousVersion }, 'Rolling back embedded plugin');
+
+    try {
+      // Unload current module
+      await this.unloadPlugin(plugin.forgehookId);
+
+      // Load previous module
+      await this.loadPlugin(plugin.forgehookId, plugin.manifest, previousModuleCode);
+
+      // Update database
+      await databaseService.updatePlugin(pluginId, {
+        status: 'running',
+        moduleCode: previousModuleCode,
+        installedVersion: previousVersion,
+        previousVersion: currentVersion,
+        previousModuleCode: plugin.moduleCode || null,
+        lastUpdatedAt: new Date(),
+        startedAt: new Date(),
+        healthStatus: 'healthy',
+        error: null,
+      });
+
+      // Log rollback
+      await databaseService.logUpdateHistory(
+        pluginId,
+        currentVersion,
+        previousVersion,
+        'rollback',
+        true
+      );
+
+      logger.info({ pluginId, previousVersion }, 'Embedded plugin rolled back successfully');
+
+      return (await databaseService.getPlugin(pluginId))!;
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Rollback failed';
+      
+      logger.error({ error, pluginId }, 'Failed to rollback embedded plugin');
+
+      await databaseService.logUpdateHistory(
+        pluginId,
+        currentVersion,
+        previousVersion,
+        'rollback',
+        false,
+        errorMessage
+      );
+
+      await databaseService.updatePlugin(pluginId, {
+        status: 'error',
+        error: errorMessage,
+      });
+
+      throw error;
+    }
+  }
+
   // ==========================================================================
   // Sandbox Creation
   // ==========================================================================

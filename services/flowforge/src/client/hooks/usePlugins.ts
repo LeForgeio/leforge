@@ -88,6 +88,73 @@ async function uninstallPlugin(pluginId: string): Promise<void> {
   }
 }
 
+async function updatePlugin(pluginId: string, options: {
+  bundleUrl?: string;
+  imageTag?: string;
+  manifest?: ForgeHookManifest;
+}): Promise<InstalledPlugin> {
+  const response = await fetch(`${API_BASE}/plugins/${pluginId}/update`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(options),
+  });
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error?.message || 'Failed to update plugin');
+  }
+  return response.json();
+}
+
+async function uploadPluginUpdate(pluginId: string, options: {
+  moduleCode: string;
+  manifest?: ForgeHookManifest;
+}): Promise<InstalledPlugin> {
+  const response = await fetch(`${API_BASE}/plugins/${pluginId}/update/upload`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(options),
+  });
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error?.message || 'Failed to upload plugin update');
+  }
+  return response.json();
+}
+
+async function rollbackPlugin(pluginId: string): Promise<InstalledPlugin> {
+  const response = await fetch(`${API_BASE}/plugins/${pluginId}/rollback`, {
+    method: 'POST',
+  });
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error?.message || 'Failed to rollback plugin');
+  }
+  return response.json();
+}
+
+interface PluginUpdateHistory {
+  pluginId: string;
+  currentVersion: string;
+  previousVersion: string | null;
+  canRollback: boolean;
+  history: Array<{
+    id: string;
+    from_version: string;
+    to_version: string;
+    action: string;
+    performed_by: string | null;
+    created_at: string;
+  }>;
+}
+
+async function fetchPluginUpdateHistory(pluginId: string): Promise<PluginUpdateHistory> {
+  const response = await fetch(`${API_BASE}/plugins/${pluginId}/updates`);
+  if (!response.ok) {
+    throw new Error('Failed to fetch update history');
+  }
+  return response.json();
+}
+
 async function fetchPluginLogs(pluginId: string, tail: number = 100): Promise<string[]> {
   const response = await fetch(`${API_BASE}/plugins/${pluginId}/logs?tail=${tail}`);
   if (!response.ok) {
@@ -180,6 +247,53 @@ export function useUninstallPlugin() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['plugins'] });
     },
+  });
+}
+
+export function useUpdatePlugin() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: ({ pluginId, options }: { 
+      pluginId: string; 
+      options: { bundleUrl?: string; imageTag?: string; manifest?: ForgeHookManifest } 
+    }) => updatePlugin(pluginId, options),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['plugins'] });
+    },
+  });
+}
+
+export function useUploadPluginUpdate() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: ({ pluginId, options }: { 
+      pluginId: string; 
+      options: { moduleCode: string; manifest?: ForgeHookManifest } 
+    }) => uploadPluginUpdate(pluginId, options),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['plugins'] });
+    },
+  });
+}
+
+export function useRollbackPlugin() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: rollbackPlugin,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['plugins'] });
+    },
+  });
+}
+
+export function usePluginUpdateHistory(pluginId: string | undefined, enabled: boolean = true) {
+  return useQuery({
+    queryKey: ['plugins', 'updates', pluginId],
+    queryFn: () => fetchPluginUpdateHistory(pluginId!),
+    enabled: !!pluginId && enabled,
   });
 }
 

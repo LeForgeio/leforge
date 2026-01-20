@@ -602,6 +602,260 @@ export class DockerService extends EventEmitter {
     }
   }
 
+  /**
+   * Update a container plugin to a new version
+   * Supports both online (pull new image) and offline (load from tar file)
+   */
+  async updatePlugin(
+    pluginId: string,
+    options: {
+      newImageTag?: string;         // Online: Pull this tag
+      imageTarPath?: string;        // Offline: Load from tar file
+      newManifest?: ForgeHookManifest;
+    }
+  ): Promise<PluginInstance> {
+    const plugin = this.plugins.get(pluginId);
+    if (!plugin) {
+      throw new Error(`Plugin ${pluginId} not found`);
+    }
+
+    const currentVersion = plugin.manifest.version;
+    const currentImageTag = plugin.manifest.image?.tag || 'latest';
+    const newManifest = options.newManifest || plugin.manifest;
+    const updateType: 'online' | 'upload' = options.imageTarPath ? 'upload' : 'online';
+
+    logger.info({ pluginId, currentVersion, updateType }, 'Updating container plugin');
+
+    const wasRunning = plugin.status === 'running';
+    this.emitEvent('plugin:updating', pluginId);
+
+    try {
+      // Step 1: Get the new image
+      let newImageRef: string;
+      
+      if (options.imageTarPath) {
+        // Offline update - load from tar file
+        logger.info({ pluginId, tarPath: options.imageTarPath }, 'Loading image from tar file');
+        const fs = await import('fs');
+        const tarStream = fs.createReadStream(options.imageTarPath);
+        await this.docker.loadImage(tarStream);
+        newImageRef = `${newManifest.image?.repository}:${newManifest.image?.tag || 'latest'}`;
+      } else if (options.newImageTag || newManifest.image?.tag) {
+        // Online update - pull new tag
+        const newTag = options.newImageTag || newManifest.image?.tag || 'latest';
+        const repo = newManifest.image?.repository || plugin.manifest.image?.repository;
+        if (!repo) {
+          throw new Error('No image repository specified');
+        }
+        newImageRef = `${repo}:${newTag}`;
+        
+        logger.info({ pluginId, newImageRef }, 'Pulling new image');
+        await this.pullImage(repo, newTag);
+      } else {
+        throw new Error('Either newImageTag or imageTarPath must be provided');
+      }
+
+      // Step 2: Stop current container if running
+      if (wasRunning && plugin.containerId) {
+        logger.info({ pluginId }, 'Stopping current container for update');
+        const container = this.docker.getContainer(plugin.containerId);
+        try {
+          await container.stop({ t: 10 });
+        } catch {
+          // May already be stopped
+        }
+      }
+
+      // Step 3: Remove old container
+      if (plugin.containerId) {
+        const container = this.docker.getContainer(plugin.containerId);
+        try {
+          await container.remove({ force: true });
+        } catch {
+          // May already be removed
+        }
+      }
+
+      // Step 4: Create new container with same config
+      const containerName = plugin.containerName || `${config.plugins.containerPrefix}${plugin.forgehookId}`;
+      
+      const env: string[] = [
+        `PORT=${newManifest.port}`,
+        `NODE_ENV=production`,
+        `ENVIRONMENT=production`,
+      ];
+
+      if (newManifest.dependencies?.services?.includes('redis')) {
+        env.push(`REDIS_HOST=flowforge-redis`);
+        env.push(`REDIS_PORT=${config.redis.port}`);
+        env.push(`REDIS_PASSWORD=${config.redis.password}`);
+      }
+
+      for (const [key, value] of Object.entries(plugin.environment)) {
+        env.push(`${key}=${value}`);
+      }
+
+      if (newManifest.environment) {
+        for (const envVar of newManifest.environment) {
+          if (envVar.default && !plugin.environment[envVar.name]) {
+            env.push(`${envVar.name}=${envVar.default}`);
+          }
+        }
+      }
+
+      const volumeBinds: string[] = [];
+      if (newManifest.volumes) {
+        for (const vol of newManifest.volumes) {
+          const volumeName = `${config.plugins.volumePrefix}${vol.name}`;
+          volumeBinds.push(`${volumeName}:${vol.containerPath}${vol.readOnly ? ':ro' : ''}`);
+        }
+      }
+
+      const newContainer = await this.docker.createContainer({
+        name: containerName,
+        Image: newImageRef,
+        Env: env,
+        ExposedPorts: {
+          [`${newManifest.port}/tcp`]: {},
+        },
+        HostConfig: {
+          PortBindings: {
+            [`${newManifest.port}/tcp`]: [{ HostPort: String(plugin.hostPort) }],
+          },
+          NetworkMode: config.plugins.networkName,
+          Binds: volumeBinds,
+          RestartPolicy: { Name: 'unless-stopped' },
+          Memory: this.parseMemory(newManifest.resources?.memory || '512m'),
+          NanoCpus: this.parseCpu(newManifest.resources?.cpu || '1'),
+        },
+        Healthcheck: newManifest.healthCheck ? {
+          Test: ['CMD', 'curl', '-f', `http://localhost:${newManifest.port}${newManifest.healthCheck.path || '/health'}`],
+          Interval: (newManifest.healthCheck.interval || 30) * 1000000000,
+          Timeout: (newManifest.healthCheck.timeout || 10) * 1000000000,
+          Retries: newManifest.healthCheck.retries || 3,
+        } : undefined,
+      });
+
+      // Step 5: Start new container if was running
+      if (wasRunning) {
+        await newContainer.start();
+      }
+
+      const newContainerInfo = await newContainer.inspect();
+      const newVersion = newManifest.version;
+
+      // Step 6: Update in-memory state
+      plugin.containerId = newContainerInfo.Id;
+      plugin.manifest = newManifest;
+      plugin.status = wasRunning ? 'running' : 'stopped';
+      plugin.error = undefined;
+
+      // Step 7: Update database
+      await databaseService.updatePlugin(pluginId, {
+        status: plugin.status,
+        containerId: newContainerInfo.Id,
+        manifest: newManifest,
+        installedVersion: newVersion,
+        previousVersion: currentVersion,
+        previousImageTag: currentImageTag,
+        lastUpdatedAt: new Date(),
+        startedAt: wasRunning ? new Date() : null,
+        error: null,
+      });
+
+      // Step 8: Log update history
+      await databaseService.logUpdateHistory(
+        pluginId,
+        currentVersion,
+        newVersion,
+        updateType,
+        true
+      );
+
+      this.emitEvent('plugin:updated', pluginId);
+
+      logger.info(
+        { pluginId, previousVersion: currentVersion, newVersion, updateType },
+        'Container plugin updated successfully'
+      );
+
+      return plugin;
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Update failed';
+      
+      logger.error({ error, pluginId }, 'Failed to update container plugin');
+
+      // Log failed update
+      await databaseService.logUpdateHistory(
+        pluginId,
+        currentVersion,
+        options.newManifest?.version || 'unknown',
+        updateType,
+        false,
+        errorMessage
+      );
+
+      plugin.status = 'error';
+      plugin.error = errorMessage;
+
+      await databaseService.updatePlugin(pluginId, {
+        status: 'error',
+        error: errorMessage,
+      });
+
+      this.emitEvent('plugin:error', pluginId, { error: errorMessage });
+      throw error;
+    }
+  }
+
+  /**
+   * Rollback a container plugin to previous version
+   */
+  async rollbackPlugin(pluginId: string): Promise<PluginInstance> {
+    const plugin = this.plugins.get(pluginId);
+    if (!plugin) {
+      throw new Error(`Plugin ${pluginId} not found`);
+    }
+
+    // Get previous image tag from database
+    const result = await databaseService.query(
+      'SELECT previous_image_tag, previous_version FROM plugins WHERE id = $1',
+      [pluginId]
+    );
+
+    const previousImageTag = result.rows[0]?.previous_image_tag;
+    const previousVersion = result.rows[0]?.previous_version;
+
+    if (!previousImageTag || !previousVersion) {
+      throw new Error('No previous version available for rollback');
+    }
+
+    const currentVersion = plugin.manifest.version;
+    const repo = plugin.manifest.image?.repository;
+    if (!repo) {
+      throw new Error('No image repository found in manifest');
+    }
+
+    logger.info({ pluginId, currentVersion, previousVersion, previousImageTag }, 'Rolling back container plugin');
+
+    // Create updated manifest with previous tag
+    const rollbackManifest = {
+      ...plugin.manifest,
+      version: previousVersion,
+      image: {
+        ...plugin.manifest.image!,
+        tag: previousImageTag,
+      },
+    };
+
+    // Use the update method with the previous image tag
+    return this.updatePlugin(pluginId, {
+      newImageTag: previousImageTag,
+      newManifest: rollbackManifest,
+    });
+  }
+
   // ==========================================================================
   // Plugin Queries
   // ==========================================================================

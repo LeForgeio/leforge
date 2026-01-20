@@ -15,13 +15,19 @@ import {
   MoreVertical,
   Search,
   Download,
+  Upload,
+  RefreshCw,
+  History,
+  ArrowDownToLine,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import { 
   DropdownMenu,
   DropdownMenuContent,
@@ -45,6 +51,10 @@ import {
   useStopPlugin,
   useRestartPlugin,
   useUninstallPlugin,
+  useUpdatePlugin,
+  useUploadPluginUpdate,
+  useRollbackPlugin,
+  usePluginUpdateHistory,
 } from '@/hooks/usePlugins';
 import { InstalledPlugin, PluginStatus, CATEGORY_INFO } from '@/types/forgehook';
 import { formatDistanceToNow } from 'date-fns';
@@ -85,19 +95,32 @@ function PluginStatusBadge({ status }: { status: PluginStatus }) {
 function PluginRow({ plugin }: { plugin: InstalledPlugin }) {
   const [showLogs, setShowLogs] = useState(false);
   const [showUninstall, setShowUninstall] = useState(false);
+  const [showUpdate, setShowUpdate] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
+  const [updateTab, setUpdateTab] = useState<'online' | 'upload'>('online');
+  const [bundleUrl, setBundleUrl] = useState('');
+  const [uploadCode, setUploadCode] = useState('');
   
   const { toast } = useToast();
   const { data: logs } = usePluginLogs(plugin.id, showLogs);
+  const { data: updateHistory } = usePluginUpdateHistory(plugin.id, showHistory);
   const startMutation = useStartPlugin();
   const stopMutation = useStopPlugin();
   const restartMutation = useRestartPlugin();
   const uninstallMutation = useUninstallPlugin();
+  const updateMutation = useUpdatePlugin();
+  const uploadMutation = useUploadPluginUpdate();
+  const rollbackMutation = useRollbackPlugin();
   
   const isActioning = startMutation.isPending || stopMutation.isPending || 
-    restartMutation.isPending || uninstallMutation.isPending;
+    restartMutation.isPending || uninstallMutation.isPending ||
+    updateMutation.isPending || uploadMutation.isPending || rollbackMutation.isPending;
   
   const categoryInfo = plugin.manifest?.category ? CATEGORY_INFO[plugin.manifest.category] : null;
   const pluginName = plugin.manifest?.name || plugin.name || plugin.forgehookId;
+  
+  // Check if this is an embedded plugin
+  const isEmbedded = plugin.runtime === 'embedded';
   
   const handleStart = async () => {
     try {
@@ -146,6 +169,64 @@ function PluginRow({ plugin }: { plugin: InstalledPlugin }) {
     } catch (error) {
       toast({ 
         title: 'Failed to uninstall', 
+        description: error instanceof Error ? error.message : 'Unknown error',
+        variant: 'destructive' 
+      });
+    }
+  };
+  
+  const handleOnlineUpdate = async () => {
+    if (!bundleUrl && isEmbedded) {
+      toast({ title: 'URL required', description: 'Please enter a bundle URL', variant: 'destructive' });
+      return;
+    }
+    try {
+      await updateMutation.mutateAsync({ 
+        pluginId: plugin.id, 
+        options: isEmbedded ? { bundleUrl } : { imageTag: bundleUrl } // bundleUrl field used for both
+      });
+      toast({ title: 'Plugin updated', description: `${pluginName} has been updated.` });
+      setShowUpdate(false);
+      setBundleUrl('');
+    } catch (error) {
+      toast({ 
+        title: 'Update failed', 
+        description: error instanceof Error ? error.message : 'Unknown error',
+        variant: 'destructive' 
+      });
+    }
+  };
+  
+  const handleUploadUpdate = async () => {
+    if (!uploadCode) {
+      toast({ title: 'Code required', description: 'Please paste the plugin code', variant: 'destructive' });
+      return;
+    }
+    try {
+      await uploadMutation.mutateAsync({ 
+        pluginId: plugin.id, 
+        options: { moduleCode: uploadCode }
+      });
+      toast({ title: 'Plugin updated', description: `${pluginName} has been updated via upload.` });
+      setShowUpdate(false);
+      setUploadCode('');
+    } catch (error) {
+      toast({ 
+        title: 'Upload failed', 
+        description: error instanceof Error ? error.message : 'Unknown error',
+        variant: 'destructive' 
+      });
+    }
+  };
+  
+  const handleRollback = async () => {
+    try {
+      await rollbackMutation.mutateAsync(plugin.id);
+      toast({ title: 'Plugin rolled back', description: `${pluginName} has been rolled back to previous version.` });
+      setShowHistory(false);
+    } catch (error) {
+      toast({ 
+        title: 'Rollback failed', 
         description: error instanceof Error ? error.message : 'Unknown error',
         variant: 'destructive' 
       });
@@ -247,6 +328,15 @@ function PluginRow({ plugin }: { plugin: InstalledPlugin }) {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => setShowUpdate(true)}>
+                      <RefreshCw className="w-4 h-4 mr-2" />
+                      Update Plugin
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setShowHistory(true)}>
+                      <History className="w-4 h-4 mr-2" />
+                      Update History
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={() => setShowLogs(true)}>
                       <Terminal className="w-4 h-4 mr-2" />
                       View Logs
@@ -349,6 +439,186 @@ function PluginRow({ plugin }: { plugin: InstalledPlugin }) {
             >
               {uninstallMutation.isPending ? 'Uninstalling...' : 'Uninstall'}
             </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Update Dialog */}
+      <Dialog open={showUpdate} onOpenChange={setShowUpdate}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Update {pluginName}</DialogTitle>
+            <DialogDescription>
+              {isEmbedded 
+                ? 'Update the embedded plugin code from URL or paste code directly.'
+                : 'Update the container plugin by specifying a new image tag.'}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <Tabs value={updateTab} onValueChange={(v) => setUpdateTab(v as 'online' | 'upload')}>
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="online">
+                <Download className="w-4 h-4 mr-2" />
+                Online
+              </TabsTrigger>
+              <TabsTrigger value="upload" disabled={!isEmbedded}>
+                <Upload className="w-4 h-4 mr-2" />
+                Upload
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="online" className="space-y-4 mt-4">
+              <div className="space-y-2">
+                <Label htmlFor="bundleUrl">
+                  {isEmbedded ? 'Bundle URL' : 'Image Tag'}
+                </Label>
+                <Input
+                  id="bundleUrl"
+                  placeholder={isEmbedded 
+                    ? 'https://example.com/plugin-v2.js' 
+                    : 'flowforge/my-plugin:v2.0.0'}
+                  value={bundleUrl}
+                  onChange={(e) => setBundleUrl(e.target.value)}
+                />
+                <p className="text-xs text-muted-foreground">
+                  {isEmbedded 
+                    ? 'Enter the URL to fetch the updated plugin bundle from.'
+                    : 'Enter the new Docker image tag to pull.'}
+                </p>
+              </div>
+              
+              <div className="flex justify-end gap-2 pt-2">
+                <Button variant="outline" onClick={() => setShowUpdate(false)}>
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleOnlineUpdate}
+                  disabled={updateMutation.isPending || !bundleUrl}
+                >
+                  {updateMutation.isPending ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                      Updating...
+                    </>
+                  ) : (
+                    <>
+                      <ArrowDownToLine className="w-4 h-4 mr-2" />
+                      Update
+                    </>
+                  )}
+                </Button>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="upload" className="space-y-4 mt-4">
+              <div className="space-y-2">
+                <Label htmlFor="uploadCode">Plugin Code</Label>
+                <Textarea
+                  id="uploadCode"
+                  placeholder="// Paste your plugin JavaScript code here..."
+                  value={uploadCode}
+                  onChange={(e) => setUploadCode(e.target.value)}
+                  className="font-mono text-sm h-48"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Paste the complete plugin module code. Useful for offline updates.
+                </p>
+              </div>
+              
+              <div className="flex justify-end gap-2 pt-2">
+                <Button variant="outline" onClick={() => setShowUpdate(false)}>
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleUploadUpdate}
+                  disabled={uploadMutation.isPending || !uploadCode}
+                >
+                  {uploadMutation.isPending ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                      Uploading...
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="w-4 h-4 mr-2" />
+                      Upload & Update
+                    </>
+                  )}
+                </Button>
+              </div>
+            </TabsContent>
+          </Tabs>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Update History Dialog */}
+      <Dialog open={showHistory} onOpenChange={setShowHistory}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Update History: {pluginName}</DialogTitle>
+            <DialogDescription>
+              View version history and rollback to previous versions.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            {/* Current Version Info */}
+            <div className="p-3 bg-muted rounded-lg">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-sm font-medium">Current Version</div>
+                  <div className="text-lg font-bold">
+                    {updateHistory?.currentVersion || plugin.manifest?.version || '1.0.0'}
+                  </div>
+                </div>
+                {updateHistory?.canRollback && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleRollback}
+                    disabled={rollbackMutation.isPending}
+                  >
+                    {rollbackMutation.isPending ? (
+                      <>
+                        <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                        Rolling back...
+                      </>
+                    ) : (
+                      <>
+                        <RotateCcw className="w-4 h-4 mr-2" />
+                        Rollback to {updateHistory.previousVersion}
+                      </>
+                    )}
+                  </Button>
+                )}
+              </div>
+            </div>
+            
+            {/* History List */}
+            <ScrollArea className="h-64">
+              {updateHistory?.history && updateHistory.history.length > 0 ? (
+                <div className="space-y-2">
+                  {updateHistory.history.map((entry) => (
+                    <div key={entry.id} className="p-3 border rounded-lg text-sm">
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium">
+                          {entry.from_version} → {entry.to_version}
+                        </span>
+                        <Badge variant="outline">{entry.action}</Badge>
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-1">
+                        {formatDistanceToNow(new Date(entry.created_at), { addSuffix: true })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center text-muted-foreground py-8">
+                  <History className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                  No update history available
+                </div>
+              )}
+            </ScrollArea>
           </div>
         </DialogContent>
       </Dialog>
