@@ -110,12 +110,12 @@ INSERT INTO registry_sources (
 ) VALUES (
   'FlowForge Official',
   'Official FlowForge plugin registry maintained by the FlowForge team',
-  'https://raw.githubusercontent.com/danstoll/flowforge/main/registry/forgehooks-registry.json',
+  'https://raw.githubusercontent.com/danstoll/forgehooks-registry/master/forgehooks-registry.json',
   'github',
   'danstoll',
-  'flowforge',
-  'main',
-  'registry/forgehooks-registry.json',
+  'forgehooks-registry',
+  'master',
+  'forgehooks-registry.json',
   true,
   0
 ) ON CONFLICT (url) DO NOTHING;
