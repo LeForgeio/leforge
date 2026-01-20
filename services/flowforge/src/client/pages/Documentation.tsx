@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Book, Code2, Rocket, History, ExternalLink } from 'lucide-react';
-import { changelog, changeTypeColors, type Release, type Change } from '@/data/changelog';
+import { changelog, changeTypeColors } from '@/data/changelog';
 
 // Use current hostname for API calls (unified app)
 const API_HOST = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
