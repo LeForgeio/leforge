@@ -25,6 +25,8 @@ export const changelog: Release[] = [
       { type: 'feature', description: 'Update dialog with online update and file upload options' },
       { type: 'feature', description: 'Plugin update history with rollback functionality' },
       { type: 'improvement', description: 'Dashboard uses installed plugins instead of hardcoded list' },
+      { type: 'improvement', description: 'Changelog now fetches from API (single source of truth)' },
+      { type: 'improvement', description: 'Archived obsolete web-ui and plugin-manager code' },
       { type: 'fix', description: 'Dashboard only polls health for running plugins' },
     ],
   },

@@ -21,6 +21,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Dashboard now uses installed plugins instead of hardcoded service list
 - Dashboard health polling only runs for plugins that are actually running
+- Changelog UI now fetches from `/api/v1/changelog` (single source of truth)
+- Archived obsolete `web-ui/` and `services/plugin-manager/` directories
+- Updated `docker-compose.yml` to use unified FlowForge app
+
+### Removed
+
+- Duplicate client-side changelog data file
+- Legacy `web-ui` Docker service (replaced by unified app)
+- `services/plugin-manager/` standalone service (merged into `services/flowforge/`)
 
 ### Fixed
 
