@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Book, Code2, Rocket, History, ExternalLink } from 'lucide-react';
-import { changelog, changeTypeColors } from '@/data/changelog';
+import { Book, Code2, Rocket, History, ExternalLink, Loader2 } from 'lucide-react';
+import { useChangelog, changeTypeColors } from '@/hooks/useChangelog';
 
 // Use current hostname for API calls (unified app)
 const API_HOST = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
@@ -167,6 +167,7 @@ curl -X POST http://localhost:8000/api/v1/pdf/generate \\
 
 export default function Documentation() {
   const [selectedService, setSelectedService] = useState<string | null>(null);
+  const { data: changelogData, isLoading: changelogLoading } = useChangelog();
 
   return (
     <div className="max-w-5xl">
@@ -388,7 +389,14 @@ export default function Documentation() {
 
         {/* Changelog */}
         <TabsContent value="changelog" className="space-y-6">
-          {changelog.map((release) => (
+          {changelogLoading ? (
+            <Card>
+              <CardContent className="flex items-center justify-center py-12">
+                <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+                <span className="ml-2 text-muted-foreground">Loading changelog...</span>
+              </CardContent>
+            </Card>
+          ) : changelogData?.changelog.map((release) => (
             <Card key={release.version}>
               <CardHeader>
                 <div className="flex items-center justify-between">
