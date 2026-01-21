@@ -388,7 +388,7 @@ function PluginRow({ plugin }: { plugin: InstalledPlugin }) {
           {plugin.error && (
             <div className="mt-3 pt-3 border-t">
               <div className="flex items-start gap-2 text-sm text-red-500">
-                <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
                 <span>{plugin.error}</span>
               </div>
             </div>
@@ -405,7 +405,7 @@ function PluginRow({ plugin }: { plugin: InstalledPlugin }) {
               Container: {plugin.containerId?.substring(0, 12) || 'N/A'}
             </DialogDescription>
           </DialogHeader>
-          <ScrollArea className="h-[500px] font-mono text-xs bg-black text-green-400 p-4 rounded-lg">
+          <ScrollArea className="h-125 font-mono text-xs bg-black text-green-400 p-4 rounded-lg">
             {logs && logs.length > 0 ? (
               logs.map((line: string, i: number) => (
                 <div key={i} className="whitespace-pre-wrap">

@@ -19,7 +19,7 @@ This guide covers deploying FlowForge to various environments.
 ### Hardware Requirements
 
 | Environment | CPU | RAM | Storage |
-|-------------|-----|-----|---------|
+| ----------- | --- | --- | ------- |
 | Development | 2 cores | 4 GB | 20 GB |
 | Staging | 4 cores | 8 GB | 50 GB |
 | Production | 8+ cores | 16+ GB | 100+ GB |
@@ -36,7 +36,7 @@ This guide covers deploying FlowForge to various environments.
 ### Server Details
 
 | Setting | Value |
-|---------|-------|
+| ------- | ----- |
 | **IP Address** | `10.0.0.115` |
 | **SSH User** | `dan` |
 | **SSH Port** | 22 (default) |
@@ -62,7 +62,7 @@ ssh dan@10.0.0.115 "sudo docker restart flowforge-plugin-manager"
 ### Service URLs (from dev server)
 
 | Service | URL |
-|---------|-----|
+| ------- | --- |
 | Plugin Manager API | `http://10.0.0.115:4000` |
 | Web UI | `http://10.0.0.115:3000` |
 | Kong Gateway | `http://10.0.0.115:8000` |

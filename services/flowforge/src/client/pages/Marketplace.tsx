@@ -231,7 +231,7 @@ function SourceCard({
                   <Badge variant="secondary" className="text-xs">Official</Badge>
                 )}
               </div>
-              <p className="text-xs text-muted-foreground truncate max-w-[200px]">
+              <p className="text-xs text-muted-foreground truncate max-w-50">
                 {source.url}
               </p>
             </div>
@@ -521,7 +521,7 @@ export default function Marketplace() {
         <TabsContent value="browse" className="space-y-6">
           {/* Search and Filters */}
           <div className="flex gap-4 flex-wrap">
-            <div className="relative flex-1 min-w-[200px] max-w-md">
+            <div className="relative flex-1 min-w-50 max-w-md">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
                 placeholder="Search plugins..."
@@ -532,7 +532,7 @@ export default function Marketplace() {
             </div>
             
             <Select value={selectedSource} onValueChange={setSelectedSource}>
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-45">
                 <SelectValue placeholder="All Sources" />
               </SelectTrigger>
               <SelectContent>
@@ -850,6 +850,7 @@ export default function Marketplace() {
               accept=".fhk"
               onChange={handleFileSelect}
               className="hidden"
+              aria-label="Select ForgeHook package file"
             />
             
             {!packagePreview ? (

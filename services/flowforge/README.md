@@ -4,7 +4,7 @@ FlowForge is a self-hosted microservices platform for AI and compute workflows. 
 
 ## Architecture
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────┐
 │                      FlowForge App                         │
 │                      (Port 4000)                           │
@@ -67,10 +67,12 @@ docker compose -f docker-compose.unified.yml up -d
 ## API Endpoints
 
 ### Health
+
 - `GET /health` - Health check with dependency status
 - `GET /ready` - Readiness check
 
 ### Plugins
+
 - `GET /api/v1/plugins` - List installed plugins
 - `GET /api/v1/plugins/:id` - Get plugin details
 - `POST /api/v1/plugins/install` - Install a plugin
@@ -81,6 +83,7 @@ docker compose -f docker-compose.unified.yml up -d
 - `GET /api/v1/plugins/:id/logs` - Get plugin logs
 
 ### Registry
+
 - `GET /api/v1/registry/plugins` - List available plugins
 - `GET /api/v1/registry/plugins/:id` - Get plugin details
 - `GET /api/v1/registry/search?q=query` - Search plugins
@@ -89,6 +92,7 @@ docker compose -f docker-compose.unified.yml up -d
 - `GET /api/v1/registry/stats` - Registry statistics
 
 ### WebSocket
+
 - `WS /ws/events` - Real-time plugin events
 
 ## Frontend Routes
@@ -104,7 +108,7 @@ docker compose -f docker-compose.unified.yml up -d
 ## Environment Variables
 
 | Variable | Default | Description |
-|----------|---------|-------------|
+| -------- | ------- | ----------- |
 | `PORT` | `4000` | Server port |
 | `NODE_ENV` | `development` | Environment |
 | `LOG_LEVEL` | `info` | Logging level |
@@ -124,7 +128,7 @@ docker compose -f docker-compose.unified.yml up -d
 
 ## Project Structure
 
-```
+```text
 services/flowforge/
 ├── src/
 │   ├── client/           # React frontend

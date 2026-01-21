@@ -123,7 +123,7 @@ function PluginHealthCard({ plugin }: PluginHealthCardProps) {
             <Icon className="w-5 h-5 text-primary" />
           </div>
           <div>
-            <CardTitle className="text-base truncate max-w-[140px]">{pluginName}</CardTitle>
+            <CardTitle className="text-base truncate max-w-35">{pluginName}</CardTitle>
             <p className="text-xs text-muted-foreground">
               {port ? `Port ${port}` : 'Embedded'}
             </p>
@@ -232,7 +232,7 @@ function RecentActivityLog() {
             </Link>
           </div>
         ) : (
-          <ScrollArea className="h-[300px]">
+          <ScrollArea className="h-75">
             <div className="space-y-2">
               {recentRequests.map((req) => (
                 <div 

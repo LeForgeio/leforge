@@ -13,7 +13,8 @@ export function Logo({ className = '', width, height, variant = 'full' }: LogoPr
         src="/logo-icon.svg"
         alt="FlowForge"
         className={className}
-        style={{ width, height }}
+        width={width}
+        height={height}
       />
     );
   }
@@ -24,7 +25,8 @@ export function Logo({ className = '', width, height, variant = 'full' }: LogoPr
       src="/logo.svg"
       alt="FlowForge"
       className={className}
-      style={{ width, height }}
+      width={width}
+      height={height}
     />
   );
 }

@@ -208,7 +208,7 @@ export default function Documentation() {
             <CardContent className="space-y-8">
               {gettingStartedSteps.map((step, index) => (
                 <div key={index} className="flex gap-4">
-                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm">
+                  <div className="shrink-0 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm">
                     {index + 1}
                   </div>
                   <div className="flex-1 space-y-2">
@@ -255,7 +255,7 @@ export default function Documentation() {
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm">Services</CardTitle>
               </CardHeader>
-              <ScrollArea className="h-[600px]">
+              <ScrollArea className="h-150">
                 <CardContent className="p-2">
                   {services.map((service) => (
                     <button
@@ -284,7 +284,7 @@ export default function Documentation() {
             </Card>
 
             <Card className="col-span-3">
-              <ScrollArea className="h-[600px]">
+              <ScrollArea className="h-150">
                 {selectedService ? (
                   (() => {
                     const service = services.find((s) => s.id === selectedService);
