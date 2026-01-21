@@ -281,9 +281,16 @@ export async function nintexRoutes(fastify: FastifyInstance) {
           }
         }
         
-        // Build full URL - plugin.hostPort is the exposed port
-        const basePath = plugin.manifest.basePath || '';
-        const pluginUrl = `http://localhost:${plugin.hostPort}${basePath}${endpoint}`;
+        // Build full URL - use container name and internal port for Docker networking
+        // Container name follows pattern: forgehook-{pluginId}
+        const containerName = `forgehook-${pluginId}`;
+        const internalPort = plugin.manifest.port || 3000;
+        
+        // Note: For container plugins, routes are typically at /api/v1/{route} directly
+        // The basePath in manifest may be incorrect/unused, so we use /api/v1 as the base
+        // and append the endpoint path directly
+        const basePath = '/api/v1';
+        const pluginUrl = `http://${containerName}:${internalPort}${basePath}${endpoint}`;
         
         logger.info({ pluginId, actionId, pluginUrl, method }, 'Executing plugin action via Nintex gateway');
         

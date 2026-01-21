@@ -83,7 +83,7 @@ services:
   # ===========================================
 
   kong-migrations:
-    image: kong:3.9-alpine
+    image: kong:3.9
     container_name: flowforge-kong-migrations
     command: kong migrations bootstrap
     environment:
@@ -100,7 +100,7 @@ services:
     restart: on-failure
 
   kong:
-    image: kong:3.9-alpine
+    image: kong:3.9
     container_name: flowforge-kong
     environment:
       KONG_DATABASE: postgres
