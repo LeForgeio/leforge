@@ -57,7 +57,6 @@ export async function pluginRoutes(fastify: FastifyInstance) {
       status: plugin.status,
       runtime: plugin.runtime || 'container',
       hostPort: plugin.hostPort ?? 0,
-      assignedPort: plugin.assignedPort,
       healthStatus: plugin.healthStatus,
       error: plugin.error,
       manifest: plugin.manifest, // Full manifest for Services/Playground pages
