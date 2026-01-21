@@ -92,7 +92,7 @@ export async function nintexRoutes(fastify: FastifyInstance) {
       const actions: Array<{ value: string; name: string; description?: string }> = [];
       
       // Check for exports in manifest (cast to any for flexible manifest access)
-      const manifest = plugin.manifest as Record<string, unknown>;
+      const manifest = plugin.manifest as unknown as Record<string, unknown>;
       if (manifest.exports && Array.isArray(manifest.exports)) {
         for (const exp of manifest.exports as ForgeHookExport[]) {
           actions.push({
@@ -151,7 +151,7 @@ export async function nintexRoutes(fastify: FastifyInstance) {
       };
       
       // Check exports for schema
-      const manifest = plugin.manifest as Record<string, unknown>;
+      const manifest = plugin.manifest as unknown as Record<string, unknown>;
       if (manifest.exports && Array.isArray(manifest.exports)) {
         const exp = (manifest.exports as ForgeHookExport[]).find(
           (e: ForgeHookExport) => e.name === actionId || e.id === actionId
@@ -260,7 +260,7 @@ export async function nintexRoutes(fastify: FastifyInstance) {
         let method = 'POST';
         
         // Check exports for path mapping
-        const manifest = plugin.manifest as Record<string, unknown>;
+        const manifest = plugin.manifest as unknown as Record<string, unknown>;
         if (manifest.exports && Array.isArray(manifest.exports)) {
           const exp = (manifest.exports as ForgeHookExport[]).find(
             (e: ForgeHookExport) => e.name === actionId || e.id === actionId
