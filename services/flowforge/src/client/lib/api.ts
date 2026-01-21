@@ -140,9 +140,6 @@ export interface EndpointInfo {
 // Service Definitions - Now dynamic, fetched from installed plugins
 // =============================================================================
 
-// Keep type exports for backward compatibility
-export type { ServiceInfo, EndpointInfo };
-
 // Empty array - services are now fetched dynamically via useInstalledPlugins()
 // This export is kept for backward compatibility but should not be used
 export const services: ServiceInfo[] = [];
