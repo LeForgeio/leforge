@@ -168,7 +168,7 @@ _archive/
 web-ui/
 
 # Legacy empty service folders (to be deleted)
-services/crypto-service/
-services/llm-service/
-services/math-service/
-services/
+/services/crypto-service/
+/services/llm-service/
+/services/math-service/
+/services/
