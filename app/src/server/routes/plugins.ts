@@ -171,11 +171,12 @@ export async function pluginRoutes(fastify: FastifyInstance) {
             environment,
           });
         } else if (manifest.runtime === 'embedded') {
-          // Embedded plugin installation via embedded service
-          plugin = await embeddedPluginService.installPlugin({
-            manifest,
-            config,
-            environment,
+          // Embedded plugins require moduleCode - use upload endpoint instead
+          return reply.status(400).send({
+            error: {
+              code: 'INVALID_RUNTIME',
+              message: 'Embedded plugins must be installed via /upload endpoint with moduleCode',
+            },
           });
         } else {
           // Default to container (Docker) installation
