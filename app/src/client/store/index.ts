@@ -335,11 +335,10 @@ const getDefaultBaseUrl = (): string => {
   }
   // Fall back to same-origin (works when served from same host)
   if (typeof window !== 'undefined') {
-    // Use Kong port 8000 by default, or VITE_API_PORT if specified
-    const port = import.meta.env.VITE_API_PORT || '8000';
-    return `${window.location.protocol}//${window.location.hostname}:${port}`;
+    // Use same port as current location (unified app serves both frontend and API)
+    return `${window.location.protocol}//${window.location.host}`;
   }
-  return 'http://localhost:8000';
+  return 'http://localhost:3000';
 };
 
 export const useSettingsStore = create<SettingsState>()(
