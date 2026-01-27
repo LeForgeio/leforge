@@ -239,27 +239,27 @@ function PluginRow({ plugin }: { plugin: InstalledPlugin }) {
   
   return (
     <>
-      <Card className="bg-white/5 border-white/10 hover:bg-white/[0.07] transition-all">
+      <Card className="bg-white/5 border-white/10 hover:bg-white/[0.07] transition-all overflow-hidden">
         <CardContent className="p-4">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-4">
             {/* Plugin Info */}
-            <div className="flex items-center gap-4 flex-1">
+            <div className="flex items-center gap-4 flex-1 min-w-0 overflow-hidden">
               <div className={cn(
-                "p-2 rounded-lg",
+                "p-2 rounded-lg shrink-0",
                 categoryInfo ? `bg-${categoryInfo.color.replace('text-', '')}/10` : 'bg-primary/10'
               )}>
                 <Package className={cn("w-6 h-6", categoryInfo?.color || 'text-primary')} />
               </div>
               
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
+              <div className="flex-1 min-w-0 overflow-hidden">
+                <div className="flex items-center gap-2 flex-wrap">
                   <h3 className="font-semibold truncate">{pluginName}</h3>
-                  <span className="text-xs text-muted-foreground">v{plugin.manifest?.version || plugin.version || '1.0.0'}</span>
+                  <span className="text-xs text-muted-foreground shrink-0">v{plugin.manifest?.version || plugin.version || '1.0.0'}</span>
                   {plugin.runtime && (
                     <Badge 
                       variant="outline" 
                       className={cn(
-                        'gap-1 text-xs px-1.5 py-0',
+                        'gap-1 text-xs px-1.5 py-0 shrink-0',
                         plugin.runtime === 'container' 
                           ? 'border-blue-500/50 bg-blue-500/10 text-blue-600' 
                           : plugin.runtime === 'core'
@@ -283,14 +283,14 @@ function PluginRow({ plugin }: { plugin: InstalledPlugin }) {
                     </Badge>
                   )}
                 </div>
-                <p className="text-sm text-muted-foreground truncate">
+                <p className="text-sm text-muted-foreground truncate max-w-full">
                   {plugin.manifest?.description || plugin.description || 'No description'}
                 </p>
               </div>
             </div>
             
             {/* Status & Actions */}
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 shrink-0">
               <div className="text-right text-sm">
                 {plugin.assignedPort && (
                   <div className="flex items-center gap-1 text-muted-foreground">
