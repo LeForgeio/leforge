@@ -1,25 +1,43 @@
+# ===========================================
+# FlowForge - Minimal 2-Container Setup
+# ===========================================
+# The simplest deployment: just PostgreSQL + FlowForge App
+# 
+# Features:
+#   - Embedded API gateway (no Kong required)
+#   - In-memory rate limiting and caching
+#   - All gateway features built into the app
+#
+# Usage:
+#   docker compose -f docker-compose.minimal.yml up -d
+#
+# Optional add-ons (for specific plugins):
+#   # Add Redis for distributed caching/rate limiting:
+#   docker compose -f docker-compose.minimal.yml -f docker-compose.redis.yml up -d
+#
+#   # Add Qdrant for vector search plugins:
+#   docker compose -f docker-compose.minimal.yml -f docker-compose.qdrant.yml up -d
+# ===========================================
+
 name: flowforge
 
 services:
   # ===========================================
-  # Infrastructure Services
+  # PostgreSQL - The only required dependency
   # ===========================================
-  
   postgres:
-    image: postgres:15-alpine
+    image: postgres:16-alpine
     container_name: flowforge-postgres
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-flowforge}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-flowforge_password}
       POSTGRES_DB: ${POSTGRES_DB:-flowforge}
-      POSTGRES_MULTIPLE_DATABASES: kong
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./infrastructure/postgres/init:/docker-entrypoint-initdb.d
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT:-5432}:5432"
     networks:
-      - backend
+      - flowforge-network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-flowforge}"]
       interval: 10s
@@ -27,359 +45,59 @@ services:
       retries: 5
     restart: unless-stopped
 
-  redis:
-    image: redis:7-alpine
-    container_name: flowforge-redis
-    command: redis-server --requirepass ${REDIS_PASSWORD:-redis_password}
-    volumes:
-      - redis_data:/data
-    ports:
-      - "6379:6379"
-    networks:
-      - backend
-    healthcheck:
-      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-redis_password}", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    restart: unless-stopped
-
-  qdrant:
-    image: qdrant/qdrant:latest
-    container_name: flowforge-qdrant
-    volumes:
-      - qdrant_data:/qdrant/storage
-    ports:
-      - "6333:6333"
-      - "6334:6334"
-    networks:
-      - backend
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:6333/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    restart: unless-stopped
-
   # ===========================================
-  # Kong API Gateway
+  # FlowForge App - All-in-one backend + frontend + gateway
   # ===========================================
-  
-  kong-migrations:
-    image: kong:3.9-alpine
-    container_name: flowforge-kong-migrations
-    command: kong migrations bootstrap
-    environment:
-      KONG_DATABASE: postgres
-      KONG_PG_HOST: postgres
-      KONG_PG_USER: kong
-      KONG_PG_PASSWORD: ${KONG_PG_PASSWORD:-kong_password}
-      KONG_PG_DATABASE: kong
-    depends_on:
-      postgres:
-        condition: service_healthy
-    networks:
-      - backend
-    restart: on-failure
-
-  kong:
-    image: kong:3.9-alpine
-    container_name: flowforge-kong
-    environment:
-      KONG_DATABASE: postgres
-      KONG_PG_HOST: postgres
-      KONG_PG_USER: kong
-      KONG_PG_PASSWORD: ${KONG_PG_PASSWORD:-kong_password}
-      KONG_PG_DATABASE: kong
-      KONG_PROXY_ACCESS_LOG: /dev/stdout
-      KONG_ADMIN_ACCESS_LOG: /dev/stdout
-      KONG_PROXY_ERROR_LOG: /dev/stderr
-      KONG_ADMIN_ERROR_LOG: /dev/stderr
-      KONG_PROXY_LISTEN: 0.0.0.0:8000
-      KONG_ADMIN_LISTEN: 0.0.0.0:8001
-    volumes:
-      - ./gateway/kong.yml:/etc/kong/declarative/kong.yml:ro
-    ports:
-      - "8000:8000"
-      - "8001:8001"
-      - "8443:8443"
-      - "8444:8444"
-    networks:
-      - backend
-      - frontend
-    depends_on:
-      postgres:
-        condition: service_healthy
-      kong-migrations:
-        condition: service_completed_successfully
-    healthcheck:
-      test: ["CMD", "kong", "health"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    restart: unless-stopped
-
-  # ===========================================
-  # Microservices
-  # ===========================================
-
-  crypto-service:
-    build:
-      context: ./services/crypto-service
-      dockerfile: Dockerfile
-    container_name: flowforge-crypto-service
-    environment:
-      NODE_ENV: production
-      PORT: 4001
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      REDIS_PASSWORD: ${REDIS_PASSWORD:-redis_password}
-      LOG_LEVEL: ${LOG_LEVEL:-info}
-    ports:
-      - "4001:4001"
-    networks:
-      - backend
-    depends_on:
-      redis:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:4001/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    restart: unless-stopped
-
-  math-service:
-    build:
-      context: ./services/math-service
-      dockerfile: Dockerfile
-    container_name: flowforge-math-service
-    environment:
-      ENVIRONMENT: production
-      PORT: 4002
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      REDIS_PASSWORD: ${REDIS_PASSWORD:-redis_password}
-      LOG_LEVEL: ${LOG_LEVEL:-info}
-    ports:
-      - "4002:4002"
-    networks:
-      - backend
-    depends_on:
-      redis:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:4002/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    restart: unless-stopped
-
-  pdf-service:
-    build:
-      context: ./services/pdf-service
-      dockerfile: Dockerfile
-    container_name: flowforge-pdf-service
-    environment:
-      NODE_ENV: production
-      PORT: 4003
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      REDIS_PASSWORD: ${REDIS_PASSWORD:-redis_password}
-      LOG_LEVEL: ${LOG_LEVEL:-info}
-      PDF_MAX_SIZE_MB: ${PDF_MAX_SIZE_MB:-100}
-    ports:
-      - "4003:4003"
-    networks:
-      - backend
-    depends_on:
-      redis:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:4003/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    restart: unless-stopped
-
-  ocr-service:
-    build:
-      context: ./services/ocr-service
-      dockerfile: Dockerfile
-    container_name: flowforge-ocr-service
-    environment:
-      ENVIRONMENT: production
-      PORT: 4004
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      REDIS_PASSWORD: ${REDIS_PASSWORD:-redis_password}
-      LOG_LEVEL: ${LOG_LEVEL:-info}
-      OCR_ENGINE: ${OCR_ENGINE:-paddleocr}
-    ports:
-      - "4004:4004"
-    networks:
-      - backend
-    depends_on:
-      redis:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:4004/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    restart: unless-stopped
-
-  image-service:
-    build:
-      context: ./services/image-service
-      dockerfile: Dockerfile
-    container_name: flowforge-image-service
-    environment:
-      NODE_ENV: production
-      PORT: 4005
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      REDIS_PASSWORD: ${REDIS_PASSWORD:-redis_password}
-      LOG_LEVEL: ${LOG_LEVEL:-info}
-      IMAGE_MAX_SIZE_MB: ${IMAGE_MAX_SIZE_MB:-50}
-    ports:
-      - "4005:4005"
-    networks:
-      - backend
-    depends_on:
-      redis:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:4005/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    restart: unless-stopped
-
-  llm-service:
-    build:
-      context: ./services/llm-service
-      dockerfile: Dockerfile
-    container_name: flowforge-llm-service
-    environment:
-      ENVIRONMENT: production
-      PORT: 4006
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      REDIS_PASSWORD: ${REDIS_PASSWORD:-redis_password}
-      LOG_LEVEL: ${LOG_LEVEL:-info}
-      LLM_MODEL_PATH: /models
-      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
-      OPENAI_API_BASE: ${OPENAI_API_BASE:-}
-    volumes:
-      - llm_models:/models
-    ports:
-      - "4006:4006"
-    networks:
-      - backend
-    depends_on:
-      redis:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:4006/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    restart: unless-stopped
-
-  vector-service:
-    build:
-      context: ./services/vector-service
-      dockerfile: Dockerfile
-    container_name: flowforge-vector-service
-    environment:
-      ENVIRONMENT: production
-      PORT: 4007
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      REDIS_PASSWORD: ${REDIS_PASSWORD:-redis_password}
-      QDRANT_HOST: qdrant
-      QDRANT_PORT: 6333
-      LOG_LEVEL: ${LOG_LEVEL:-info}
-    ports:
-      - "4007:4007"
-    networks:
-      - backend
-    depends_on:
-      redis:
-        condition: service_healthy
-      qdrant:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:4007/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    restart: unless-stopped
-
-  data-transform-service:
-    build:
-      context: ./services/data-transform-service
-      dockerfile: Dockerfile
-    container_name: flowforge-data-transform-service
-    environment:
-      NODE_ENV: production
-      PORT: 4008
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      REDIS_PASSWORD: ${REDIS_PASSWORD:-redis_password}
-      LOG_LEVEL: ${LOG_LEVEL:-info}
-    ports:
-      - "4008:4008"
-    networks:
-      - backend
-    depends_on:
-      redis:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:4008/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    restart: unless-stopped
-
-  # ===========================================
-  # FlowForge App (Unified Backend + Frontend)
-  # NOTE: Use docker-compose.unified.yml for the recommended setup
-  # ===========================================
-
   flowforge:
     build:
       context: ./app
       dockerfile: Dockerfile
     container_name: flowforge-app
     environment:
-      NODE_ENV: production
-      PORT: 4000
+      NODE_ENV: ${NODE_ENV:-production}
+      PORT: 3000
+      
+      # PostgreSQL (required)
+      DATABASE_URL: postgres://${POSTGRES_USER:-flowforge}:${POSTGRES_PASSWORD:-flowforge_password}@postgres:5432/${POSTGRES_DB:-flowforge}
+      
+      # Docker socket for plugin container management
       DOCKER_SOCKET_PATH: /var/run/docker.sock
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      REDIS_PASSWORD: ${REDIS_PASSWORD:-redis_password}
-      POSTGRES_HOST: postgres
-      POSTGRES_PORT: 5432
-      POSTGRES_USER: ${POSTGRES_USER:-flowforge}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-flowforge_password}
-      POSTGRES_DB: ${POSTGRES_DB:-flowforge}
+      DOCKER_NETWORK: flowforge-network
+      
+      # Plugin port allocation
+      PLUGIN_PORT_RANGE_START: ${PLUGIN_PORT_START:-4001}
+      PLUGIN_PORT_RANGE_END: ${PLUGIN_PORT_END:-4999}
+      
+      # Embedded Gateway Settings
+      GATEWAY_ENABLED: "true"
+      RATE_LIMIT_ENABLED: "true"
+      RATE_LIMIT_MAX: ${RATE_LIMIT_MAX:-100}
+      RATE_LIMIT_WINDOW_MS: ${RATE_LIMIT_WINDOW_MS:-60000}
+      
+      # Auth settings
+      API_KEY_ENABLED: "true"
+      JWT_ENABLED: "false"
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-production-min-32-chars}
+      
+      # Logging
       LOG_LEVEL: ${LOG_LEVEL:-info}
+      
+      # Optional services (disabled by default)
+      REDIS_ENABLED: "false"
+      QDRANT_ENABLED: "false"
+      
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+      - flowforge_data:/app/data
     ports:
-      - "4000:4000"
+      - "${APP_PORT:-3000}:3000"
     networks:
-      - backend
-      - frontend
+      - flowforge-network
     depends_on:
-      redis:
-        condition: service_healthy
       postgres:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:4000/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -388,25 +106,16 @@ services:
 # ===========================================
 # Networks
 # ===========================================
-
 networks:
-  backend:
+  flowforge-network:
     driver: bridge
-    name: flowforge-backend
-  frontend:
-    driver: bridge
-    name: flowforge-frontend
+    name: flowforge-network
 
 # ===========================================
 # Volumes
 # ===========================================
-
 volumes:
   postgres_data:
     name: flowforge-postgres-data
-  redis_data:
-    name: flowforge-redis-data
-  qdrant_data:
-    name: flowforge-qdrant-data
-  llm_models:
-    name: flowforge-llm-models
+  flowforge_data:
+    name: flowforge-data

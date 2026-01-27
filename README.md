@@ -78,11 +78,11 @@ cd flowforge
 # Copy environment configuration
 cp .env.example .env
 
-# Start minimal setup (2 containers: PostgreSQL + FlowForge)
-docker compose -f docker-compose.minimal.yml up -d
+# Start FlowForge (2 containers: PostgreSQL + FlowForge App)
+docker compose up -d
 
 # Or with optional Redis (for distributed caching)
-docker compose -f docker-compose.minimal.yml -f docker-compose.redis.yml up -d
+docker compose -f docker-compose.yml -f docker-compose.redis.yml up -d
 
 # Check service health
 docker compose ps

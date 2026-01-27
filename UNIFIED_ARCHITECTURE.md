@@ -63,23 +63,27 @@ FlowForge runs with just **2 containers** - PostgreSQL and the FlowForge App. Al
 ## 🚀 Deployment Options
 
 ### Option 1: Minimal (2 containers)
+
 ```bash
-docker compose -f docker-compose.minimal.yml up -d
+docker compose up -d
 ```
 
 ### Option 2: With Redis (distributed caching)
+
 ```bash
-docker compose -f docker-compose.minimal.yml -f docker-compose.redis.yml up -d
+docker compose -f docker-compose.yml -f docker-compose.redis.yml up -d
 ```
 
 ### Option 3: With Qdrant (vector search / RAG)
+
 ```bash
-docker compose -f docker-compose.minimal.yml -f docker-compose.qdrant.yml up -d
+docker compose -f docker-compose.yml -f docker-compose.qdrant.yml up -d
 ```
 
 ### Option 4: Full stack (all optional services)
+
 ```bash
-docker compose -f docker-compose.minimal.yml \
+docker compose -f docker-compose.yml \
   -f docker-compose.redis.yml \
   -f docker-compose.qdrant.yml up -d
 ```
