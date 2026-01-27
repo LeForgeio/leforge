@@ -5,16 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LeForge - AI & Compute Platform for Workflow Automation</title>
     <meta name="description" content="Self-hosted microservices platform extending n8n, Make, and Zapier with AI, cryptography, math, and data processing capabilities.">
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔥</text></svg>">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚒️</text></svg>">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         :root {
-            --primary: #f97316;
-            --primary-dark: #ea580c;
-            --bg-dark: #0f172a;
-            --bg-card: #1e293b;
-            --text: #f1f5f9;
-            --text-muted: #94a3b8;
+            /* Purple/Violet theme - matches core app */
+            --primary: hsl(250, 90%, 65%);
+            --primary-dark: hsl(250, 90%, 55%);
+            --bg-dark: hsl(220, 25%, 6%);
+            --bg-card: hsl(220, 20%, 9%);
+            --text: hsl(220, 10%, 95%);
+            --text-muted: hsl(220, 10%, 55%);
         }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -75,7 +76,7 @@
         .hero-buttons { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
         .badge {
             display: inline-block;
-            background: rgba(249, 115, 22, 0.1);
+            background: hsla(250, 90%, 65%, 0.1);
             color: var(--primary);
             padding: 6px 12px;
             border-radius: 20px;
@@ -138,7 +139,7 @@
         .feature-icon {
             width: 48px;
             height: 48px;
-            background: rgba(249, 115, 22, 0.1);
+            background: hsla(250, 90%, 65%, 0.1);
             border-radius: 10px;
             display: flex;
             align-items: center;
@@ -184,7 +185,7 @@
 <body>
     <header>
         <nav class="container">
-            <a href="#" class="logo">🔥 Le<span>Forge</span></a>
+            <a href="#" class="logo">⚒️ Le<span>Forge</span></a>
             <div class="nav-links">
                 <a href="#services">Services</a>
                 <a href="#features">Features</a>
@@ -342,7 +343,7 @@ curl http://localhost:8000/api/v1/crypto/hash \
 
     <footer>
         <div class="container">
-            <p>🔥 LeForge is open source under the <a href="https://github.com/LeForgeio/leforge/blob/master/LICENSE">MIT License</a></p>
+            <p>⚒️ LeForge is open source under the <a href="https://github.com/LeForgeio/leforge/blob/master/LICENSE">MIT License</a></p>
             <p class="footer-built">Built with ❤️ for the workflow automation community</p>
         </div>
     </footer>
