@@ -239,7 +239,7 @@ function PluginRow({ plugin }: { plugin: InstalledPlugin }) {
   
   return (
     <>
-      <Card>
+      <Card className="bg-white/5 border-white/10 hover:bg-white/[0.07] transition-all">
         <CardContent className="p-4">
           <div className="flex items-center justify-between">
             {/* Plugin Info */}
@@ -713,28 +713,28 @@ export default function InstalledPlugins() {
       
       {/* Stats */}
       <div className="grid grid-cols-4 gap-4">
-        <Card>
+        <Card className="bg-white/5 border-white/10">
           <CardContent className="pt-6">
-            <div className="text-2xl font-bold">{data?.total || 0}</div>
-            <p className="text-sm text-muted-foreground">Total Plugins</p>
+            <div className="text-2xl font-bold text-white">{data?.total || 0}</div>
+            <p className="text-sm text-gray-400">Total Plugins</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="bg-white/5 border-white/10">
           <CardContent className="pt-6">
-            <div className="text-2xl font-bold text-green-500">{runningCount}</div>
-            <p className="text-sm text-muted-foreground">Running</p>
+            <div className="text-2xl font-bold text-emerald-400">{runningCount}</div>
+            <p className="text-sm text-gray-400">Running</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="bg-white/5 border-white/10">
           <CardContent className="pt-6">
-            <div className="text-2xl font-bold text-gray-500">{stoppedCount}</div>
-            <p className="text-sm text-muted-foreground">Stopped</p>
+            <div className="text-2xl font-bold text-gray-400">{stoppedCount}</div>
+            <p className="text-sm text-gray-400">Stopped</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="bg-white/5 border-white/10">
           <CardContent className="pt-6">
-            <div className="text-2xl font-bold text-red-500">{errorCount}</div>
-            <p className="text-sm text-muted-foreground">Errors</p>
+            <div className="text-2xl font-bold text-red-400">{errorCount}</div>
+            <p className="text-sm text-gray-400">Errors</p>
           </CardContent>
         </Card>
       </div>
@@ -764,7 +764,7 @@ export default function InstalledPlugins() {
       {isLoading ? (
         <div className="space-y-4">
           {[1, 2, 3].map((i) => (
-            <Card key={i} className="animate-pulse">
+            <Card key={i} className="animate-pulse bg-white/5 border-white/10">
               <CardContent className="p-4">
                 <div className="flex items-center gap-4">
                   <div className="w-10 h-10 bg-muted rounded-lg" />
@@ -778,7 +778,7 @@ export default function InstalledPlugins() {
           ))}
         </div>
       ) : filteredPlugins.length === 0 ? (
-        <Card>
+        <Card className="bg-white/5 border-white/10">
           <CardContent className="py-12 text-center">
             <Package className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
             <h3 className="font-semibold">No plugins found</h3>
