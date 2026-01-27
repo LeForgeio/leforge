@@ -10,6 +10,7 @@ import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 import { ScrollArea } from '../components/ui/scroll-area';
 import { Skeleton } from '../components/ui/skeleton';
+import { SystemPulse } from '../components/SystemPulse';
 import { usePlaygroundStore, RequestHistoryItem } from '../store';
 import { useInstalledPlugins } from '../hooks/usePlugins';
 import { cn } from '../lib/utils';
@@ -354,6 +355,9 @@ export default function Dashboard() {
           </p>
         </div>
       </div>
+
+      {/* System Pulse Monitor */}
+      <SystemPulse />
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
