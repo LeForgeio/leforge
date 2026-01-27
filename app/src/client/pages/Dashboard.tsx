@@ -66,6 +66,7 @@ interface PluginHealthCardProps {
     name?: string;
     forgehookId: string;
     status: string;
+    runtime?: string;
     assignedPort?: number;
     manifest?: {
       name?: string;
@@ -79,14 +80,16 @@ interface PluginHealthCardProps {
 function PluginHealthCard({ plugin }: PluginHealthCardProps) {
   const isRunning = plugin.status === 'running';
   const port = plugin.assignedPort;
+  const isCore = plugin.runtime === 'core';
+  const isEmbedded = plugin.runtime === 'embedded';
   
-  // Only poll health if plugin is running and has a port
+  // Only poll health if plugin is running, has a port, and is not core/embedded
   const { data, isLoading } = useQuery({
     queryKey: ['health', plugin.id],
     queryFn: () => checkHealth(port!),
     refetchInterval: 30000,
     retry: false,
-    enabled: isRunning && !!port, // Only fetch if running
+    enabled: isRunning && !!port && !isCore && !isEmbedded,
   });
 
   const category = plugin.manifest?.category || 'default';
@@ -97,6 +100,9 @@ function PluginHealthCard({ plugin }: PluginHealthCardProps) {
   let status: 'loading' | 'offline' | 'online' | 'stopped';
   if (!isRunning) {
     status = 'stopped';
+  } else if (isCore || isEmbedded) {
+    // Core and embedded plugins are always online when running
+    status = 'online';
   } else if (isLoading) {
     status = 'loading';
   } else if (!data) {
@@ -125,7 +131,7 @@ function PluginHealthCard({ plugin }: PluginHealthCardProps) {
           <div>
             <CardTitle className="text-base truncate max-w-35">{pluginName}</CardTitle>
             <p className="text-xs text-muted-foreground">
-              {port ? `Port ${port}` : 'Embedded'}
+              {isCore ? 'Core' : port ? `Port ${port}` : 'Embedded'}
             </p>
           </div>
         </div>
