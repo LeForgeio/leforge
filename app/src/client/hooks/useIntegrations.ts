@@ -8,9 +8,20 @@ export interface IntegrationAction {
   description: string;
 }
 
+export type ConnectorCategory = 
+  | 'workflow'
+  | 'form-plugin'
+  | 'form-control'
+  | 'data-access'
+  | 'service-broker'
+  | 'custom-connector'
+  | 'component'
+  | 'node';
+
 export interface Integration {
   id: string;
   name: string;
+  category: ConnectorCategory;
   pluginId: string;
   pluginName: string;
   downloadUrl?: string;
@@ -18,6 +29,9 @@ export interface Integration {
   repositoryUrl?: string;
   setupSteps?: string[];
   actions?: IntegrationAction[];
+  formEvents?: string[];
+  dataOperations?: string[];
+  controlType?: string;
 }
 
 export interface PlatformConnector {
@@ -26,6 +40,13 @@ export interface PlatformConnector {
   format: string;
   description: string;
   status: 'ready' | 'in-development' | 'planned';
+  documentationUrl?: string;
+  categories: {
+    workflow?: boolean;
+    formPlugins?: boolean;
+    formControls?: boolean;
+    dataAccess?: boolean;
+  };
   connectors: Integration[];
 }
 

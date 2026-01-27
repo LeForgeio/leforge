@@ -17,6 +17,7 @@ import {
   Package,
   BookOpen,
   AlertCircle,
+  LayoutGrid,
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -282,6 +283,18 @@ function ConnectorDetailDialog({
   );
 }
 
+// Category labels and icons
+const CATEGORY_CONFIG: Record<string, { label: string; icon: typeof FileJson; color: string }> = {
+  'workflow': { label: 'Workflow Actions', icon: Workflow, color: 'text-blue-500' },
+  'form-plugin': { label: 'Forms Plugins', icon: FileJson, color: 'text-purple-500' },
+  'data-access': { label: 'Data Objects', icon: Database, color: 'text-emerald-500' },
+  'form-control': { label: 'Form Controls', icon: LayoutGrid, color: 'text-amber-500' },
+  'service-broker': { label: 'Service Brokers', icon: Cable, color: 'text-cyan-500' },
+  'custom-connector': { label: 'Custom Connectors', icon: Settings2, color: 'text-orange-500' },
+  'component': { label: 'Components', icon: Package, color: 'text-indigo-500' },
+  'node': { label: 'Nodes', icon: Code2, color: 'text-red-500' },
+};
+
 // Platform detail dialog
 function PlatformDetailDialog({
   open,
@@ -298,13 +311,33 @@ function PlatformDetailDialog({
 }) {
   const [selectedConnector, setSelectedConnector] = useState<Integration | null>(null);
   const [search, setSearch] = useState('');
+  const [activeCategory, setActiveCategory] = useState<string>('all');
 
   if (!platform) return null;
 
-  const filteredConnectors = platform.connectors.filter(
-    (c) =>
+  // Get unique categories from connectors
+  const availableCategories = Array.from(
+    new Set(platform.connectors.map((c) => c.category || 'workflow'))
+  );
+
+  const filteredConnectors = platform.connectors.filter((c) => {
+    const matchesSearch =
       c.name.toLowerCase().includes(search.toLowerCase()) ||
-      c.pluginName.toLowerCase().includes(search.toLowerCase())
+      c.pluginName.toLowerCase().includes(search.toLowerCase());
+    const matchesCategory =
+      activeCategory === 'all' || (c.category || 'workflow') === activeCategory;
+    return matchesSearch && matchesCategory;
+  });
+
+  // Group connectors by category for display
+  const connectorsByCategory = platform.connectors.reduce(
+    (acc, connector) => {
+      const category = connector.category || 'workflow';
+      if (!acc[category]) acc[category] = [];
+      acc[category].push(connector);
+      return acc;
+    },
+    {} as Record<string, Integration[]>
   );
 
   if (selectedConnector) {
@@ -338,6 +371,36 @@ function PlatformDetailDialog({
         </DialogHeader>
 
         <div className="mt-4">
+          {/* Category Tabs */}
+          {availableCategories.length > 1 && (
+            <div className="flex flex-wrap gap-2 mb-4">
+              <Button
+                variant={activeCategory === 'all' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setActiveCategory('all')}
+              >
+                All ({platform.connectors.length})
+              </Button>
+              {availableCategories.map((category) => {
+                const config = CATEGORY_CONFIG[category];
+                const Icon = config.icon;
+                const count = connectorsByCategory[category]?.length || 0;
+                return (
+                  <Button
+                    key={category}
+                    variant={activeCategory === category ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setActiveCategory(category)}
+                    className="gap-1"
+                  >
+                    <Icon className={`w-3 h-3 ${activeCategory === category ? '' : config.color}`} />
+                    {config.label} ({count})
+                  </Button>
+                );
+              })}
+            </div>
+          )}
+
           <div className="flex items-center gap-2 mb-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -354,6 +417,9 @@ function PlatformDetailDialog({
             {filteredConnectors.length > 0 ? (
               filteredConnectors.map((connector) => {
                 const isInstalled = installedPluginIds.includes(connector.pluginId);
+                const category = connector.category || 'workflow-actions';
+                const categoryConfig = CATEGORY_CONFIG[category];
+                const CategoryIcon = categoryConfig?.icon || FileJson;
                 return (
                   <div
                     key={connector.id}
@@ -362,11 +428,14 @@ function PlatformDetailDialog({
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <FileJson className="w-4 h-4 text-muted-foreground" />
+                        <CategoryIcon className={`w-4 h-4 ${categoryConfig?.color || 'text-muted-foreground'}`} />
                         <div>
                           <span className="font-medium text-sm">{connector.name}</span>
                           <p className="text-xs text-muted-foreground">
                             {connector.pluginName}
+                            {activeCategory === 'all' && categoryConfig && (
+                              <span className="ml-2 opacity-75">• {categoryConfig.label}</span>
+                            )}
                           </p>
                         </div>
                       </div>

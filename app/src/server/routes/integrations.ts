@@ -14,9 +14,21 @@ interface ConnectorAction {
   description: string;
 }
 
+// Connector category types
+type ConnectorCategory = 
+  | 'workflow'           // Workflow actions/connectors
+  | 'form-plugin'        // Form controls and plugins 
+  | 'form-control'       // UI form controls
+  | 'data-access'        // Data access objects (SmartObjects, Service Brokers)
+  | 'service-broker'     // Service broker/REST integration
+  | 'custom-connector'   // Custom API connectors
+  | 'component'          // Reusable UI components
+  | 'node';              // Automation nodes
+
 interface PlatformConnector {
   id: string;
   name: string;
+  category: ConnectorCategory;
   pluginId: string;
   pluginName: string;
   downloadUrl?: string;
@@ -24,6 +36,9 @@ interface PlatformConnector {
   repositoryUrl?: string;
   setupSteps?: string[];
   actions?: ConnectorAction[];
+  formEvents?: string[];       // For form plugins: events they can hook into
+  dataOperations?: string[];   // For data access: CRUD operations supported
+  controlType?: string;        // For form controls: text, dropdown, grid, etc.
 }
 
 interface Platform {
@@ -32,86 +47,292 @@ interface Platform {
   format: string;
   description: string;
   status: 'ready' | 'in-development' | 'planned';
+  documentationUrl?: string;
+  categories: {
+    workflow?: boolean;
+    formPlugins?: boolean;
+    formControls?: boolean;
+    dataAccess?: boolean;
+  };
   connectors: PlatformConnector[];
 }
 
 // Static platform connectors catalog
 const PLATFORM_CONNECTORS: Platform[] = [
+  // ============================================================================
+  // Nintex Forms (Form Plugins)
+  // ============================================================================
   {
-    id: 'power-automate',
-    name: 'Power Automate',
-    format: 'OpenAPI Custom Connector',
-    description: 'Connect FlowForge services to Microsoft Power Automate flows for enterprise automation.',
+    id: 'nintex-forms',
+    name: 'Nintex Forms',
+    format: 'Form Plugins (JavaScript)',
+    description: 'Extend Nintex Forms with custom controls, validators, and data integrations using FlowForge services.',
     status: 'in-development',
+    documentationUrl: 'https://help.nintex.com/en-US/formplugins/Home.htm',
+    categories: {
+      formPlugins: true,
+      formControls: true,
+      dataAccess: true,
+    },
     connectors: [
+      // Form Plugin - AI Text Assistant
       {
-        id: 'pa-llm-service',
-        name: 'LLM Service Connector',
+        id: 'nf-ai-text-plugin',
+        name: 'AI Text Assistant Plugin',
+        category: 'form-plugin',
         pluginId: 'llm-service',
         pluginName: 'LLM Service',
-        repositoryUrl: 'https://github.com/danstoll/forgehooks-registry/tree/master/integrations/power-automate/LlmService',
+        repositoryUrl: 'https://github.com/danstoll/forgehooks-registry/tree/master/integrations/nintex-forms/plugins/AiTextAssistant',
+        documentationUrl: 'https://help.nintex.com/en-US/formplugins/Reference/PluginClass.htm',
         setupSteps: [
-          'Download the connector package',
-          'Go to Power Automate > Data > Custom Connectors',
-          'Click "New custom connector" > "Import an OpenAPI file"',
-          'Upload the connector file and configure security',
-          'Create a connection with your FlowForge API key',
+          'Download the plugin JavaScript file',
+          'In Nintex Forms designer, go to Form Settings > Custom JavaScript',
+          'Upload or paste the plugin code',
+          'Configure the FlowForge endpoint URL and API key',
+          'Use NWC.FormPlugins.register() to activate the plugin',
         ],
+        formEvents: ['NWC.FormReady', 'NWC.BeforeSave', 'NWC.AfterSave', 'NWC.ControlChange'],
         actions: [
-          { name: 'Chat Completion', method: 'POST', path: '/chat', description: 'Generate AI chat responses' },
-          { name: 'Text Generation', method: 'POST', path: '/generate', description: 'Generate text from a prompt' },
-          { name: 'Create Embeddings', method: 'POST', path: '/embeddings', description: 'Generate vector embeddings' },
+          { name: 'Auto-complete text', method: 'POST', path: '/generate', description: 'AI-powered text completion for form fields' },
+          { name: 'Summarize content', method: 'POST', path: '/summarize', description: 'Summarize long text inputs' },
+          { name: 'Translate text', method: 'POST', path: '/translate', description: 'Translate form text to other languages' },
         ],
       },
+      // Form Plugin - Smart Validator
       {
-        id: 'pa-formula-engine',
-        name: 'Formula Engine Connector',
+        id: 'nf-smart-validator',
+        name: 'Smart Validator Plugin',
+        category: 'form-plugin',
+        pluginId: 'data-transform-service',
+        pluginName: 'Data Transform',
+        repositoryUrl: 'https://github.com/danstoll/forgehooks-registry/tree/master/integrations/nintex-forms/plugins/SmartValidator',
+        formEvents: ['NWC.BeforeSave', 'NWC.ControlChange'],
+        actions: [
+          { name: 'Validate email format', method: 'POST', path: '/validate/email', description: 'Advanced email validation' },
+          { name: 'Validate address', method: 'POST', path: '/validate/address', description: 'Address standardization and validation' },
+          { name: 'Validate phone', method: 'POST', path: '/validate/phone', description: 'International phone number validation' },
+        ],
+      },
+      // Form Plugin - Formula Engine
+      {
+        id: 'nf-formula-plugin',
+        name: 'Formula Engine Plugin',
+        category: 'form-plugin',
         pluginId: 'formula-engine',
         pluginName: 'Formula Engine',
-        repositoryUrl: 'https://github.com/danstoll/forgehooks-registry/tree/master/integrations/power-automate/FormulaEngine',
+        repositoryUrl: 'https://github.com/danstoll/forgehooks-registry/tree/master/integrations/nintex-forms/plugins/FormulaEngine',
+        formEvents: ['NWC.ControlChange', 'NWC.FormReady'],
         actions: [
-          { name: 'Evaluate Formula', method: 'POST', path: '/evaluate', description: 'Evaluate an Excel-style formula' },
-          { name: 'VLOOKUP', method: 'POST', path: '/vlookup', description: 'Perform a VLOOKUP operation' },
-          { name: 'SUMIF', method: 'POST', path: '/sumif', description: 'Sum values matching criteria' },
+          { name: 'Calculate formula', method: 'POST', path: '/evaluate', description: 'Excel-style formula evaluation' },
+          { name: 'Date calculation', method: 'POST', path: '/date-calc', description: 'Business day calculations' },
         ],
       },
+      // Form Control - AI Chatbot
       {
-        id: 'pa-crypto-service',
-        name: 'Crypto Service Connector',
-        pluginId: 'crypto-service',
-        pluginName: 'Crypto Service',
-        repositoryUrl: 'https://github.com/danstoll/forgehooks-registry/tree/master/integrations/power-automate/CryptoService',
+        id: 'nf-chatbot-control',
+        name: 'AI Chatbot Control',
+        category: 'form-control',
+        pluginId: 'llm-service',
+        pluginName: 'LLM Service',
+        controlType: 'custom-control',
+        repositoryUrl: 'https://github.com/danstoll/forgehooks-registry/tree/master/integrations/nintex-forms/controls/AiChatbot',
+        setupSteps: [
+          'Add a Panel control to your form',
+          'Apply the chatbot CSS and JavaScript',
+          'Configure the chat endpoint and context',
+          'Users can interact with AI within the form',
+        ],
         actions: [
-          { name: 'Encrypt', method: 'POST', path: '/encrypt', description: 'Encrypt data with AES-256' },
-          { name: 'Decrypt', method: 'POST', path: '/decrypt', description: 'Decrypt AES-256 encrypted data' },
-          { name: 'Hash', method: 'POST', path: '/hash', description: 'Generate cryptographic hash' },
-          { name: 'Sign JWT', method: 'POST', path: '/jwt/sign', description: 'Create a signed JWT token' },
+          { name: 'Send message', method: 'POST', path: '/chat', description: 'Send chat message and get AI response' },
+          { name: 'Get suggestions', method: 'POST', path: '/suggestions', description: 'Get contextual suggestions' },
         ],
       },
+      // Data Access - External Data Plugin
       {
-        id: 'pa-streaming-file',
-        name: 'File Service Connector',
-        pluginId: 'streaming-file-service',
-        pluginName: 'Streaming File Service',
-        repositoryUrl: 'https://github.com/danstoll/forgehooks-registry/tree/master/integrations/power-automate/StreamingFileService',
+        id: 'nf-data-lookup',
+        name: 'FlowForge Data Lookup',
+        category: 'data-access',
+        pluginId: 'gateway',
+        pluginName: 'FlowForge Gateway',
+        repositoryUrl: 'https://github.com/danstoll/forgehooks-registry/tree/master/integrations/nintex-forms/plugins/DataLookup',
+        dataOperations: ['read', 'search'],
+        formEvents: ['NWC.ControlChange'],
         actions: [
-          { name: 'Upload File', method: 'POST', path: '/upload', description: 'Upload a file with chunked transfer' },
-          { name: 'Download File', method: 'GET', path: '/download', description: 'Download a file' },
-          { name: 'Convert File', method: 'POST', path: '/convert', description: 'Convert file format' },
+          { name: 'Lookup data', method: 'GET', path: '/lookup', description: 'Fetch external data for dropdowns/lookups' },
+          { name: 'Search records', method: 'POST', path: '/search', description: 'Search external data sources' },
         ],
       },
     ],
   },
+
+  // ============================================================================
+  // Nintex K2 (Service Brokers, SmartObjects, Form Controls)
+  // ============================================================================
+  {
+    id: 'nintex-k2',
+    name: 'Nintex K2',
+    format: 'Service Brokers + SmartObjects + Form Controls',
+    description: 'Full K2 integration with Service Brokers for data access, SmartObjects for data modeling, and custom SmartForm controls.',
+    status: 'in-development',
+    documentationUrl: 'https://help.nintex.com/en-US/nintexautomation/devref/current/Content/WelcomeLandingPages/NintexK2Landing.htm',
+    categories: {
+      workflow: true,
+      formControls: true,
+      dataAccess: true,
+    },
+    connectors: [
+      // Service Broker - FlowForge REST
+      {
+        id: 'k2-flowforge-broker',
+        name: 'FlowForge REST Service Broker',
+        category: 'service-broker',
+        pluginId: 'gateway',
+        pluginName: 'FlowForge Gateway',
+        repositoryUrl: 'https://github.com/danstoll/forgehooks-registry/tree/master/integrations/nintex-k2/service-brokers/FlowForgeRest',
+        documentationUrl: 'https://help.nintex.com/en-US/nintexautomation/devref/current/Content/Extend/DeveloperReference/CustomServiceBrokers/CustomServiceBrokers.htm',
+        setupSteps: [
+          'Deploy the Service Broker DLL to K2 blackpearl server',
+          'Register the Service Broker in K2 Management',
+          'Create a Service Instance with your FlowForge endpoint',
+          'Configure authentication with API key',
+          'Service Objects will be available for SmartObject creation',
+        ],
+        dataOperations: ['create', 'read', 'update', 'delete', 'execute'],
+        actions: [
+          { name: 'Execute Plugin', method: 'POST', path: '/execute', description: 'Execute any FlowForge plugin' },
+          { name: 'List Services', method: 'GET', path: '/services', description: 'Get available FlowForge services' },
+        ],
+      },
+      // SmartObject - LLM Service
+      {
+        id: 'k2-llm-smartobject',
+        name: 'LLM Service SmartObject',
+        category: 'data-access',
+        pluginId: 'llm-service',
+        pluginName: 'LLM Service',
+        repositoryUrl: 'https://github.com/danstoll/forgehooks-registry/tree/master/integrations/nintex-k2/smartobjects/LlmService',
+        documentationUrl: 'https://help.nintex.com/en-US/nintexautomation/devref/current/Content/Extend/DeveloperReference/SmOnlineHelpDevelopersReference/SmartObjectsOverview.htm',
+        dataOperations: ['execute'],
+        setupSteps: [
+          'Import the SmartObject definition into K2 Designer',
+          'Configure the FlowForge Service Instance',
+          'Map input/output properties',
+          'Use in workflows or SmartForms',
+        ],
+        actions: [
+          { name: 'ChatCompletion', method: 'POST', path: '/chat', description: 'Generate AI chat response' },
+          { name: 'TextGeneration', method: 'POST', path: '/generate', description: 'Generate text from prompt' },
+          { name: 'CreateEmbeddings', method: 'POST', path: '/embeddings', description: 'Generate vector embeddings' },
+          { name: 'Summarize', method: 'POST', path: '/summarize', description: 'Summarize text content' },
+        ],
+      },
+      // SmartObject - Crypto Service
+      {
+        id: 'k2-crypto-smartobject',
+        name: 'Crypto Service SmartObject',
+        category: 'data-access',
+        pluginId: 'crypto-service',
+        pluginName: 'Crypto Service',
+        repositoryUrl: 'https://github.com/danstoll/forgehooks-registry/tree/master/integrations/nintex-k2/smartobjects/CryptoService',
+        dataOperations: ['execute'],
+        actions: [
+          { name: 'Encrypt', method: 'POST', path: '/encrypt', description: 'Encrypt sensitive data' },
+          { name: 'Decrypt', method: 'POST', path: '/decrypt', description: 'Decrypt encrypted data' },
+          { name: 'Hash', method: 'POST', path: '/hash', description: 'Generate cryptographic hash' },
+          { name: 'SignJWT', method: 'POST', path: '/jwt/sign', description: 'Sign a JWT token' },
+          { name: 'VerifyJWT', method: 'POST', path: '/jwt/verify', description: 'Verify JWT token' },
+        ],
+      },
+      // SmartObject - Formula Engine
+      {
+        id: 'k2-formula-smartobject',
+        name: 'Formula Engine SmartObject',
+        category: 'data-access',
+        pluginId: 'formula-engine',
+        pluginName: 'Formula Engine',
+        repositoryUrl: 'https://github.com/danstoll/forgehooks-registry/tree/master/integrations/nintex-k2/smartobjects/FormulaEngine',
+        dataOperations: ['execute'],
+        actions: [
+          { name: 'EvaluateFormula', method: 'POST', path: '/evaluate', description: 'Evaluate Excel-style formula' },
+          { name: 'VLOOKUP', method: 'POST', path: '/vlookup', description: 'Perform VLOOKUP operation' },
+          { name: 'SUMIF', method: 'POST', path: '/sumif', description: 'Sum values matching criteria' },
+        ],
+      },
+      // Form Control - AI Text Input
+      {
+        id: 'k2-ai-textbox',
+        name: 'AI-Enhanced TextBox Control',
+        category: 'form-control',
+        pluginId: 'llm-service',
+        pluginName: 'LLM Service',
+        controlType: 'textbox',
+        repositoryUrl: 'https://github.com/danstoll/forgehooks-registry/tree/master/integrations/nintex-k2/controls/AiTextBox',
+        documentationUrl: 'https://help.nintex.com/en-US/nintexautomation/devref/current/Content/Extend/DeveloperReference/SmartForms/CustomFormControlDevelopment.htm',
+        setupSteps: [
+          'Deploy the control assembly to K2 server',
+          'Register in K2 Designer control toolbox',
+          'Drag control onto SmartForm canvas',
+          'Configure AI settings and endpoint',
+        ],
+        actions: [
+          { name: 'Auto-complete', method: 'POST', path: '/complete', description: 'AI text auto-completion' },
+          { name: 'Spell check', method: 'POST', path: '/spellcheck', description: 'AI-powered spell checking' },
+        ],
+      },
+      // Form Control - Smart Lookup
+      {
+        id: 'k2-smart-lookup',
+        name: 'Smart Lookup Control',
+        category: 'form-control',
+        pluginId: 'gateway',
+        pluginName: 'FlowForge Gateway',
+        controlType: 'dropdown',
+        repositoryUrl: 'https://github.com/danstoll/forgehooks-registry/tree/master/integrations/nintex-k2/controls/SmartLookup',
+        setupSteps: [
+          'Deploy the control to K2 server',
+          'Add to SmartForm and bind to SmartObject',
+          'Configure search settings and display',
+        ],
+        actions: [
+          { name: 'Search', method: 'POST', path: '/search', description: 'Fuzzy search with AI ranking' },
+          { name: 'Get suggestions', method: 'GET', path: '/suggest', description: 'Type-ahead suggestions' },
+        ],
+      },
+      // Form Control - Document Viewer
+      {
+        id: 'k2-doc-viewer',
+        name: 'Document Viewer Control',
+        category: 'form-control',
+        pluginId: 'pdf-service',
+        pluginName: 'PDF Service',
+        controlType: 'viewer',
+        repositoryUrl: 'https://github.com/danstoll/forgehooks-registry/tree/master/integrations/nintex-k2/controls/DocumentViewer',
+        actions: [
+          { name: 'Render PDF', method: 'GET', path: '/render', description: 'Render PDF in browser' },
+          { name: 'Extract text', method: 'POST', path: '/extract', description: 'Extract text from document' },
+        ],
+      },
+    ],
+  },
+
+  // ============================================================================
+  // Nintex Workflow Cloud (Xtensions)
+  // ============================================================================
   {
     id: 'nintex-cloud',
     name: 'Nintex Workflow Cloud',
     format: 'OpenAPI Xtension',
     description: 'Extend Nintex Workflow Cloud with FlowForge AI and data processing capabilities.',
     status: 'ready',
+    documentationUrl: 'https://help.nintex.com/en-US/xtensions/Home.htm',
+    categories: {
+      workflow: true,
+    },
     connectors: [
       {
         id: 'nwc-llm-service',
         name: 'LLM Service Xtension',
+        category: 'workflow',
         pluginId: 'llm-service',
         pluginName: 'LLM Service',
         downloadUrl: 'https://raw.githubusercontent.com/danstoll/forgehooks-registry/master/integrations/nintex-cloud/LlmService/xtension.json',
@@ -132,6 +353,7 @@ const PLATFORM_CONNECTORS: Platform[] = [
       {
         id: 'nwc-formula-engine',
         name: 'Formula Engine Xtension',
+        category: 'workflow',
         pluginId: 'formula-engine',
         pluginName: 'Formula Engine',
         downloadUrl: 'https://raw.githubusercontent.com/danstoll/forgehooks-registry/master/integrations/nintex-cloud/FormulaEngine/xtension.json',
@@ -144,6 +366,7 @@ const PLATFORM_CONNECTORS: Platform[] = [
       {
         id: 'nwc-crypto-service',
         name: 'Crypto Service Xtension',
+        category: 'workflow',
         pluginId: 'crypto-service',
         pluginName: 'Crypto Service',
         downloadUrl: 'https://raw.githubusercontent.com/danstoll/forgehooks-registry/master/integrations/nintex-cloud/CryptoService/xtension.json',
@@ -157,6 +380,7 @@ const PLATFORM_CONNECTORS: Platform[] = [
       {
         id: 'nwc-streaming-file',
         name: 'File Service Xtension',
+        category: 'workflow',
         pluginId: 'streaming-file-service',
         pluginName: 'Streaming File Service',
         downloadUrl: 'https://raw.githubusercontent.com/danstoll/forgehooks-registry/master/integrations/nintex-cloud/StreamingFileService/xtension.json',
@@ -169,6 +393,7 @@ const PLATFORM_CONNECTORS: Platform[] = [
       {
         id: 'nwc-gateway',
         name: 'Gateway Xtension',
+        category: 'workflow',
         pluginId: 'gateway',
         pluginName: 'FlowForge Gateway',
         downloadUrl: 'https://raw.githubusercontent.com/danstoll/forgehooks-registry/master/integrations/nintex-cloud/Gateway/xtension.json',
@@ -180,27 +405,154 @@ const PLATFORM_CONNECTORS: Platform[] = [
       },
     ],
   },
+
+  // ============================================================================
+  // Power Platform (Power Automate + Power Apps)
+  // ============================================================================
   {
-    id: 'nintex-k2',
-    name: 'Nintex K2',
-    format: 'Swagger + SmartObjects',
-    description: 'Integrate FlowForge services into K2 SmartForms and workflows.',
+    id: 'power-platform',
+    name: 'Microsoft Power Platform',
+    format: 'Custom Connectors + PCF Controls',
+    description: 'Connect FlowForge to Power Automate flows, Power Apps, and Dataverse with custom connectors and PCF components.',
     status: 'in-development',
-    connectors: [],
+    documentationUrl: 'https://learn.microsoft.com/en-us/connectors/custom-connectors/',
+    categories: {
+      workflow: true,
+      formControls: true,
+      dataAccess: true,
+    },
+    connectors: [
+      // Custom Connector - LLM Service
+      {
+        id: 'pa-llm-service',
+        name: 'LLM Service Connector',
+        category: 'custom-connector',
+        pluginId: 'llm-service',
+        pluginName: 'LLM Service',
+        repositoryUrl: 'https://github.com/danstoll/forgehooks-registry/tree/master/integrations/power-platform/connectors/LlmService',
+        documentationUrl: 'https://learn.microsoft.com/en-us/connectors/custom-connectors/define-openapi-definition',
+        setupSteps: [
+          'Download the connector package (apiDefinition.swagger.json)',
+          'Go to Power Automate > Data > Custom Connectors',
+          'Click "New custom connector" > "Import an OpenAPI file"',
+          'Upload the connector file and configure security',
+          'Create a connection with your FlowForge API key',
+        ],
+        actions: [
+          { name: 'Chat Completion', method: 'POST', path: '/chat', description: 'Generate AI chat responses' },
+          { name: 'Text Generation', method: 'POST', path: '/generate', description: 'Generate text from a prompt' },
+          { name: 'Create Embeddings', method: 'POST', path: '/embeddings', description: 'Generate vector embeddings' },
+        ],
+      },
+      // Custom Connector - Formula Engine
+      {
+        id: 'pa-formula-engine',
+        name: 'Formula Engine Connector',
+        category: 'custom-connector',
+        pluginId: 'formula-engine',
+        pluginName: 'Formula Engine',
+        repositoryUrl: 'https://github.com/danstoll/forgehooks-registry/tree/master/integrations/power-platform/connectors/FormulaEngine',
+        actions: [
+          { name: 'Evaluate Formula', method: 'POST', path: '/evaluate', description: 'Evaluate an Excel-style formula' },
+          { name: 'VLOOKUP', method: 'POST', path: '/vlookup', description: 'Perform a VLOOKUP operation' },
+          { name: 'SUMIF', method: 'POST', path: '/sumif', description: 'Sum values matching criteria' },
+        ],
+      },
+      // Custom Connector - Crypto Service
+      {
+        id: 'pa-crypto-service',
+        name: 'Crypto Service Connector',
+        category: 'custom-connector',
+        pluginId: 'crypto-service',
+        pluginName: 'Crypto Service',
+        repositoryUrl: 'https://github.com/danstoll/forgehooks-registry/tree/master/integrations/power-platform/connectors/CryptoService',
+        actions: [
+          { name: 'Encrypt', method: 'POST', path: '/encrypt', description: 'Encrypt data with AES-256' },
+          { name: 'Decrypt', method: 'POST', path: '/decrypt', description: 'Decrypt AES-256 encrypted data' },
+          { name: 'Hash', method: 'POST', path: '/hash', description: 'Generate cryptographic hash' },
+          { name: 'Sign JWT', method: 'POST', path: '/jwt/sign', description: 'Create a signed JWT token' },
+        ],
+      },
+      // PCF Control - AI Text Input
+      {
+        id: 'pa-ai-textinput',
+        name: 'AI Text Input (PCF)',
+        category: 'form-control',
+        pluginId: 'llm-service',
+        pluginName: 'LLM Service',
+        controlType: 'textbox',
+        repositoryUrl: 'https://github.com/danstoll/forgehooks-registry/tree/master/integrations/power-platform/pcf/AiTextInput',
+        documentationUrl: 'https://learn.microsoft.com/en-us/power-apps/developer/component-framework/overview',
+        setupSteps: [
+          'Download the PCF solution package (.zip)',
+          'Import into your Power Apps environment',
+          'Add the control to your Canvas or Model-driven app',
+          'Configure FlowForge connection in control properties',
+        ],
+        actions: [
+          { name: 'Auto-complete', method: 'POST', path: '/complete', description: 'AI-powered text completion' },
+          { name: 'Suggestions', method: 'POST', path: '/suggest', description: 'Get smart suggestions' },
+        ],
+      },
+      // PCF Control - Document Scanner
+      {
+        id: 'pa-doc-scanner',
+        name: 'Document Scanner (PCF)',
+        category: 'form-control',
+        pluginId: 'ocr-service',
+        pluginName: 'OCR Service',
+        controlType: 'scanner',
+        repositoryUrl: 'https://github.com/danstoll/forgehooks-registry/tree/master/integrations/power-platform/pcf/DocumentScanner',
+        actions: [
+          { name: 'Scan document', method: 'POST', path: '/scan', description: 'Scan and OCR documents' },
+          { name: 'Extract fields', method: 'POST', path: '/extract', description: 'Extract form fields from images' },
+        ],
+      },
+      // Virtual Table - FlowForge Data
+      {
+        id: 'pa-virtual-table',
+        name: 'FlowForge Virtual Table',
+        category: 'data-access',
+        pluginId: 'gateway',
+        pluginName: 'FlowForge Gateway',
+        repositoryUrl: 'https://github.com/danstoll/forgehooks-registry/tree/master/integrations/power-platform/virtual-tables/FlowForgeData',
+        documentationUrl: 'https://learn.microsoft.com/en-us/power-apps/maker/data-platform/create-edit-virtual-entities',
+        dataOperations: ['read', 'list'],
+        setupSteps: [
+          'Register the virtual table provider in Dataverse',
+          'Create virtual table entity definition',
+          'Configure FlowForge endpoint and authentication',
+          'Use in Power Apps like any Dataverse table',
+        ],
+        actions: [
+          { name: 'Get records', method: 'GET', path: '/data', description: 'Retrieve records from FlowForge' },
+          { name: 'Query data', method: 'POST', path: '/query', description: 'Query with filters' },
+        ],
+      },
+    ],
   },
+
+  // ============================================================================
+  // n8n
+  // ============================================================================
   {
     id: 'n8n',
     name: 'n8n',
-    format: 'TypeScript npm package',
+    format: 'Community Nodes (TypeScript)',
     description: 'Use FlowForge nodes in your n8n self-hosted automation workflows.',
     status: 'in-development',
+    documentationUrl: 'https://docs.n8n.io/integrations/community-nodes/',
+    categories: {
+      workflow: true,
+    },
     connectors: [
       {
         id: 'n8n-flowforge',
-        name: 'FlowForge Community Node',
+        name: 'FlowForge Node',
+        category: 'node',
         pluginId: 'flowforge',
         pluginName: 'FlowForge',
-        repositoryUrl: 'https://github.com/danstoll/forgehooks-registry/tree/master/integrations/n8n',
+        repositoryUrl: 'https://github.com/danstoll/forgehooks-registry/tree/master/integrations/n8n/nodes/FlowForge',
         setupSteps: [
           'In n8n, go to Settings > Community Nodes',
           'Install n8n-nodes-flowforge package',
@@ -212,39 +564,290 @@ const PLATFORM_CONNECTORS: Platform[] = [
           { name: 'List Plugins', method: 'GET', path: '/plugins', description: 'Get installed plugins' },
         ],
       },
+      {
+        id: 'n8n-llm-node',
+        name: 'FlowForge AI Node',
+        category: 'node',
+        pluginId: 'llm-service',
+        pluginName: 'LLM Service',
+        repositoryUrl: 'https://github.com/danstoll/forgehooks-registry/tree/master/integrations/n8n/nodes/FlowForgeAI',
+        actions: [
+          { name: 'Chat', method: 'POST', path: '/chat', description: 'AI chat completion' },
+          { name: 'Generate', method: 'POST', path: '/generate', description: 'Text generation' },
+          { name: 'Embeddings', method: 'POST', path: '/embeddings', description: 'Create embeddings' },
+        ],
+      },
     ],
   },
+
+  // ============================================================================
+  // Salesforce
+  // ============================================================================
   {
     id: 'salesforce',
     name: 'Salesforce',
-    format: 'External Services + Apex',
-    description: 'Call FlowForge services from Salesforce Flow Builder and Apex code.',
+    format: 'External Services + Apex + LWC',
+    description: 'Call FlowForge services from Salesforce Flow Builder, Apex code, and Lightning Web Components.',
     status: 'planned',
-    connectors: [],
+    documentationUrl: 'https://developer.salesforce.com/docs/atlas.en-us.externalservices.meta/externalservices/',
+    categories: {
+      workflow: true,
+      formControls: true,
+      dataAccess: true,
+    },
+    connectors: [
+      // External Service
+      {
+        id: 'sf-external-service',
+        name: 'FlowForge External Service',
+        category: 'workflow',
+        pluginId: 'gateway',
+        pluginName: 'FlowForge Gateway',
+        repositoryUrl: 'https://github.com/danstoll/forgehooks-registry/tree/master/integrations/salesforce/external-services/FlowForge',
+        setupSteps: [
+          'Upload OpenAPI spec to Salesforce Setup > External Services',
+          'Create Named Credential for FlowForge endpoint',
+          'Generate Apex classes from the spec',
+          'Use invocable methods in Flow Builder',
+        ],
+        actions: [
+          { name: 'Execute action', method: 'POST', path: '/execute', description: 'Execute FlowForge plugin' },
+        ],
+      },
+      // Apex Classes
+      {
+        id: 'sf-apex-wrapper',
+        name: 'FlowForge Apex Wrapper',
+        category: 'data-access',
+        pluginId: 'gateway',
+        pluginName: 'FlowForge Gateway',
+        repositoryUrl: 'https://github.com/danstoll/forgehooks-registry/tree/master/integrations/salesforce/apex/FlowForgeWrapper',
+        dataOperations: ['execute'],
+        actions: [
+          { name: 'callFlowForge', method: 'POST', path: '/api', description: 'Generic FlowForge API call' },
+          { name: 'chatCompletion', method: 'POST', path: '/chat', description: 'AI chat completion' },
+        ],
+      },
+      // Lightning Web Component
+      {
+        id: 'sf-lwc-ai-input',
+        name: 'AI Input LWC',
+        category: 'form-control',
+        pluginId: 'llm-service',
+        pluginName: 'LLM Service',
+        controlType: 'textbox',
+        repositoryUrl: 'https://github.com/danstoll/forgehooks-registry/tree/master/integrations/salesforce/lwc/aiInput',
+        actions: [
+          { name: 'Auto-complete', method: 'POST', path: '/complete', description: 'AI text completion' },
+        ],
+      },
+    ],
   },
+
+  // ============================================================================
+  // ServiceNow
+  // ============================================================================
   {
     id: 'servicenow',
     name: 'ServiceNow',
-    format: 'IntegrationHub Spoke',
-    description: 'Add FlowForge capabilities to ServiceNow Flow Designer workflows.',
+    format: 'IntegrationHub Spoke + UI Components',
+    description: 'Add FlowForge capabilities to ServiceNow Flow Designer workflows and Service Portal widgets.',
     status: 'planned',
-    connectors: [],
+    documentationUrl: 'https://developer.servicenow.com/dev.do#!/reference/api/latest',
+    categories: {
+      workflow: true,
+      formControls: true,
+      dataAccess: true,
+    },
+    connectors: [
+      // IntegrationHub Spoke
+      {
+        id: 'snow-spoke',
+        name: 'FlowForge Spoke',
+        category: 'workflow',
+        pluginId: 'gateway',
+        pluginName: 'FlowForge Gateway',
+        repositoryUrl: 'https://github.com/danstoll/forgehooks-registry/tree/master/integrations/servicenow/spoke/FlowForge',
+        setupSteps: [
+          'Import the Spoke application into ServiceNow',
+          'Configure Connection & Credential Alias',
+          'Actions will appear in Flow Designer',
+        ],
+        actions: [
+          { name: 'Execute Plugin', method: 'POST', path: '/execute', description: 'Execute FlowForge plugin' },
+          { name: 'AI Chat', method: 'POST', path: '/chat', description: 'AI chat completion' },
+        ],
+      },
+      // Scripted REST API
+      {
+        id: 'snow-scripted-rest',
+        name: 'FlowForge Scripted REST',
+        category: 'data-access',
+        pluginId: 'gateway',
+        pluginName: 'FlowForge Gateway',
+        repositoryUrl: 'https://github.com/danstoll/forgehooks-registry/tree/master/integrations/servicenow/scripted-rest/FlowForge',
+        dataOperations: ['execute'],
+      },
+      // Service Portal Widget
+      {
+        id: 'snow-widget-ai',
+        name: 'AI Assistant Widget',
+        category: 'form-control',
+        pluginId: 'llm-service',
+        pluginName: 'LLM Service',
+        controlType: 'widget',
+        repositoryUrl: 'https://github.com/danstoll/forgehooks-registry/tree/master/integrations/servicenow/widgets/AiAssistant',
+      },
+    ],
   },
+
+  // ============================================================================
+  // OutSystems
+  // ============================================================================
   {
     id: 'outsystems',
     name: 'OutSystems',
-    format: 'Forge Component',
-    description: 'Consume FlowForge REST APIs in OutSystems applications.',
+    format: 'Forge Component + UI Blocks',
+    description: 'Consume FlowForge REST APIs in OutSystems applications with ready-to-use UI blocks.',
     status: 'planned',
-    connectors: [],
+    documentationUrl: 'https://success.outsystems.com/documentation/11/developing_an_application/integrate_with_external_systems/',
+    categories: {
+      workflow: true,
+      formControls: true,
+      dataAccess: true,
+    },
+    connectors: [
+      // REST Integration
+      {
+        id: 'os-rest-integration',
+        name: 'FlowForge REST Integration',
+        category: 'data-access',
+        pluginId: 'gateway',
+        pluginName: 'FlowForge Gateway',
+        repositoryUrl: 'https://github.com/danstoll/forgehooks-registry/tree/master/integrations/outsystems/rest/FlowForge',
+        dataOperations: ['execute'],
+        setupSteps: [
+          'Import the Forge component into Service Studio',
+          'Configure the REST endpoint and API key',
+          'Use server actions in your application logic',
+        ],
+      },
+      // UI Block - AI Input
+      {
+        id: 'os-ai-input-block',
+        name: 'AI Input Block',
+        category: 'form-control',
+        pluginId: 'llm-service',
+        pluginName: 'LLM Service',
+        controlType: 'textbox',
+        repositoryUrl: 'https://github.com/danstoll/forgehooks-registry/tree/master/integrations/outsystems/blocks/AiInput',
+      },
+    ],
   },
+
+  // ============================================================================
+  // Mendix
+  // ============================================================================
   {
     id: 'mendix',
     name: 'Mendix',
-    format: 'Marketplace Module',
-    description: 'Integrate FlowForge services into Mendix low-code applications.',
+    format: 'Marketplace Module + Widgets',
+    description: 'Integrate FlowForge services into Mendix low-code applications with pluggable widgets.',
     status: 'planned',
-    connectors: [],
+    documentationUrl: 'https://docs.mendix.com/appstore/creating-content/connector-guide/',
+    categories: {
+      workflow: true,
+      formControls: true,
+      dataAccess: true,
+    },
+    connectors: [
+      // Connector Module
+      {
+        id: 'mx-connector',
+        name: 'FlowForge Connector Module',
+        category: 'data-access',
+        pluginId: 'gateway',
+        pluginName: 'FlowForge Gateway',
+        repositoryUrl: 'https://github.com/danstoll/forgehooks-registry/tree/master/integrations/mendix/modules/FlowForgeConnector',
+        dataOperations: ['execute'],
+        setupSteps: [
+          'Download module from Mendix Marketplace',
+          'Import into your Mendix project',
+          'Configure constants for endpoint and API key',
+          'Use microflow actions in your logic',
+        ],
+      },
+      // Pluggable Widget - AI Chat
+      {
+        id: 'mx-ai-chat-widget',
+        name: 'AI Chat Widget',
+        category: 'form-control',
+        pluginId: 'llm-service',
+        pluginName: 'LLM Service',
+        controlType: 'chat',
+        repositoryUrl: 'https://github.com/danstoll/forgehooks-registry/tree/master/integrations/mendix/widgets/AiChat',
+        documentationUrl: 'https://docs.mendix.com/appstore/widgets/',
+      },
+    ],
+  },
+
+  // ============================================================================
+  // Zapier
+  // ============================================================================
+  {
+    id: 'zapier',
+    name: 'Zapier',
+    format: 'Zapier App',
+    description: 'Connect FlowForge to 5000+ apps with Zapier triggers and actions.',
+    status: 'planned',
+    documentationUrl: 'https://platform.zapier.com/build/how-zapier-works',
+    categories: {
+      workflow: true,
+    },
+    connectors: [
+      {
+        id: 'zapier-app',
+        name: 'FlowForge Zapier App',
+        category: 'workflow',
+        pluginId: 'gateway',
+        pluginName: 'FlowForge Gateway',
+        repositoryUrl: 'https://github.com/danstoll/forgehooks-registry/tree/master/integrations/zapier',
+        actions: [
+          { name: 'Execute Plugin', method: 'POST', path: '/execute', description: 'Run any FlowForge plugin' },
+          { name: 'AI Chat', method: 'POST', path: '/chat', description: 'AI chat completion' },
+          { name: 'Transform Data', method: 'POST', path: '/transform', description: 'Transform data formats' },
+        ],
+      },
+    ],
+  },
+
+  // ============================================================================
+  // Make (Integromat)
+  // ============================================================================
+  {
+    id: 'make',
+    name: 'Make (Integromat)',
+    format: 'Make App',
+    description: 'Build complex FlowForge integrations with Make\'s visual automation platform.',
+    status: 'planned',
+    documentationUrl: 'https://www.make.com/en/help/apps/app-development',
+    categories: {
+      workflow: true,
+    },
+    connectors: [
+      {
+        id: 'make-app',
+        name: 'FlowForge Make App',
+        category: 'workflow',
+        pluginId: 'gateway',
+        pluginName: 'FlowForge Gateway',
+        repositoryUrl: 'https://github.com/danstoll/forgehooks-registry/tree/master/integrations/make',
+        actions: [
+          { name: 'Execute Plugin', method: 'POST', path: '/execute', description: 'Run any FlowForge plugin' },
+          { name: 'AI Operations', method: 'POST', path: '/ai', description: 'AI-powered operations' },
+        ],
+      },
+    ],
   },
 ];
 
