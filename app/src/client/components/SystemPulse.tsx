@@ -219,7 +219,12 @@ export function SystemPulse() {
           {metrics.map((metric) => (
             <div 
               key={metric.label}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/40 backdrop-blur-sm border border-white/10"
+              title={
+                metric.label === 'CPU' ? 'CPU Usage - Current processor utilization across all cores' :
+                metric.label === 'Memory' ? 'Memory Usage - RAM consumed by FlowForge services' :
+                'Requests/min - API calls processed in the last minute'
+              }
+              className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/40 backdrop-blur-sm border border-white/10 cursor-help"
             >
               <metric.icon className={cn('w-3.5 h-3.5', 
                 metric.label === 'CPU' ? 'text-indigo-400' :
