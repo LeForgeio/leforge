@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **QR Code & Barcode Generation**: Built-in core utilities for generating QR codes and barcodes
+  - Pure TypeScript implementation (no external dependencies)
+  - Output formats: SVG, Base64 PNG, raw matrix
+  - QR Code: ISO 18004 compliant with automatic version/error correction
+  - Barcodes: Code128, EAN-13, UPC-A support
+  - REST API endpoints at `/api/v1/utils/qr/*` and `/api/v1/utils/barcode/*`
+
+### Changed
+
+- **UI Rebrand**: Stainless.com-inspired design refresh
+  - Dark theme now default with proper hydration
+  - New gradient hero section on Dashboard
+  - Glassmorphism stats cards with indigo/violet accents
+  - Gradient sidebar navigation with updated FlowForge logo
+  - Updated color system with subtle gradients and noise texture
+
+### Removed
+
+- `qrcode-utils` plugin from forgehooks-registry (now built into core)
+
+### Fixed
+
+- QR code generation array bounds error in finder pattern placement
+
 ## [1.2.0] - 2026-01-20
 
 ### Added
