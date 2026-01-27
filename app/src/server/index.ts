@@ -139,8 +139,10 @@ async function main() {
             ca: activeCert.caBundle ? [activeCert.caBundle] : undefined,
             minVersion: `TLSv${sslSettings.minTlsVersion}` as 'TLSv1.2' | 'TLSv1.3',
           },
-          // @ts-expect-error - Fastify handler is compatible
-          app.server
+          (req, res) => {
+            // Route HTTPS requests through Fastify
+            app.server.emit('request', req, res);
+          }
         );
 
         httpsServer.listen(sslSettings.httpsPort, '0.0.0.0', () => {
@@ -178,7 +180,13 @@ async function main() {
         }, 'HTTPS enabled');
       }
     } catch (sslError) {
-      logger.warn({ error: sslError }, 'Failed to initialize HTTPS - running HTTP only');
+      const err = sslError as Error & { code?: string };
+      logger.warn({ 
+        error: sslError,
+        errorMessage: err.message,
+        errorCode: err.code,
+        errorStack: err.stack,
+      }, 'Failed to initialize HTTPS - running HTTP only');
     }
 
     // Log startup summary
