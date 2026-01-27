@@ -1,0 +1,121 @@
+# ===========================================
+# FlowForge - Minimal 2-Container Setup
+# ===========================================
+# The simplest deployment: just PostgreSQL + FlowForge App
+# 
+# Features:
+#   - Embedded API gateway (no Kong required)
+#   - In-memory rate limiting and caching
+#   - All gateway features built into the app
+#
+# Usage:
+#   docker compose -f docker-compose.minimal.yml up -d
+#
+# Optional add-ons (for specific plugins):
+#   # Add Redis for distributed caching/rate limiting:
+#   docker compose -f docker-compose.minimal.yml -f docker-compose.redis.yml up -d
+#
+#   # Add Qdrant for vector search plugins:
+#   docker compose -f docker-compose.minimal.yml -f docker-compose.qdrant.yml up -d
+# ===========================================
+
+name: flowforge
+
+services:
+  # ===========================================
+  # PostgreSQL - The only required dependency
+  # ===========================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: flowforge-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-flowforge}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-flowforge_password}
+      POSTGRES_DB: ${POSTGRES_DB:-flowforge}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    networks:
+      - flowforge-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-flowforge}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ===========================================
+  # FlowForge App - All-in-one backend + frontend + gateway
+  # ===========================================
+  flowforge:
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+    container_name: flowforge-app
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      PORT: 3000
+      
+      # PostgreSQL (required)
+      DATABASE_URL: postgres://${POSTGRES_USER:-flowforge}:${POSTGRES_PASSWORD:-flowforge_password}@postgres:5432/${POSTGRES_DB:-flowforge}
+      
+      # Docker socket for plugin container management
+      DOCKER_SOCKET_PATH: /var/run/docker.sock
+      DOCKER_NETWORK: flowforge-network
+      
+      # Plugin port allocation
+      PLUGIN_PORT_RANGE_START: ${PLUGIN_PORT_START:-4001}
+      PLUGIN_PORT_RANGE_END: ${PLUGIN_PORT_END:-4999}
+      
+      # Embedded Gateway Settings
+      GATEWAY_ENABLED: "true"
+      RATE_LIMIT_ENABLED: "true"
+      RATE_LIMIT_MAX: ${RATE_LIMIT_MAX:-100}
+      RATE_LIMIT_WINDOW_MS: ${RATE_LIMIT_WINDOW_MS:-60000}
+      
+      # Auth settings
+      API_KEY_ENABLED: "true"
+      JWT_ENABLED: "false"
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-production-min-32-chars}
+      
+      # Logging
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      
+      # Optional services (disabled by default)
+      REDIS_ENABLED: "false"
+      QDRANT_ENABLED: "false"
+      
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - flowforge_data:/app/data
+    ports:
+      - "${APP_PORT:-3000}:3000"
+    networks:
+      - flowforge-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+# ===========================================
+# Networks
+# ===========================================
+networks:
+  flowforge-network:
+    driver: bridge
+    name: flowforge-network
+
+# ===========================================
+# Volumes
+# ===========================================
+volumes:
+  postgres_data:
+    name: flowforge-postgres-data
+  flowforge_data:
+    name: flowforge-data

@@ -1,0 +1,42 @@
+# ===========================================
+# FlowForge - Optional Qdrant Add-on
+# ===========================================
+# Use this when you need:
+#   - Vector search / semantic search
+#   - RAG (Retrieval Augmented Generation)
+#   - Vector embeddings storage
+#
+# Required by plugins:
+#   - vector-service
+#   - llm-service (for RAG features)
+#
+# Usage:
+#   docker compose -f docker-compose.minimal.yml -f docker-compose.qdrant.yml up -d
+# ===========================================
+
+services:
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: flowforge-qdrant
+    volumes:
+      - qdrant_data:/qdrant/storage
+    ports:
+      - "${QDRANT_HTTP_PORT:-6333}:6333"
+      - "${QDRANT_GRPC_PORT:-6334}:6334"
+    networks:
+      - flowforge-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6333/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  flowforge:
+    environment:
+      QDRANT_ENABLED: "true"
+      QDRANT_URL: http://qdrant:6333
+
+volumes:
+  qdrant_data:
+    name: flowforge-qdrant-data
