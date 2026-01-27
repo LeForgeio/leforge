@@ -60,8 +60,8 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
-# Install runtime dependencies
-RUN apk add --no-cache curl docker-cli
+# Install runtime dependencies (curl for healthcheck, docker-cli for container management, openssl for SSL certs)
+RUN apk add --no-cache curl docker-cli openssl
 
 # Copy package files and install production dependencies only
 COPY package*.json ./
@@ -82,12 +82,12 @@ RUN addgroup -g 1001 -S nodejs && \
     adduser -S nodejs -u 1001 && \
     chown -R nodejs:nodejs /app
 
-# Expose port
-EXPOSE 4000
+# Expose ports (HTTP and HTTPS)
+EXPOSE 3000 3443
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
-  CMD curl -f http://localhost:4000/health || exit 1
+  CMD curl -f http://localhost:3000/health || exit 1
 
 # Start server
 CMD ["node", "dist/server/index.js"]

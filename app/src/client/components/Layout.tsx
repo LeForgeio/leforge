@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { Sun, Moon, Home, Box, Play, Key, Github, Book, Menu, X, Package, Store, Sparkles } from 'lucide-react';
+import { Sun, Moon, Home, Box, Play, Key, Github, Book, Menu, X, Package, Store, Sparkles, Shield } from 'lucide-react';
 import { useThemeStore, useAuthStore } from '../store';
 import { Button } from './ui/button';
 import { cn } from '../lib/utils';
@@ -12,6 +12,7 @@ const navItems = [
   { path: '/plugins', label: 'Installed Plugins', icon: Package },
   { path: '/playground', label: 'API Playground', icon: Play },
   { path: '/api-keys', label: 'API Keys', icon: Key },
+  { path: '/ssl', label: 'SSL / TLS', icon: Shield },
   { path: '/docs', label: 'Documentation', icon: Book },
 ];
 

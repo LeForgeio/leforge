@@ -95,6 +95,7 @@ services:
       - flowforge_data:/app/data
     ports:
       - "${APP_PORT:-3000}:3000"
+      - "${APP_HTTPS_PORT:-3443}:3443"
     networks:
       - flowforge-network
     depends_on:

@@ -6,6 +6,8 @@ import { printBanner, logStartupInfo, logConfig, logValidation, logReady } from 
 import { databaseService } from './services/database.service.js';
 import { dockerService } from './services/docker.service.js';
 import { registryService } from './services/registry.service.js';
+import { sslService } from './services/ssl.service.js';
+import https from 'https';
 
 async function main() {
   // ==========================================================================
@@ -104,13 +106,69 @@ async function main() {
   process.on('SIGINT', () => shutdown('SIGINT'));
 
   // ==========================================================================
-  // Start Server
+  // Start Server (HTTP and optionally HTTPS)
   // ==========================================================================
   try {
+    // Start HTTP server
     await app.listen({
       port: config.port,
       host: '0.0.0.0'
     });
+
+    // Check if HTTPS should be enabled
+    try {
+      const sslSettings = await sslService.getSettings();
+      const activeCert = await sslService.getActiveCertificate();
+      
+      if (sslSettings.httpsEnabled && activeCert) {
+        const httpsServer = https.createServer(
+          {
+            key: activeCert.privateKey,
+            cert: activeCert.certificate,
+            ca: activeCert.caBundle ? [activeCert.caBundle] : undefined,
+            minVersion: `TLSv${sslSettings.minTlsVersion}` as 'TLSv1.2' | 'TLSv1.3',
+          },
+          // @ts-expect-error - Fastify handler is compatible
+          app.server
+        );
+
+        httpsServer.listen(sslSettings.httpsPort, '0.0.0.0', () => {
+          logger.info({ port: sslSettings.httpsPort }, 'HTTPS server started');
+        });
+
+        // Handle HTTPS redirect if enabled
+        if (sslSettings.forceHttps) {
+          app.addHook('onRequest', async (request, reply) => {
+            // Skip if already HTTPS or local health check
+            if (request.headers['x-forwarded-proto'] === 'https' || 
+                request.url === '/health' ||
+                request.headers.host?.includes('localhost')) {
+              return;
+            }
+            
+            const host = request.headers.host?.split(':')[0] || 'localhost';
+            const httpsUrl = `https://${host}:${sslSettings.httpsPort}${request.url}`;
+            return reply.redirect(httpsUrl);
+          });
+        }
+
+        // Add HSTS header if enabled
+        if (sslSettings.hstsEnabled) {
+          app.addHook('onSend', async (_request, reply) => {
+            reply.header('Strict-Transport-Security', `max-age=${sslSettings.hstsMaxAge}; includeSubDomains`);
+          });
+        }
+
+        logger.info({
+          httpsPort: sslSettings.httpsPort,
+          forceHttps: sslSettings.forceHttps,
+          hstsEnabled: sslSettings.hstsEnabled,
+          certName: activeCert.name,
+        }, 'HTTPS enabled');
+      }
+    } catch (sslError) {
+      logger.warn({ error: sslError }, 'Failed to initialize HTTPS - running HTTP only');
+    }
 
     // Log startup summary
     const plugins = dockerService.listPlugins();
