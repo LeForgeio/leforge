@@ -64,7 +64,7 @@ By participating in this project, you agree to abide by our Code of Conduct:
 # 1. Fork the repository on GitHub
 
 # 2. Clone your fork
-git clone https://github.com/YOUR-USERNAME/flowforge.git
+git clone https://github.com/LeForgeio/leforge.git
 cd flowforge
 
 # 3. Add upstream remote

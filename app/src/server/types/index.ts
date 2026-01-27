@@ -286,7 +286,7 @@ export interface RegistryPluginEntry {
 
 // GitHub Install Request
 export interface GitHubInstallRequest {
-  repository: string; // e.g., "flowforge/math-service" or "https://github.com/flowforge/math-service"
+  repository: string; // e.g., "flowforge/math-service" or "https://github.com/LeForgeio/registry/tree/main/plugins/math-service"
   ref?: string; // branch, tag, or commit (default: main)
   manifestPath?: string; // path to forgehook.json (default: forgehook.json)
   config?: Record<string, unknown>;

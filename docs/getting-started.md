@@ -31,7 +31,7 @@ docker info
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/yourusername/flowforge.git
+git clone https://github.com/LeForgeio/leforge.git
 cd flowforge
 ```
 

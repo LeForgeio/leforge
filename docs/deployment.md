@@ -122,7 +122,7 @@ sudo apt install docker-compose-plugin
 2. **Clone and configure**
 
 ```bash
-git clone https://github.com/yourusername/flowforge.git
+git clone https://github.com/LeForgeio/leforge.git
 cd flowforge
 
 # Create production environment file
