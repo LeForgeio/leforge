@@ -157,7 +157,8 @@ export class MarketplaceService extends EventEmitter {
       try {
         await this.refreshSource(source.id);
       } catch (error) {
-        logger.error({ error, sourceId: source.id, sourceName: source.name }, 'Failed to refresh source');
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        logger.error({ errorMessage, sourceId: source.id, sourceName: source.name }, 'Failed to refresh source');
       }
     }
   }
@@ -174,18 +175,31 @@ export class MarketplaceService extends EventEmitter {
     logger.debug({ sourceId, sourceName: source.name, url: source.url }, 'Fetching registry source');
 
     try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+      
       const response = await fetch(source.url, {
         headers: {
           Accept: 'application/json',
           'User-Agent': 'FlowForge-Marketplace/1.0',
         },
+        signal: controller.signal,
       });
+      
+      clearTimeout(timeout);
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
-      const index = (await response.json()) as RegistryIndex;
+      const text = await response.text();
+      let index: RegistryIndex;
+      
+      try {
+        index = JSON.parse(text) as RegistryIndex;
+      } catch (parseError) {
+        throw new Error(`JSON parse error: ${parseError instanceof Error ? parseError.message : 'Invalid JSON'}`);
+      }
 
       // Validate basic structure
       if (!index.plugins || !Array.isArray(index.plugins)) {
@@ -207,14 +221,23 @@ export class MarketplaceService extends EventEmitter {
       return index;
 
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorMessage = error instanceof Error ? error.message : 
+        (typeof error === 'object' && error !== null ? JSON.stringify(error) : String(error));
+      
       await databaseService.updateRegistrySource(sourceId, {
         fetchError: errorMessage,
         lastFetched: new Date(),
       });
 
-      logger.error({ error, sourceId, sourceName: source.name }, 'Failed to fetch registry source');
-      throw error;
+      logger.error({ 
+        errorMessage, 
+        errorType: error?.constructor?.name,
+        sourceId, 
+        sourceName: source.name,
+        url: source.url 
+      }, 'Failed to fetch registry source');
+      
+      throw new Error(errorMessage);
     }
   }
 
