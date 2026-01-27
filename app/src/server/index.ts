@@ -121,6 +121,17 @@ async function main() {
       const activeCert = await sslService.getActiveCertificate();
       
       if (sslSettings.httpsEnabled && activeCert) {
+        logger.info({
+          certHasKey: !!activeCert.privateKey,
+          certHasCert: !!activeCert.certificate,
+          keyType: typeof activeCert.privateKey,
+          certType: typeof activeCert.certificate,
+          keyLength: activeCert.privateKey?.length,
+          certLength: activeCert.certificate?.length,
+          keyStart: activeCert.privateKey?.substring(0, 50),
+          certStart: activeCert.certificate?.substring(0, 50),
+        }, 'HTTPS certificate details');
+        
         const httpsServer = https.createServer(
           {
             key: activeCert.privateKey,
