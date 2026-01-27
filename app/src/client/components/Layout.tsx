@@ -96,7 +96,7 @@ export default function Layout() {
         </div>
 
         <a
-          href="https://github.com/danstoll/flowforge"
+          href="https://github.com/LeForgeio/leforge"
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center gap-2.5 px-3 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-accent"

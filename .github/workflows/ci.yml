@@ -7,46 +7,69 @@ on:
     branches: [main]
 
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: app/package-lock.json
+
+      - name: Install dependencies
+        run: |
+          cd app
+          npm ci
+
+      - name: Run linter
+        run: |
+          cd app
+          npm run lint
+
   test:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        service: [crypto-service, math-service]
+    needs: lint
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: flowforge
+          POSTGRES_PASSWORD: flowforge
+          POSTGRES_DB: flowforge_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     steps:
       - uses: actions/checkout@v4
 
       - name: Setup Node.js
-        if: contains(matrix.service, 'crypto') || contains(matrix.service, 'pdf') || contains(matrix.service, 'image') || contains(matrix.service, 'data-transform')
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
-          cache-dependency-path: services/${{ matrix.service }}/package-lock.json
+          cache-dependency-path: app/package-lock.json
 
-      - name: Setup Python
-        if: contains(matrix.service, 'math') || contains(matrix.service, 'ocr') || contains(matrix.service, 'llm') || contains(matrix.service, 'vector')
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Install Node.js dependencies
-        if: contains(matrix.service, 'crypto') || contains(matrix.service, 'pdf') || contains(matrix.service, 'image') || contains(matrix.service, 'data-transform')
+      - name: Install dependencies
         run: |
-          cd services/${{ matrix.service }}
+          cd app
           npm ci
 
-      - name: Install Python dependencies
-        if: contains(matrix.service, 'math') || contains(matrix.service, 'ocr') || contains(matrix.service, 'llm') || contains(matrix.service, 'vector')
-        run: |
-          cd services/${{ matrix.service }}
-          pip install -r requirements.txt
-
       - name: Run tests
+        env:
+          DATABASE_URL: postgresql://flowforge:flowforge@localhost:5432/flowforge_test
+          NODE_ENV: test
         run: |
-          cd services/${{ matrix.service }}
-          if [ -f package.json ]; then npm test; fi
-          if [ -f requirements.txt ]; then pytest || true; fi
+          cd app
+          npm test
 
   build:
     needs: test
@@ -60,4 +83,4 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Build images
-        run: docker-compose build
+        run: docker compose build

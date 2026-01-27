@@ -72,7 +72,7 @@ FlowForge uses a **minimal 2-container architecture** with an embedded gateway:
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/flowforge.git
+git clone https://github.com/LeForgeio/leforge.git
 cd flowforge
 
 # Copy environment configuration
@@ -101,8 +101,10 @@ docker compose ps
 ```bash
 # API Key (recommended for low-code platforms)
 curl -H "X-API-Key: your-api-key" http://localhost:3000/api/v1/plugins
-```
-curl -X POST http://localhost:8000/api/v1/crypto/hash \
+
+# Example: Hash some data
+curl -X POST http://localhost:3000/api/v1/crypto/hash \
+  -H "X-API-Key: your-api-key" \
   -H "Content-Type: application/json" \
   -d '{"algorithm": "sha256", "data": "Hello, FlowForge!"}'
 
@@ -138,35 +140,35 @@ docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
 
 ```
 flowforge/
-├── app/              # Unified full-stack application
+├── app/                    # Unified full-stack application
 │   ├── src/
-│   │   ├── client/   # React frontend
-│   │   └── server/   # Fastify backend
-│   └── migrations/   # Database migrations
-├── gateway/          # Kong API Gateway configuration
-├── services/         # Bundled microservices
-│   ├── crypto-service/
-│   ├── llm-service/
-│   └── math-service/
-├── sdk/              # Client SDKs
-├── infrastructure/   # Docker configs
-├── docs/             # Documentation
-└── scripts/          # Utility scripts
+│   │   ├── client/         # React frontend (Vite + TailwindCSS)
+│   │   └── server/         # Fastify backend with embedded gateway
+│   │       ├── routes/     # API route handlers
+│   │       ├── services/   # Business logic services
+│   │       └── embedded-plugins/  # Built-in plugins (string-utils, date-utils)
+│   ├── registry/           # Local plugin registry cache
+│   └── migrations/         # Database migrations
+├── gateway/                # Kong configuration (optional external gateway)
+├── sdk/                    # Client SDKs (JavaScript, Python, .NET)
+├── infrastructure/         # Infrastructure configs (monitoring, certs)
+├── integrations/           # Platform integration examples
+├── docs/                   # Documentation
+└── scripts/                # Utility scripts
 ```
 
-> **Note**: Additional services (PDF, OCR, Image, Vector, Data Transform) are available as plugins from the [ForgeHooks Registry](https://github.com/danstoll/forgehooks-registry) and deployed dynamically.
+> **Note**: Services are installed dynamically as ForgeHook plugins from the [ForgeHooks Registry](https://github.com/LeForgeio/registry). The unified app architecture eliminates the need for separate service containers.
 
 ## 🛠️ Technology Stack
 
 | Layer | Technology |
 |-------|------------|
-| Gateway | Kong API Gateway |
-| Backend (Node.js) | Express, TypeScript |
-| Backend (Python) | FastAPI, Pydantic |
+| Gateway | Embedded (Fastify middleware) or Kong API Gateway |
+| Backend | Fastify, TypeScript, Node.js 20+ |
 | Frontend | React 18, Vite, TailwindCSS |
 | Database | PostgreSQL 15 |
-| Cache | Redis 7 |
-| Vector DB | Qdrant |
+| Cache | Redis 7 (optional) |
+| Vector DB | Qdrant (optional, for vector-service plugin) |
 | Containers | Docker, Docker Compose |
 
 ## 🤝 Contributing

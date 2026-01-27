@@ -68,22 +68,20 @@ git clone https://github.com/YOUR-USERNAME/flowforge.git
 cd flowforge
 
 # 3. Add upstream remote
-git remote add upstream https://github.com/flowforge/flowforge.git
+git remote add upstream https://github.com/LeForgeio/leforge.git
 
 # 4. Copy environment file
 cp .env.example .env
 
 # 5. Start development environment
-docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
+docker compose up -d
 
-# 6. Install dependencies for the service you're working on
-# For Node.js services:
-cd services/crypto-service
+# 6. Install app dependencies for local development
+cd app
 npm install
 
-# For Python services:
-cd services/math-service
-pip install -r requirements.txt
+# 7. Start the app in development mode
+npm run dev
 ```
 
 ### Development Tools
@@ -270,19 +268,15 @@ service-name/
 # Run all tests
 ./scripts/test.sh
 
-# Run tests for a specific service
-cd services/crypto-service
+# Run app tests
+cd app
 npm test
 
 # Run with coverage
 npm run test:coverage
 
-# Run Python tests
-cd services/math-service
-pytest
-
-# Run with coverage
-pytest --cov=src
+# Run server-side tests only
+npm run test:server
 ```
 
 ### Writing Tests

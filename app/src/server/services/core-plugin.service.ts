@@ -19,10 +19,10 @@ const CORE_PLUGINS: ForgeHookManifest[] = [
     description: 'Generate QR codes and barcodes (Code128, EAN-13, UPC-A) with multiple output formats (SVG, Base64 PNG, matrix). Pure TypeScript implementation - zero external dependencies. Built into FlowForge core.',
     author: {
       name: 'FlowForge Team',
-      url: 'https://flowforge.dev',
+      url: 'https://leforge.io',
     },
     license: 'MIT',
-    repository: 'https://github.com/danstoll/flowforge',
+    repository: 'https://github.com/LeForgeio/leforge',
     icon: 'qr-code',
     category: 'utility',
     tags: ['qrcode', 'barcode', 'code128', 'ean13', 'upca', 'svg', 'core', 'built-in'],

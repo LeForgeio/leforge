@@ -108,12 +108,12 @@ INSERT INTO registry_sources (
   is_official,
   priority
 ) VALUES (
-  'FlowForge Official',
-  'Official FlowForge plugin registry maintained by the FlowForge team',
-  'https://raw.githubusercontent.com/danstoll/forgehooks-registry/master/forgehooks-registry.json',
+  'LeForge Official',
+  'Official ForgeHooks plugin registry maintained by the LeForge team',
+  'https://raw.githubusercontent.com/LeForgeio/registry/master/forgehooks-registry.json',
   'github',
-  'danstoll',
-  'forgehooks-registry',
+  'LeForgeio',
+  'registry',
   'master',
   'forgehooks-registry.json',
   true,

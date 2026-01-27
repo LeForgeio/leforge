@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://flowforge.dev/schemas/forgehook-manifest.json",
+  "$id": "https://leforge.io/schemas/forgehook-manifest.json",
   "title": "ForgeHook Manifest",
   "description": "Schema for FlowForge plugin manifests",
   "type": "object",

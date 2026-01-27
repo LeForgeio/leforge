@@ -5,11 +5,11 @@
   "description": "Lightweight date and time manipulation utilities including formatting, parsing, relative time, timezone conversion, and date math. Runs embedded without Docker overhead.",
   "author": {
     "name": "FlowForge",
-    "url": "https://github.com/danstoll/flowforge"
+    "url": "https://github.com/LeForgeio/leforge"
   },
   "license": "MIT",
-  "repository": "https://github.com/danstoll/forgehooks-registry",
-  "icon": "https://raw.githubusercontent.com/danstoll/forgehooks-registry/master/icons/date-utils.svg",
+  "repository": "https://github.com/LeForgeio/registry",
+  "icon": "https://raw.githubusercontent.com/LeForgeio/registry/master/icons/date-utils.svg",
   "category": "utility",
   "tags": ["date", "time", "datetime", "format", "parse", "timezone", "utility", "embedded"],
 
