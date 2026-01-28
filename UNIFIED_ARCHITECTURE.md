@@ -1,8 +1,8 @@
-# FlowForge Unified Architecture
+# LeForge Unified Architecture
 
 ## 🎯 Minimal Architecture: 2 Containers
 
-FlowForge runs with just **2 containers** - PostgreSQL and the FlowForge App. All gateway features (auth, rate limiting, routing) are built directly into the app.
+LeForge runs with just **2 containers** - PostgreSQL and the LeForge App. All gateway features (auth, rate limiting, routing) are built directly into the app.
 
 ---
 
@@ -12,7 +12,7 @@ FlowForge runs with just **2 containers** - PostgreSQL and the FlowForge App. Al
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                    FlowForge App (:3000)                         │
+│                    LeForge App (:3000)                         │
 │  ┌─────────────────────────────────────────────────────────────┐│
 │  │              Embedded Gateway Layer                          ││
 │  │  • API Key Authentication (X-API-Key header)                 ││
@@ -46,7 +46,7 @@ FlowForge runs with just **2 containers** - PostgreSQL and the FlowForge App. Al
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                    FlowForge App (:3000)                         │
+│                    LeForge App (:3000)                         │
 └───────────────────────────────────────────────────────────────┬─┘
                                                                 │
         ┌───────────────────────┬───────────────────────────────┤
@@ -92,7 +92,7 @@ docker compose -f docker-compose.yml \
 
 ## 🔐 Embedded Gateway Features
 
-The FlowForge app includes all gateway features that were previously handled by Kong:
+The LeForge app includes all gateway features that were previously handled by Kong:
 
 | Feature | Implementation | Notes |
 |---------|----------------|-------|
@@ -121,7 +121,7 @@ curl -H "Authorization: Bearer <token>" http://localhost:3000/api/v1/plugins
 ## 📁 Project Structure
 
 ```
-flowforge/
+LeForge/
 ├── docker-compose.yml              ← Simplified (no separate plugin-manager)
 ├── .env
 │
@@ -186,7 +186,7 @@ Merge dependencies from both services:
 
 ```json
 {
-  "name": "@flowforge/app",
+  "name": "@LeForge/app",
   "version": "1.0.0",
   "scripts": {
     "dev:frontend": "vite",
@@ -307,19 +307,19 @@ services:
   kong:
     # ... same as before
 
-  flowforge:  # ← SINGLE SERVICE NOW!
+  LeForge:  # ← SINGLE SERVICE NOW!
     build:
       context: ./web-ui
       dockerfile: Dockerfile
-    container_name: flowforge
+    container_name: LeForge
     environment:
       NODE_ENV: production
       PORT: 3000
       # Database
-      DATABASE_URL: postgres://flowforge:password@postgres:5432/flowforge
+      DATABASE_URL: postgres://LeForge:password@postgres:5432/LeForge
       # Docker
       DOCKER_SOCKET: /var/run/docker.sock
-      DOCKER_NETWORK: flowforge-network
+      DOCKER_NETWORK: LeForge-network
       # Kong
       KONG_ADMIN_URL: http://kong:8001
       # Redis
@@ -327,11 +327,11 @@ services:
       REDIS_PASSWORD: password
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - flowforge_data:/app/data
+      - LeForge_data:/app/data
     ports:
       - "3000:3000"
     networks:
-      - flowforge-network
+      - LeForge-network
     depends_on:
       - postgres
       - redis
@@ -358,7 +358,7 @@ services:
 ## 🚀 Startup Flow
 
 ```
-1. Start FlowForge container
+1. Start LeForge container
 2. Backend starts (Fastify on port 3000)
    ├─ Connect to PostgreSQL
    ├─ Run migrations

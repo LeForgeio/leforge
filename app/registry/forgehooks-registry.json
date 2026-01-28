@@ -1,10 +1,10 @@
 {
     "version":  "1.1.0",
     "registry":  {
-                     "name":  "FlowForge Official Registry",
-                     "description":  "Official ForgeHook plugins maintained by the FlowForge team",
+                     "name":  "LeForge Official Registry",
+                     "description":  "Official ForgeHook plugins maintained by the LeForge team",
                      "url":  "https://github.com/LeForgeio/registry",
-                     "maintainer":  "FlowForge Team"
+                     "maintainer":  "LeForge Team"
                  },
     "lastUpdated":  "2026-01-26T12:00:00Z",
     "packages":  {
@@ -58,9 +58,9 @@
                                          "id":  "qrcode-utils",
                                          "name":  "QR Code & Barcode Generator",
                                          "version":  "1.0.0",
-                                         "description":  "Generate QR codes and barcodes (Code128, EAN-13, UPC-A) with multiple output formats (SVG, Base64 PNG, matrix). Pure TypeScript implementation - zero external dependencies. Built into FlowForge core.",
+                                         "description":  "Generate QR codes and barcodes (Code128, EAN-13, UPC-A) with multiple output formats (SVG, Base64 PNG, matrix). Pure TypeScript implementation - zero external dependencies. Built into LeForge core.",
                                          "author":  {
-                                                        "name":  "FlowForge Team",
+                                                        "name":  "LeForge Team",
                                                         "url":  "https://leforge.io"
                                                     },
                                          "license":  "MIT",
@@ -129,7 +129,7 @@
                                          "version":  "1.0.0",
                                          "description":  "Lightweight string manipulation utilities including slugify, camelCase, truncate, sanitize HTML, and more. Runs embedded without Docker overhead.",
                                          "author":  {
-                                                        "name":  "FlowForge Team",
+                                                        "name":  "LeForge Team",
                                                         "url":  "https://leforge.io"
                                                     },
                                          "license":  "MIT",
@@ -265,7 +265,7 @@
                                          "version":  "1.0.0",
                                          "description":  "Lightweight date and time manipulation utilities including formatting, parsing, relative time, and date math. Runs embedded without Docker overhead.",
                                          "author":  {
-                                                        "name":  "FlowForge Team",
+                                                        "name":  "LeForge Team",
                                                         "url":  "https://leforge.io"
                                                     },
                                          "license":  "MIT",
@@ -389,7 +389,7 @@
                                          "version":  "1.0.0",
                                          "description":  "Cryptographic operations including hashing, encryption, and JWT token management. Supports SHA, bcrypt, argon2, AES-256-GCM encryption.",
                                          "author":  {
-                                                        "name":  "FlowForge Team",
+                                                        "name":  "LeForge Team",
                                                         "url":  "https://leforge.io"
                                                     },
                                          "license":  "MIT",
@@ -406,7 +406,7 @@
                                                       "aes"
                                                   ],
                                          "image":  {
-                                                       "repository":  "flowforge/crypto-service",
+                                                       "repository":  "LeForge/crypto-service",
                                                        "tag":  "latest"
                                                    },
                                          "port":  3001,
@@ -503,7 +503,7 @@
                                          "version":  "1.0.0",
                                          "description":  "Advanced mathematical operations including arithmetic, statistics, matrix operations, equation solving, and numerical analysis.",
                                          "author":  {
-                                                        "name":  "FlowForge Team",
+                                                        "name":  "LeForge Team",
                                                         "url":  "https://leforge.io"
                                                     },
                                          "license":  "MIT",
@@ -519,7 +519,7 @@
                                                       "calculations"
                                                   ],
                                          "image":  {
-                                                       "repository":  "flowforge/math-service",
+                                                       "repository":  "LeForge/math-service",
                                                        "tag":  "latest"
                                                    },
                                          "port":  3002,
@@ -665,7 +665,7 @@
                                          "version":  "1.0.0",
                                          "description":  "PDF generation from HTML, merging, splitting, text extraction, and watermarking.",
                                          "author":  {
-                                                        "name":  "FlowForge Team",
+                                                        "name":  "LeForge Team",
                                                         "url":  "https://leforge.io"
                                                     },
                                          "license":  "MIT",
@@ -681,7 +681,7 @@
                                                       "split"
                                                   ],
                                          "image":  {
-                                                       "repository":  "flowforge/pdf-service",
+                                                       "repository":  "LeForge/pdf-service",
                                                        "tag":  "latest"
                                                    },
                                          "port":  3003,
@@ -779,7 +779,7 @@
                                          "version":  "1.0.0",
                                          "description":  "Optical character recognition for extracting text from images. Supports multiple languages and document layouts.",
                                          "author":  {
-                                                        "name":  "FlowForge Team",
+                                                        "name":  "LeForge Team",
                                                         "url":  "https://leforge.io"
                                                     },
                                          "license":  "MIT",
@@ -794,7 +794,7 @@
                                                       "tesseract"
                                                   ],
                                          "image":  {
-                                                       "repository":  "flowforge/ocr-service",
+                                                       "repository":  "LeForge/ocr-service",
                                                        "tag":  "latest"
                                                    },
                                          "port":  3004,
@@ -867,7 +867,7 @@
                                          "version":  "1.0.0",
                                          "description":  "Image processing including resize, convert, optimize, crop, and format transformations using Sharp.",
                                          "author":  {
-                                                        "name":  "FlowForge Team",
+                                                        "name":  "LeForge Team",
                                                         "url":  "https://leforge.io"
                                                     },
                                          "license":  "MIT",
@@ -883,7 +883,7 @@
                                                       "webp"
                                                   ],
                                          "image":  {
-                                                       "repository":  "flowforge/image-service",
+                                                       "repository":  "LeForge/image-service",
                                                        "tag":  "latest"
                                                    },
                                          "port":  3005,
@@ -981,7 +981,7 @@
                                          "version":  "1.0.0",
                                          "description":  "AI text generation and chat completions. Compatible with OpenAI API, Anthropic, and local models via Ollama/vLLM.",
                                          "author":  {
-                                                        "name":  "FlowForge Team",
+                                                        "name":  "LeForge Team",
                                                         "url":  "https://leforge.io"
                                                     },
                                          "license":  "MIT",
@@ -998,7 +998,7 @@
                                                       "anthropic"
                                                   ],
                                          "image":  {
-                                                       "repository":  "flowforge/llm-service",
+                                                       "repository":  "LeForge/llm-service",
                                                        "tag":  "latest"
                                                    },
                                          "port":  3006,
@@ -1107,7 +1107,7 @@
                                          "version":  "1.0.0",
                                          "description":  "Vector database operations for semantic search, RAG, and embeddings storage using Qdrant.",
                                          "author":  {
-                                                        "name":  "FlowForge Team",
+                                                        "name":  "LeForge Team",
                                                         "url":  "https://leforge.io"
                                                     },
                                          "license":  "MIT",
@@ -1122,7 +1122,7 @@
                                                       "rag"
                                                   ],
                                          "image":  {
-                                                       "repository":  "flowforge/vector-service",
+                                                       "repository":  "LeForge/vector-service",
                                                        "tag":  "latest"
                                                    },
                                          "port":  3007,
@@ -1220,7 +1220,7 @@
                                          "version":  "1.0.0",
                                          "description":  "Data format conversions between JSON, CSV, XML, YAML, and more. Supports JSONPath queries and data validation.",
                                          "author":  {
-                                                        "name":  "FlowForge Team",
+                                                        "name":  "LeForge Team",
                                                         "url":  "https://leforge.io"
                                                     },
                                          "license":  "MIT",
@@ -1237,7 +1237,7 @@
                                                       "conversion"
                                                   ],
                                          "image":  {
-                                                       "repository":  "flowforge/data-transform-service",
+                                                       "repository":  "LeForge/data-transform-service",
                                                        "tag":  "latest"
                                                    },
                                          "port":  3008,

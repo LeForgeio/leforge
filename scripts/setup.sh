@@ -1,9 +1,9 @@
 #!/bin/bash
-# FlowForge Setup Script
+# LeForge Setup Script
 
 set -e
 
-echo "🔥 FlowForge Setup"
+echo "🔥 LeForge Setup"
 echo "==================="
 
 # Check prerequisites

@@ -1,10 +1,10 @@
-# Deploy FlowForge Unified Architecture to Remote Server
+# Deploy LeForge Unified Architecture to Remote Server
 # PowerShell version
 
 $REMOTE_HOST = "dan@10.0.0.166"
-$REMOTE_DIR = "~/flowforge"
+$REMOTE_DIR = "~/LeForge"
 
-Write-Host "🚀 Deploying FlowForge Unified Architecture to $REMOTE_HOST" -ForegroundColor Green
+Write-Host "🚀 Deploying LeForge Unified Architecture to $REMOTE_HOST" -ForegroundColor Green
 Write-Host ""
 
 # Step 1: Copy unified files
@@ -41,7 +41,7 @@ ssh $REMOTE_HOST "cd $REMOTE_DIR && docker compose -f docker-compose.core.yml do
 Write-Host ""
 
 # Step 3: Build and start
-Write-Host "🏗️  Step 3: Building and starting unified FlowForge..." -ForegroundColor Cyan
+Write-Host "🏗️  Step 3: Building and starting unified LeForge..." -ForegroundColor Cyan
 ssh $REMOTE_HOST "cd $REMOTE_DIR && docker compose -f docker-compose.unified.yml up -d --build"
 Write-Host ""
 
@@ -65,11 +65,11 @@ Write-Host ""
 
 # Step 6: Show logs
 Write-Host "📋 Step 6: Recent logs..." -ForegroundColor Cyan
-ssh $REMOTE_HOST "docker logs flowforge --tail 50"
+ssh $REMOTE_HOST "docker logs LeForge --tail 50"
 Write-Host ""
 
 Write-Host "✅ Deployment complete!" -ForegroundColor Green
 Write-Host ""
-Write-Host "🌐 Access FlowForge at: http://10.0.0.166:3000" -ForegroundColor Yellow
-Write-Host "📊 View logs: docker context use flowforge-remote && docker logs flowforge -f"
-Write-Host "🔍 Check status: docker context use flowforge-remote && docker compose -f docker-compose.unified.yml ps"
+Write-Host "🌐 Access LeForge at: http://10.0.0.166:3000" -ForegroundColor Yellow
+Write-Host "📊 View logs: docker context use LeForge-remote && docker logs LeForge -f"
+Write-Host "🔍 Check status: docker context use LeForge-remote && docker compose -f docker-compose.unified.yml ps"

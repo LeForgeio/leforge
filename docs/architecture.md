@@ -1,10 +1,10 @@
-# FlowForge Architecture
+# LeForge Architecture
 
-This document describes the architecture and design patterns used in FlowForge.
+This document describes the architecture and design patterns used in LeForge.
 
 ## Overview
 
-FlowForge is a microservices-based platform designed to provide AI and computational services to workflow automation tools. It follows a service-oriented architecture (SOA) with an API gateway pattern.
+LeForge is a microservices-based platform designed to provide AI and computational services to workflow automation tools. It follows a service-oriented architecture (SOA) with an API gateway pattern.
 
 ## System Architecture
 

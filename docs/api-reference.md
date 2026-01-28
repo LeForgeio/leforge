@@ -1,6 +1,6 @@
 # API Reference
 
-This document provides a comprehensive reference for the FlowForge API.
+This document provides a comprehensive reference for the LeForge API.
 
 ## Base URL
 
@@ -16,7 +16,7 @@ Development: http://localhost:8000/api/v1
 Include your API key in the request header:
 
 ```bash
-curl -H "X-API-Key: your-api-key" https://api.flowforge.io/api/v1/crypto/hash
+curl -H "X-API-Key: your-api-key" https://api.LeForge.io/api/v1/crypto/hash
 ```
 
 ### JWT Bearer Token
@@ -24,7 +24,7 @@ curl -H "X-API-Key: your-api-key" https://api.flowforge.io/api/v1/crypto/hash
 For user-authenticated requests:
 
 ```bash
-curl -H "Authorization: Bearer your-jwt-token" https://api.flowforge.io/api/v1/crypto/hash
+curl -H "Authorization: Bearer your-jwt-token" https://api.LeForge.io/api/v1/crypto/hash
 ```
 
 ## Common Headers

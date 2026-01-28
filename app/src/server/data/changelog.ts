@@ -48,7 +48,7 @@ export const changelog: Release[] = [
     version: '1.0.0',
     date: '2026-01-15',
     changes: [
-      { type: 'feature', description: 'Initial release of FlowForge platform' },
+      { type: 'feature', description: 'Initial release of LeForge platform' },
       { type: 'feature', description: 'Crypto Service: Hashing, encryption, JWT operations' },
       { type: 'feature', description: 'Math Service: Calculations, statistics, conversions' },
       { type: 'feature', description: 'PDF Service: Generation, merge, split, text extraction' },

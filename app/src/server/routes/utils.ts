@@ -238,7 +238,7 @@ export default async function utilsRoutes(fastify: FastifyInstance) {
    */
   fastify.get('/info', async () => {
     return {
-      name: 'FlowForge Core Utilities',
+      name: 'LeForge Core Utilities',
       version: '1.0.0',
       utilities: [
         {

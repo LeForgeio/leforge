@@ -1,9 +1,9 @@
 #!/bin/bash
-# FlowForge Development Start Script
+# LeForge Development Start Script
 
 set -e
 
-echo "🔥 Starting FlowForge in development mode..."
+echo "🔥 Starting LeForge in development mode..."
 
 # Start infrastructure services first
 docker-compose up -d postgres redis qdrant

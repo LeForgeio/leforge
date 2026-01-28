@@ -1,7 +1,7 @@
 {
-  "name": "@flowforge/app",
+  "name": "@LeForge/app",
   "version": "1.0.0",
-  "description": "FlowForge - Unified Platform with ForgeHook Plugin System",
+  "description": "LeForge - Unified Platform with ForgeHook Plugin System",
   "type": "module",
   "main": "dist/server/index.js",
   "scripts": {
@@ -19,8 +19,8 @@
     "lint": "eslint src",
     "lint:fix": "eslint src --fix",
     "typecheck": "tsc --noEmit",
-    "docker:build": "docker build -t flowforge .",
-    "docker:run": "docker run -p 4000:4000 flowforge"
+    "docker:build": "docker build -t LeForge .",
+    "docker:run": "docker run -p 4000:4000 LeForge"
   },
   "dependencies": {
     "@eslint/js": "^9.39.2",
@@ -52,7 +52,6 @@
     "dockerode": "^4.0.2",
     "dotenv": "^17.2.3",
     "fastify": "^5.7.1",
-    "ioredis": "^5.3.2",
     "lucide-react": "^0.562.0",
     "pg": "^8.11.0",
     "pino": "^10.2.1",

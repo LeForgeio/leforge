@@ -1,5 +1,5 @@
 /**
- * String Utilities - Embedded FlowForge Plugin
+ * String Utilities - Embedded LeForge Plugin
  * Lightweight string manipulation functions
  */
 

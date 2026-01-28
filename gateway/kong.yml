@@ -2,10 +2,10 @@ _format_version: "3.0"
 _transform: true
 
 # =============================================================================
-# FlowForge API Gateway Configuration
+# LeForge API Gateway Configuration
 # =============================================================================
 # This file defines the Kong Gateway declarative configuration for routing
-# and securing all FlowForge microservices.
+# and securing all LeForge microservices.
 #
 # Key Features:
 # - JWT Authentication (with exclusions for health/metrics)
@@ -31,7 +31,7 @@ services:
     read_timeout: 60000
     retries: 3
     tags:
-      - flowforge
+      - LeForge
       - crypto
 
   # ---------------------------------------------------------------------------
@@ -44,7 +44,7 @@ services:
     read_timeout: 60000
     retries: 3
     tags:
-      - flowforge
+      - LeForge
       - math
 
   # ---------------------------------------------------------------------------
@@ -57,7 +57,7 @@ services:
     read_timeout: 120000
     retries: 3
     tags:
-      - flowforge
+      - LeForge
       - pdf
 
   # ---------------------------------------------------------------------------
@@ -70,7 +70,7 @@ services:
     read_timeout: 120000
     retries: 3
     tags:
-      - flowforge
+      - LeForge
       - ocr
 
   # ---------------------------------------------------------------------------
@@ -83,7 +83,7 @@ services:
     read_timeout: 60000
     retries: 3
     tags:
-      - flowforge
+      - LeForge
       - image
 
   # ---------------------------------------------------------------------------
@@ -96,7 +96,7 @@ services:
     read_timeout: 300000
     retries: 2
     tags:
-      - flowforge
+      - LeForge
       - llm
 
   # ---------------------------------------------------------------------------
@@ -109,7 +109,7 @@ services:
     read_timeout: 60000
     retries: 3
     tags:
-      - flowforge
+      - LeForge
       - vector
 
   # ---------------------------------------------------------------------------
@@ -122,7 +122,7 @@ services:
     read_timeout: 60000
     retries: 3
     tags:
-      - flowforge
+      - LeForge
       - data-transform
 
 # =============================================================================
@@ -507,7 +507,7 @@ plugins:
     config:
       add:
         headers:
-          - "X-Powered-By:FlowForge"
+          - "X-Powered-By:LeForge"
           - "X-API-Version:1.0"
       remove:
         headers:
@@ -859,7 +859,7 @@ jwt_secrets:
   # Admin JWT Credential
   - consumer: admin
     key: admin
-    secret: flowforge-admin-jwt-secret-change-in-production-min-32-chars
+    secret: LeForge-admin-jwt-secret-change-in-production-min-32-chars
     algorithm: HS256
     tags:
       - admin
@@ -867,7 +867,7 @@ jwt_secrets:
   # Default API User JWT Credential
   - consumer: default-api-user
     key: default-api-user
-    secret: flowforge-default-jwt-secret-change-in-production-min-32-chars
+    secret: LeForge-default-jwt-secret-change-in-production-min-32-chars
     algorithm: HS256
     tags:
       - default
@@ -875,7 +875,7 @@ jwt_secrets:
   # Test User JWT Credential
   - consumer: test-user
     key: test-user
-    secret: flowforge-test-jwt-secret-change-in-production-min-32-chars
+    secret: LeForge-test-jwt-secret-change-in-production-min-32-chars
     algorithm: HS256
     tags:
       - test
@@ -886,17 +886,17 @@ jwt_secrets:
 
 keyauth_credentials:
   - consumer: admin
-    key: flowforge-admin-api-key-change-in-production
+    key: LeForge-admin-api-key-change-in-production
     tags:
       - admin
 
   - consumer: default-api-user
-    key: flowforge-default-api-key-change-in-production
+    key: LeForge-default-api-key-change-in-production
     tags:
       - default
 
   - consumer: test-user
-    key: flowforge-test-api-key
+    key: LeForge-test-api-key
     tags:
       - test
 

@@ -489,7 +489,7 @@ export default function Marketplace() {
             ForgeHook Marketplace
           </h1>
           <p className="text-muted-foreground mt-1">
-            Discover and install plugins to extend FlowForge
+            Discover and install plugins to extend LeForge
           </p>
         </div>
         
@@ -650,7 +650,7 @@ export default function Marketplace() {
             <div>
               <h2 className="text-xl font-semibold">Registry Sources</h2>
               <p className="text-sm text-muted-foreground">
-                Manage where FlowForge looks for plugins
+                Manage where LeForge looks for plugins
               </p>
             </div>
             <div className="flex gap-2">

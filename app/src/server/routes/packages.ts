@@ -23,7 +23,7 @@ interface PackageImportBody {
 }
 
 // Temp directory for package operations
-const PACKAGE_TEMP_DIR = '/tmp/flowforge-packages';
+const PACKAGE_TEMP_DIR = '/tmp/LeForge-packages';
 
 export async function packageRoutes(fastify: FastifyInstance) {
   // Ensure temp directory exists
@@ -96,7 +96,7 @@ ${plugin.manifest.description}
 
 ## Installation
 
-Upload this .fhk file to FlowForge via:
+Upload this .fhk file to LeForge via:
 - Web UI: Settings > Packages > Import
 - API: POST /api/v1/packages/import
 

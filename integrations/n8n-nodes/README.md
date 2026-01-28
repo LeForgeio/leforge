@@ -1,28 +1,28 @@
-# FlowForge n8n Nodes
+# LeForge n8n Nodes
 
-Custom n8n nodes for FlowForge services.
+Custom n8n nodes for LeForge services.
 
 ## Installation
 
 ```bash
-npm install n8n-nodes-flowforge
+npm install n8n-nodes-LeForge
 ```
 
 ## Available Nodes
 
-- **FlowForge Crypto** - Hash, encrypt, decrypt data
-- **FlowForge Math** - Mathematical calculations
-- **FlowForge PDF** - PDF manipulation
-- **FlowForge OCR** - Text extraction from images
-- **FlowForge Image** - Image processing
-- **FlowForge LLM** - AI completions
-- **FlowForge Vector** - Vector search
-- **FlowForge Data** - Data transformations
+- **LeForge Crypto** - Hash, encrypt, decrypt data
+- **LeForge Math** - Mathematical calculations
+- **LeForge PDF** - PDF manipulation
+- **LeForge OCR** - Text extraction from images
+- **LeForge Image** - Image processing
+- **LeForge LLM** - AI completions
+- **LeForge Vector** - Vector search
+- **LeForge Data** - Data transformations
 
 ## Configuration
 
-Add your FlowForge credentials in n8n:
+Add your LeForge credentials in n8n:
 
 1. Go to Settings > Credentials
-2. Add new "FlowForge API" credential
+2. Add new "LeForge API" credential
 3. Enter your base URL and API key

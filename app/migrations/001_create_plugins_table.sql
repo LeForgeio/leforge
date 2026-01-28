@@ -1,5 +1,5 @@
 -- ============================================================================
--- FlowForge Plugin Manager - Database Schema
+-- LeForge Plugin Manager - Database Schema
 -- Migration: 001_create_plugins_table
 -- Description: Create tables for plugin persistence
 -- ============================================================================
@@ -185,9 +185,9 @@ $$ LANGUAGE plpgsql;
 -- ============================================================================
 -- Permissions (Optional - adjust based on your security model)
 -- ============================================================================
--- GRANT SELECT, INSERT, UPDATE, DELETE ON plugins TO flowforge_app;
--- GRANT SELECT, INSERT ON plugin_events TO flowforge_app;
--- GRANT SELECT, INSERT ON plugin_metrics TO flowforge_app;
+-- GRANT SELECT, INSERT, UPDATE, DELETE ON plugins TO LeForge_app;
+-- GRANT SELECT, INSERT ON plugin_events TO LeForge_app;
+-- GRANT SELECT, INSERT ON plugin_metrics TO LeForge_app;
 
 -- ============================================================================
 -- Migration Complete

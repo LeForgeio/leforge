@@ -21,7 +21,7 @@ export const useAuthStore = create<AuthState>()(
       clearApiKey: () => set({ apiKey: null, isAuthenticated: false }),
     }),
     {
-      name: 'flowforge-auth',
+      name: 'LeForge-auth',
     }
   )
 );
@@ -51,7 +51,7 @@ export const useThemeStore = create<ThemeState>()(
       },
     }),
     {
-      name: 'flowforge-theme',
+      name: 'LeForge-theme',
       onRehydrateStorage: () => (state) => {
         // Apply theme on initial load
         if (state) {
@@ -140,7 +140,7 @@ export const usePlaygroundStore = create<PlaygroundState>()(
       clearHistory: () => set({ requestHistory: [] }),
     }),
     {
-      name: 'flowforge-playground',
+      name: 'LeForge-playground',
     }
   )
 );
@@ -205,7 +205,7 @@ export const useApiCallHistoryStore = create<ApiCallHistoryState>()(
       getRecentCalls: (limit = 10) => get().calls.slice(0, limit),
     }),
     {
-      name: 'flowforge-api-history',
+      name: 'LeForge-api-history',
     }
   )
 );
@@ -262,7 +262,7 @@ export const useSavedRequestsStore = create<SavedRequestsState>()(
       getRequestById: (id) => get().requests.find((req) => req.id === id),
     }),
     {
-      name: 'flowforge-saved-requests',
+      name: 'LeForge-saved-requests',
     }
   )
 );
@@ -350,7 +350,7 @@ export const useSettingsStore = create<SettingsState>()(
       setTimeout: (ms) => set({ timeout: ms }),
     }),
     {
-      name: 'flowforge-settings',
+      name: 'LeForge-settings',
     }
   )
 );

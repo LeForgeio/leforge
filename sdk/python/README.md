@@ -1,17 +1,17 @@
-# FlowForge Python SDK
+# LeForge Python SDK
 
 ## Installation
 
 ```bash
-pip install flowforge-sdk
+pip install LeForge-sdk
 ```
 
 ## Usage
 
 ```python
-from flowforge import FlowForgeClient
+from LeForge import LeForgeClient
 
-client = FlowForgeClient(
+client = LeForgeClient(
     base_url="http://localhost:8000",
     api_key="your-api-key"
 )

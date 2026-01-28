@@ -17,12 +17,12 @@ For Kong Gateway SSL:
 # Generate CA key and certificate
 openssl genrsa -out ca.key 4096
 openssl req -new -x509 -days 365 -key ca.key -out ca.crt \
-    -subj "/C=US/ST=State/L=City/O=FlowForge/CN=FlowForge CA"
+    -subj "/C=US/ST=State/L=City/O=LeForge/CN=LeForge CA"
 
 # Generate server key and CSR
 openssl genrsa -out server.key 2048
 openssl req -new -key server.key -out server.csr \
-    -subj "/C=US/ST=State/L=City/O=FlowForge/CN=localhost"
+    -subj "/C=US/ST=State/L=City/O=LeForge/CN=localhost"
 
 # Sign server certificate with CA
 openssl x509 -req -days 365 -in server.csr -CA ca.crt -CAkey ca.key \

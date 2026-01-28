@@ -1,5 +1,5 @@
 # =============================================================================
-# FlowForge Unified Application
+# LeForge Unified Application
 # Multi-stage build: Frontend (Vite/React) + Backend (Node/Fastify)
 # =============================================================================
 
@@ -60,8 +60,14 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
-# Install runtime dependencies (curl for healthcheck, docker-cli for container management, openssl for SSL certs)
-RUN apk add --no-cache curl docker-cli openssl
+# Install runtime dependencies:
+# - curl for healthcheck
+# - docker-cli for container management
+# - openssl for SSL certs
+# - redis for embedded caching/queuing
+# - postgresql for embedded database
+# - supervisor to manage multiple processes
+RUN apk add --no-cache curl docker-cli openssl redis supervisor postgresql postgresql-contrib
 
 # Copy package files and install production dependencies only
 COPY package*.json ./
@@ -77,17 +83,22 @@ COPY --from=frontend-builder /app/dist/client ./dist/client
 COPY migrations ./dist/migrations
 COPY registry ./dist/registry
 
-# Create non-root user
-RUN addgroup -g 1001 -S nodejs && \
+# Copy supervisord configuration
+COPY supervisord.conf /etc/supervisord.conf
+
+# Create directories for Redis, PostgreSQL, and supervisor
+RUN mkdir -p /var/lib/redis /var/lib/postgresql/data /var/log/supervisor /var/run/supervisor /run/postgresql && \
+    addgroup -g 1001 -S nodejs && \
     adduser -S nodejs -u 1001 && \
-    chown -R nodejs:nodejs /app
+    chown -R nodejs:nodejs /app /var/lib/redis /var/log/supervisor /var/run/supervisor && \
+    chown -R postgres:postgres /var/lib/postgresql /run/postgresql
 
-# Expose ports (HTTP and HTTPS)
-EXPOSE 3000 3443
+# Expose ports (HTTP, HTTPS, Redis, and PostgreSQL for plugin containers)
+EXPOSE 3000 3443 6379 5432
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
-  CMD curl -f http://localhost:3000/health || exit 1
+# Health check (checks Node app, Redis, and PostgreSQL)
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+  CMD curl -f http://localhost:3000/health && redis-cli ping && pg_isready -U leforge || exit 1
 
-# Start server
-CMD ["node", "dist/server/index.js"]
+# Start supervisord (manages Node.js, Redis, and PostgreSQL)
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisord.conf"]

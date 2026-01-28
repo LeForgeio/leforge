@@ -1,6 +1,6 @@
 # Deployment Guide
 
-This guide covers deploying FlowForge to various environments.
+This guide covers deploying LeForge to various environments.
 
 ## Table of Contents
 
@@ -41,7 +41,7 @@ This guide covers deploying FlowForge to various environments.
 | **SSH User** | `dan` |
 | **SSH Port** | 22 (default) |
 | **SSH Key** | Uses SSH key authentication (no password needed for SSH) |
-| **FlowForge Source** | `~/flowforge` |
+| **LeForge Source** | `~/LeForge` |
 
 ### Quick Access
 
@@ -53,10 +53,10 @@ ssh dan@10.0.0.166
 ssh dan@10.0.0.166 "sudo docker ps"
 
 # View plugin manager logs
-ssh dan@10.0.0.166 "sudo docker logs flowforge-plugin-manager -f"
+ssh dan@10.0.0.166 "sudo docker logs LeForge-plugin-manager -f"
 
 # Restart plugin manager
-ssh dan@10.0.0.166 "sudo docker restart flowforge-plugin-manager"
+ssh dan@10.0.0.166 "sudo docker restart LeForge-plugin-manager"
 ```
 
 ### Service URLs (from dev server)
@@ -74,15 +74,15 @@ ssh dan@10.0.0.166 "sudo docker restart flowforge-plugin-manager"
 
 ```bash
 # Copy updated source files to server
-scp -r ./app/src/client/hooks/*.ts dan@10.0.0.166:~/flowforge/app/src/client/hooks/
-scp -r ./app/src/client/pages/*.tsx dan@10.0.0.166:~/flowforge/app/src/client/pages/
-scp -r ./app/src/client/components/ui/*.tsx dan@10.0.0.166:~/flowforge/app/src/client/components/ui/
+scp -r ./app/src/client/hooks/*.ts dan@10.0.0.166:~/LeForge/app/src/client/hooks/
+scp -r ./app/src/client/pages/*.tsx dan@10.0.0.166:~/LeForge/app/src/client/pages/
+scp -r ./app/src/client/components/ui/*.tsx dan@10.0.0.166:~/LeForge/app/src/client/components/ui/
 
 # Rebuild Docker image on server
-ssh dan@10.0.0.166 "cd ~/flowforge/app && docker build -t flowforge:latest ."
+ssh dan@10.0.0.166 "cd ~/LeForge/app && docker build -t LeForge:latest ."
 
 # Restart container with new image
-ssh dan@10.0.0.166 "docker stop flowforge-api && docker rm flowforge-api && docker run -d --name flowforge-api --network flowforge-network -p 4000:4000 -e POSTGRES_HOST=flowforge-postgres -e POSTGRES_PASSWORD=flowforge_password -v /var/run/docker.sock:/var/run/docker.sock -v flowforge_plugin_data:/app/data flowforge:latest"
+ssh dan@10.0.0.166 "docker stop LeForge-api && docker rm LeForge-api && docker run -d --name LeForge-api --network LeForge-network -p 4000:4000 -e POSTGRES_HOST=LeForge-postgres -e POSTGRES_PASSWORD=LeForge_password -v /var/run/docker.sock:/var/run/docker.sock -v LeForge_plugin_data:/app/data LeForge:latest"
 
 # Verify deployment
 Invoke-RestMethod -Uri "http://10.0.0.166:4000/health"
@@ -92,13 +92,13 @@ Invoke-RestMethod -Uri "http://10.0.0.166:4000/health"
 
 ```bash
 # Connect to PostgreSQL
-ssh dan@10.0.0.166 "sudo docker exec -it flowforge-postgres psql -U flowforge -d flowforge"
+ssh dan@10.0.0.166 "sudo docker exec -it LeForge-postgres psql -U LeForge -d LeForge"
 
 # Database credentials (development only)
-# Host: flowforge-postgres (internal) or 10.0.0.166 (external)
-# User: flowforge
-# Password: flowforge_password
-# Database: flowforge
+# Host: LeForge-postgres (internal) or 10.0.0.166 (external)
+# User: LeForge
+# Password: LeForge_password
+# Database: LeForge
 ```
 
 ## Docker Compose Deployment
@@ -123,7 +123,7 @@ sudo apt install docker-compose-plugin
 
 ```bash
 git clone https://github.com/LeForgeio/leforge.git
-cd flowforge
+cd LeForge
 
 # Create production environment file
 cp .env.example .env
@@ -175,16 +175,16 @@ For production, use nginx or Traefik as a reverse proxy:
 ```nginx
 server {
     listen 80;
-    server_name flowforge.yourdomain.com;
+    server_name LeForge.yourdomain.com;
     return 301 https://$server_name$request_uri;
 }
 
 server {
     listen 443 ssl http2;
-    server_name flowforge.yourdomain.com;
+    server_name LeForge.yourdomain.com;
 
-    ssl_certificate /etc/letsencrypt/live/flowforge.yourdomain.com/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/flowforge.yourdomain.com/privkey.pem;
+    ssl_certificate /etc/letsencrypt/live/LeForge.yourdomain.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/LeForge.yourdomain.com/privkey.pem;
 
     # API Gateway
     location /api/ {
@@ -209,13 +209,13 @@ server {
 ### Helm Chart (Recommended)
 
 ```bash
-# Add FlowForge Helm repository
-helm repo add flowforge https://charts.flowforge.io
+# Add LeForge Helm repository
+helm repo add LeForge https://charts.LeForge.io
 helm repo update
 
 # Install with custom values
-helm install flowforge flowforge/flowforge \
-  --namespace flowforge \
+helm install LeForge LeForge/LeForge \
+  --namespace LeForge \
   --create-namespace \
   --values values-production.yaml
 ```
@@ -230,14 +230,14 @@ ingress:
   enabled: true
   className: nginx
   hosts:
-    - host: flowforge.yourdomain.com
+    - host: LeForge.yourdomain.com
       paths:
         - path: /
           pathType: Prefix
   tls:
-    - secretName: flowforge-tls
+    - secretName: LeForge-tls
       hosts:
-        - flowforge.yourdomain.com
+        - LeForge.yourdomain.com
 
 postgresql:
   auth:
@@ -281,14 +281,14 @@ Create Kubernetes manifests in `k8s/` directory:
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: flowforge
+  name: LeForge
 ---
 # k8s/configmap.yaml
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: flowforge-config
-  namespace: flowforge
+  name: LeForge-config
+  namespace: LeForge
 data:
   ENVIRONMENT: "production"
   LOG_LEVEL: "info"
@@ -298,7 +298,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: crypto-service
-  namespace: flowforge
+  namespace: LeForge
 spec:
   replicas: 2
   selector:
@@ -311,14 +311,14 @@ spec:
     spec:
       containers:
         - name: crypto-service
-          image: flowforge/crypto-service:latest
+          image: LeForge/crypto-service:latest
           ports:
             - containerPort: 3001
           envFrom:
             - configMapRef:
-                name: flowforge-config
+                name: LeForge-config
             - secretRef:
-                name: flowforge-secrets
+                name: LeForge-secrets
           livenessProbe:
             httpGet:
               path: /health
@@ -353,14 +353,14 @@ kubectl apply -f k8s/
 
 ```bash
 # Create ECR repositories
-aws ecr create-repository --repository-name flowforge/crypto-service
-aws ecr create-repository --repository-name flowforge/math-service
+aws ecr create-repository --repository-name LeForge/crypto-service
+aws ecr create-repository --repository-name LeForge/math-service
 # ... repeat for other services
 
 # Build and push images
-docker build -t flowforge/crypto-service ./services/crypto-service
-docker tag flowforge/crypto-service:latest <account>.dkr.ecr.<region>.amazonaws.com/flowforge/crypto-service:latest
-docker push <account>.dkr.ecr.<region>.amazonaws.com/flowforge/crypto-service:latest
+docker build -t LeForge/crypto-service ./services/crypto-service
+docker tag LeForge/crypto-service:latest <account>.dkr.ecr.<region>.amazonaws.com/LeForge/crypto-service:latest
+docker push <account>.dkr.ecr.<region>.amazonaws.com/LeForge/crypto-service:latest
 ```
 
 2. **Using EKS**
@@ -368,50 +368,50 @@ docker push <account>.dkr.ecr.<region>.amazonaws.com/flowforge/crypto-service:la
 ```bash
 # Create EKS cluster
 eksctl create cluster \
-  --name flowforge \
+  --name LeForge \
   --region us-east-1 \
   --nodegroup-name standard-workers \
   --node-type t3.medium \
   --nodes 3
 
 # Deploy with Helm
-helm install flowforge flowforge/flowforge -f values-aws.yaml
+helm install LeForge LeForge/LeForge -f values-aws.yaml
 ```
 
 ### Google Cloud (GKE)
 
 ```bash
 # Create GKE cluster
-gcloud container clusters create flowforge \
+gcloud container clusters create LeForge \
   --num-nodes=3 \
   --machine-type=e2-medium \
   --region=us-central1
 
 # Get credentials
-gcloud container clusters get-credentials flowforge --region=us-central1
+gcloud container clusters get-credentials LeForge --region=us-central1
 
 # Deploy
-helm install flowforge flowforge/flowforge -f values-gcp.yaml
+helm install LeForge LeForge/LeForge -f values-gcp.yaml
 ```
 
 ### Azure (AKS)
 
 ```bash
 # Create resource group
-az group create --name flowforge --location eastus
+az group create --name LeForge --location eastus
 
 # Create AKS cluster
 az aks create \
-  --resource-group flowforge \
-  --name flowforge-cluster \
+  --resource-group LeForge \
+  --name LeForge-cluster \
   --node-count 3 \
   --node-vm-size Standard_D2_v2
 
 # Get credentials
-az aks get-credentials --resource-group flowforge --name flowforge-cluster
+az aks get-credentials --resource-group LeForge --name LeForge-cluster
 
 # Deploy
-helm install flowforge flowforge/flowforge -f values-azure.yaml
+helm install LeForge LeForge/LeForge -f values-azure.yaml
 ```
 
 ## Security Considerations
@@ -447,7 +447,7 @@ helm install flowforge flowforge/flowforge -f values-azure.yaml
 1. **Image scanning**
    ```bash
    # Scan images with Trivy
-   trivy image flowforge/crypto-service:latest
+   trivy image LeForge/crypto-service:latest
    ```
 
 2. **Non-root users**
@@ -499,12 +499,12 @@ promtail:
 
 ```bash
 # PostgreSQL backup
-docker-compose exec postgres pg_dump -U flowforge flowforge > backup.sql
+docker-compose exec postgres pg_dump -U LeForge LeForge > backup.sql
 
 # Automated backup script
 #!/bin/bash
 DATE=$(date +%Y%m%d_%H%M%S)
-docker-compose exec -T postgres pg_dump -U flowforge flowforge | gzip > backups/flowforge_$DATE.sql.gz
+docker-compose exec -T postgres pg_dump -U LeForge LeForge | gzip > backups/LeForge_$DATE.sql.gz
 
 # Keep last 7 days
 find backups/ -name "*.sql.gz" -mtime +7 -delete
@@ -517,7 +517,7 @@ find backups/ -name "*.sql.gz" -mtime +7 -delete
 docker-compose exec redis redis-cli -a $REDIS_PASSWORD BGSAVE
 
 # Copy RDB file
-docker cp flowforge-redis:/data/dump.rdb backups/redis_backup.rdb
+docker cp LeForge-redis:/data/dump.rdb backups/redis_backup.rdb
 ```
 
 ### Disaster Recovery
@@ -607,7 +607,7 @@ done
 2. **Database connection errors**
    ```bash
    # Check PostgreSQL
-   docker-compose exec postgres psql -U flowforge -c "SELECT 1"
+   docker-compose exec postgres psql -U LeForge -c "SELECT 1"
    ```
 
 3. **Out of memory**

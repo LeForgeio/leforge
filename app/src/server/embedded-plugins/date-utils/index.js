@@ -1,5 +1,5 @@
 /**
- * Date Utilities - Embedded FlowForge Plugin
+ * Date Utilities - Embedded LeForge Plugin
  * Lightweight date and time manipulation functions
  */
 

@@ -1,6 +1,6 @@
 #!/bin/bash
 # ===========================================
-# FlowForge Infrastructure Health Check Script
+# LeForge Infrastructure Health Check Script
 # ===========================================
 # This script verifies all infrastructure services are running
 # ===========================================
@@ -29,9 +29,9 @@ fi
 # Default values
 POSTGRES_HOST="${POSTGRES_HOST:-localhost}"
 POSTGRES_PORT="${POSTGRES_PORT:-5432}"
-POSTGRES_USER="${POSTGRES_USER:-flowforge}"
-POSTGRES_PASSWORD="${POSTGRES_PASSWORD:-flowforge_password}"
-POSTGRES_DB="${POSTGRES_DB:-flowforge_db}"
+POSTGRES_USER="${POSTGRES_USER:-LeForge}"
+POSTGRES_PASSWORD="${POSTGRES_PASSWORD:-LeForge_password}"
+POSTGRES_DB="${POSTGRES_DB:-LeForge_db}"
 
 REDIS_HOST="${REDIS_HOST:-localhost}"
 REDIS_PORT="${REDIS_PORT:-6379}"
@@ -106,13 +106,13 @@ check_postgres() {
             print_warning "Kong database not found"
         fi
         
-        # Check FlowForge schema
+        # Check LeForge schema
         ((TOTAL_CHECKS++))
-        local table_count=$(PGPASSWORD="$POSTGRES_PASSWORD" psql -h "$POSTGRES_HOST" -p "$POSTGRES_PORT" -U "$POSTGRES_USER" -d "$POSTGRES_DB" -tAc "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'flowforge'" 2>/dev/null)
+        local table_count=$(PGPASSWORD="$POSTGRES_PASSWORD" psql -h "$POSTGRES_HOST" -p "$POSTGRES_PORT" -U "$POSTGRES_USER" -d "$POSTGRES_DB" -tAc "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'LeForge'" 2>/dev/null)
         if [ "$table_count" -gt 0 ]; then
-            print_success "FlowForge schema tables: $table_count"
+            print_success "LeForge schema tables: $table_count"
         else
-            print_warning "FlowForge schema has no tables"
+            print_warning "LeForge schema has no tables"
         fi
     else
         print_error "PostgreSQL connection failed"
@@ -268,7 +268,7 @@ check_containers() {
     print_header "Docker Containers Status"
     
     if command -v docker &> /dev/null; then
-        local containers=("flowforge-postgres" "flowforge-redis" "flowforge-qdrant" "flowforge-kong")
+        local containers=("LeForge-postgres" "LeForge-redis" "LeForge-qdrant" "LeForge-kong")
         
         for container in "${containers[@]}"; do
             ((TOTAL_CHECKS++))
@@ -404,7 +404,7 @@ main() {
     
     echo ""
     echo -e "${CYAN}╔══════════════════════════════════════════════════════════╗${NC}"
-    echo -e "${CYAN}║      FlowForge Infrastructure Health Check              ║${NC}"
+    echo -e "${CYAN}║      LeForge Infrastructure Health Check              ║${NC}"
     echo -e "${CYAN}║      $(date '+%Y-%m-%d %H:%M:%S')                             ║${NC}"
     echo -e "${CYAN}╚══════════════════════════════════════════════════════════╝${NC}"
     

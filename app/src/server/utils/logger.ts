@@ -14,6 +14,6 @@ export const logger = pino({
       }
     : undefined,
   base: {
-    service: 'flowforge',
+    service: 'LeForge',
   },
 });

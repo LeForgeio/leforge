@@ -181,7 +181,7 @@ export class MarketplaceService extends EventEmitter {
       const response = await fetch(source.url, {
         headers: {
           Accept: 'application/json',
-          'User-Agent': 'FlowForge-Marketplace/1.0',
+          'User-Agent': 'LeForge-Marketplace/1.0',
         },
         signal: controller.signal,
       });
@@ -375,7 +375,7 @@ export class MarketplaceService extends EventEmitter {
     const response = await fetch(manifestUrl, {
       headers: {
         Accept: 'application/json',
-        'User-Agent': 'FlowForge-Marketplace/1.0',
+        'User-Agent': 'LeForge-Marketplace/1.0',
       },
     });
 

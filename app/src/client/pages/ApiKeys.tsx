@@ -33,7 +33,7 @@ export default function ApiKeys() {
     <div className="max-w-2xl">
       <div className="mb-8">
         <h1 className="text-3xl font-bold">API Keys</h1>
-        <p className="text-muted-foreground mt-1">Manage your FlowForge API authentication</p>
+        <p className="text-muted-foreground mt-1">Manage your LeForge API authentication</p>
       </div>
 
       {/* Status Card */}
@@ -101,7 +101,7 @@ export default function ApiKeys() {
           <CardDescription>
             {isAuthenticated 
               ? 'Replace your current API key with a new one'
-              : 'Enter your FlowForge API key to authenticate requests'
+              : 'Enter your LeForge API key to authenticate requests'
             }
           </CardDescription>
         </CardHeader>

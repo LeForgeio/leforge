@@ -88,7 +88,7 @@ export async function sslRoutes(fastify: FastifyInstance) {
       logger.info({ settings }, 'SSL settings updated');
       
       return reply.send({
-        message: 'SSL settings updated. Restart FlowForge to apply HTTPS changes.',
+        message: 'SSL settings updated. Restart LeForge to apply HTTPS changes.',
         settings,
         restartRequired: request.body.httpsEnabled !== undefined,
       });
@@ -194,9 +194,9 @@ export async function sslRoutes(fastify: FastifyInstance) {
   ) => {
     try {
       const { 
-        name = 'FlowForge Self-Signed', 
-        commonName = 'flowforge.local',
-        organization = 'FlowForge',
+        name = 'LeForge Self-Signed', 
+        commonName = 'LeForge.local',
+        organization = 'LeForge',
         validDays = 365,
         setActive = true,
       } = request.body;
@@ -253,7 +253,7 @@ export async function sslRoutes(fastify: FastifyInstance) {
       logger.info({ certId: request.params.id }, 'Certificate activated');
       
       return reply.send({
-        message: 'Certificate activated. Restart FlowForge to apply changes.',
+        message: 'Certificate activated. Restart LeForge to apply changes.',
         restartRequired: true,
       });
     } catch (error) {

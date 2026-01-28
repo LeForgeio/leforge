@@ -1,7 +1,7 @@
 # ===========================================
-# FlowForge - Minimal 2-Container Setup
+# LeForge - Minimal 2-Container Setup
 # ===========================================
-# The simplest deployment: just PostgreSQL + FlowForge App
+# The simplest deployment: just PostgreSQL + LeForge App
 # 
 # Features:
 #   - Embedded API gateway (no Kong required)
@@ -19,7 +19,7 @@
 #   docker compose -f docker-compose.minimal.yml -f docker-compose.qdrant.yml up -d
 # ===========================================
 
-name: flowforge
+name: LeForge
 
 services:
   # ===========================================
@@ -27,32 +27,32 @@ services:
   # ===========================================
   postgres:
     image: postgres:16-alpine
-    container_name: flowforge-postgres
+    container_name: LeForge-postgres
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-flowforge}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-flowforge_password}
-      POSTGRES_DB: ${POSTGRES_DB:-flowforge}
+      POSTGRES_USER: ${POSTGRES_USER:-LeForge}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-LeForge_password}
+      POSTGRES_DB: ${POSTGRES_DB:-LeForge}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     networks:
-      - flowforge-network
+      - LeForge-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-flowforge}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-LeForge}"]
       interval: 10s
       timeout: 5s
       retries: 5
     restart: unless-stopped
 
   # ===========================================
-  # FlowForge App - All-in-one backend + frontend + gateway
+  # LeForge App - All-in-one backend + frontend + gateway
   # ===========================================
-  flowforge:
+  LeForge:
     build:
       context: ./app
       dockerfile: Dockerfile
-    container_name: flowforge-app
+    container_name: LeForge-app
     environment:
       NODE_ENV: ${NODE_ENV:-production}
       PORT: 3000
@@ -60,13 +60,13 @@ services:
       # PostgreSQL (required) - use container hostname
       POSTGRES_HOST: postgres
       POSTGRES_PORT: 5432
-      POSTGRES_USER: ${POSTGRES_USER:-flowforge}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-flowforge_password}
-      POSTGRES_DB: ${POSTGRES_DB:-flowforge}
+      POSTGRES_USER: ${POSTGRES_USER:-LeForge}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-LeForge_password}
+      POSTGRES_DB: ${POSTGRES_DB:-LeForge}
       
       # Docker socket for plugin container management
       DOCKER_SOCKET_PATH: /var/run/docker.sock
-      DOCKER_NETWORK: flowforge-network
+      DOCKER_NETWORK: LeForge-network
       
       # Plugin port allocation
       PLUGIN_PORT_RANGE_START: ${PLUGIN_PORT_START:-4001}
@@ -92,12 +92,12 @@ services:
       
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - flowforge_data:/app/data
+      - LeForge_data:/app/data
     ports:
       - "${APP_PORT:-3000}:3000"
       - "${APP_HTTPS_PORT:-3443}:3443"
     networks:
-      - flowforge-network
+      - LeForge-network
     depends_on:
       postgres:
         condition: service_healthy
@@ -112,15 +112,15 @@ services:
 # Networks
 # ===========================================
 networks:
-  flowforge-network:
+  LeForge-network:
     driver: bridge
-    name: flowforge-network
+    name: LeForge-network
 
 # ===========================================
 # Volumes
 # ===========================================
 volumes:
   postgres_data:
-    name: flowforge-postgres-data
-  flowforge_data:
-    name: flowforge-data
+    name: LeForge-postgres-data
+  LeForge_data:
+    name: LeForge-data

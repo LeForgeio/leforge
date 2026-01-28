@@ -1,11 +1,11 @@
-# FlowForge Zapier Integration
+# LeForge Zapier Integration
 
-Connect FlowForge to thousands of apps via Zapier.
+Connect LeForge to thousands of apps via Zapier.
 
 ## Setup
 
-1. Search for "FlowForge" in Zapier
-2. Connect your FlowForge account
+1. Search for "LeForge" in Zapier
+2. Connect your LeForge account
 3. Start building Zaps!
 
 ## Available Actions

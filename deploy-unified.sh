@@ -1,13 +1,13 @@
 #!/bin/bash
-# Deploy FlowForge Unified Architecture to Remote Server
+# Deploy LeForge Unified Architecture to Remote Server
 
 set -e  # Exit on error
 
 REMOTE_HOST="dan@10.0.0.115"
-REMOTE_DIR="~/flowforge"
+REMOTE_DIR="~/LeForge"
 LOCAL_DIR="."
 
-echo "🚀 Deploying FlowForge Unified Architecture to $REMOTE_HOST"
+echo "🚀 Deploying LeForge Unified Architecture to $REMOTE_HOST"
 echo ""
 
 # Step 1: Copy unified files to remote
@@ -42,7 +42,7 @@ ssh $REMOTE_HOST "cd $REMOTE_DIR && docker compose -f docker-compose.core.yml do
 echo ""
 
 # Step 3: Build and start unified services
-echo "🏗️  Step 3: Building and starting unified FlowForge..."
+echo "🏗️  Step 3: Building and starting unified LeForge..."
 ssh $REMOTE_HOST "cd $REMOTE_DIR && docker compose -f docker-compose.unified.yml up -d --build"
 echo ""
 
@@ -60,11 +60,11 @@ echo ""
 
 # Step 6: Show logs
 echo "📋 Step 6: Showing recent logs..."
-ssh $REMOTE_HOST "cd $REMOTE_DIR && docker logs flowforge --tail 50"
+ssh $REMOTE_HOST "cd $REMOTE_DIR && docker logs LeForge --tail 50"
 echo ""
 
 echo "✅ Deployment complete!"
 echo ""
-echo "🌐 Access FlowForge at: http://10.0.0.115:3000"
-echo "📊 View logs: docker context use flowforge-remote && docker logs flowforge -f"
-echo "🔍 Check status: docker context use flowforge-remote && docker compose -f docker-compose.unified.yml ps"
+echo "🌐 Access LeForge at: http://10.0.0.115:3000"
+echo "📊 View logs: docker context use LeForge-remote && docker logs LeForge -f"
+echo "🔍 Check status: docker context use LeForge-remote && docker compose -f docker-compose.unified.yml ps"

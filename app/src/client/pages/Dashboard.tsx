@@ -348,7 +348,7 @@ export default function Dashboard() {
         <div className="absolute -top-24 -right-24 w-96 h-96 bg-gradient-to-br from-indigo-500/20 to-violet-500/20 rounded-full blur-3xl" />
         <div className="relative">
           <h1 className="text-4xl font-bold text-white mb-2">
-            Welcome to <span className="bg-gradient-to-r from-indigo-400 to-violet-400 bg-clip-text text-transparent">FlowForge</span>
+            Welcome to <span className="bg-gradient-to-r from-indigo-400 to-violet-400 bg-clip-text text-transparent">LeForge</span>
           </h1>
           <p className="text-gray-400 text-lg max-w-xl">
             Monitor your services, manage plugins, and build powerful integrations with enterprise-grade APIs.

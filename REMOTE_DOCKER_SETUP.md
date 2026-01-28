@@ -1,4 +1,4 @@
-# FlowForge Remote Docker Deployment
+# LeForge Remote Docker Deployment
 
 ## 🎯 Setup Overview
 
@@ -27,14 +27,14 @@ This allows you to use `docker` commands locally that execute on the remote serv
 
 ```bash
 # Create a Docker context for remote server
-docker context create flowforge-remote \
+docker context create LeForge-remote \
   --docker "host=ssh://dan@10.0.0.166"
 
 # List contexts
 docker context ls
 
 # Switch to remote context
-docker context use flowforge-remote
+docker context use LeForge-remote
 
 # Test connection
 docker ps
@@ -44,16 +44,16 @@ docker ps
 
 ---
 
-## 📦 Step 2: Deploy FlowForge
+## 📦 Step 2: Deploy LeForge
 
 ### Option A: Using Docker Context (Recommended)
 
 ```bash
 # Make sure you're using the remote context
-docker context use flowforge-remote
+docker context use LeForge-remote
 
 # Navigate to project
-cd f:/Projects/lcncAK/flowforge
+cd f:/Projects/lcncAK/LeForge
 
 # Deploy to remote server
 docker compose -f docker-compose.unified.yml up -d
@@ -62,7 +62,7 @@ docker compose -f docker-compose.unified.yml up -d
 docker compose -f docker-compose.unified.yml ps
 
 # View logs
-docker compose -f docker-compose.unified.yml logs -f flowforge
+docker compose -f docker-compose.unified.yml logs -f LeForge
 ```
 
 ### Option B: Using DOCKER_HOST Environment Variable
@@ -75,7 +75,7 @@ export DOCKER_HOST="ssh://dan@10.0.0.166"
 $env:DOCKER_HOST = "ssh://dan@10.0.0.166"
 
 # Now deploy
-cd f:/Projects/lcncAK/flowforge
+cd f:/Projects/lcncAK/LeForge
 docker compose -f docker-compose.unified.yml up -d
 ```
 
@@ -83,21 +83,21 @@ docker compose -f docker-compose.unified.yml up -d
 
 ```bash
 # Copy project to remote server
-scp -r f:/Projects/lcncAK/flowforge dan@10.0.0.166:~/
+scp -r f:/Projects/lcncAK/LeForge dan@10.0.0.166:~/
 
 # SSH into server
 ssh dan@10.0.0.166
 
 # On remote server:
-cd ~/flowforge
+cd ~/LeForge
 docker compose -f docker-compose.unified.yml up -d
 ```
 
 ---
 
-## 🌐 Step 3: Access FlowForge
+## 🌐 Step 3: Access LeForge
 
-After deployment, FlowForge will be accessible at:
+After deployment, LeForge will be accessible at:
 
 - **Web UI**: http://10.0.0.166:3000
 - **API**: http://10.0.0.166:3000/api/v1/...
@@ -112,7 +112,7 @@ Since the server is remote, you need to update the frontend to call the correct 
 Edit `docker-compose.unified.yml`:
 
 ```yaml
-flowforge:
+LeForge:
   build:
     context: ./web-ui
     dockerfile: Dockerfile.unified
@@ -124,7 +124,7 @@ flowforge:
 
 **Option 2: Configure at runtime** (recommended)
 
-The frontend is already set up to use the same origin, so if you access FlowForge at `http://10.0.0.166:3000`, it will automatically call APIs at `http://10.0.0.166:3000/api/v1/...`.
+The frontend is already set up to use the same origin, so if you access LeForge at `http://10.0.0.166:3000`, it will automatically call APIs at `http://10.0.0.166:3000/api/v1/...`.
 
 **No changes needed!** Just access via the server IP.
 
@@ -149,7 +149,7 @@ start http://10.0.0.166:3000
 
 ```bash
 # Using Docker context
-docker context use flowforge-remote
+docker context use LeForge-remote
 docker compose -f docker-compose.unified.yml ps
 
 # Or via SSH
@@ -160,11 +160,11 @@ ssh dan@10.0.0.166 "docker ps"
 
 ```bash
 # Using Docker context
-docker context use flowforge-remote
-docker logs flowforge -f
+docker context use LeForge-remote
+docker logs LeForge -f
 
 # Or via SSH
-ssh dan@10.0.0.166 "docker logs flowforge -f"
+ssh dan@10.0.0.166 "docker logs LeForge -f"
 ```
 
 ---
@@ -175,10 +175,10 @@ ssh dan@10.0.0.166 "docker logs flowforge -f"
 
 ```bash
 # Switch to remote context
-docker context use flowforge-remote
+docker context use LeForge-remote
 
 # Navigate to project
-cd f:/Projects/lcncAK/flowforge
+cd f:/Projects/lcncAK/LeForge
 
 # Pull latest changes, rebuild, restart
 docker compose -f docker-compose.unified.yml up -d --build
@@ -187,22 +187,22 @@ docker compose -f docker-compose.unified.yml up -d --build
 ### Stop Services
 
 ```bash
-docker context use flowforge-remote
+docker context use LeForge-remote
 docker compose -f docker-compose.unified.yml down
 ```
 
 ### View Logs
 
 ```bash
-docker context use flowforge-remote
+docker context use LeForge-remote
 docker compose -f docker-compose.unified.yml logs -f
 ```
 
 ### Restart Single Service
 
 ```bash
-docker context use flowforge-remote
-docker compose -f docker-compose.unified.yml restart flowforge
+docker context use LeForge-remote
+docker compose -f docker-compose.unified.yml restart LeForge
 ```
 
 ### Access Server Shell
@@ -212,7 +212,7 @@ docker compose -f docker-compose.unified.yml restart flowforge
 ssh dan@10.0.0.166
 
 # Or execute remote command
-ssh dan@10.0.0.166 "docker exec -it flowforge sh"
+ssh dan@10.0.0.166 "docker exec -it LeForge sh"
 ```
 
 ---
@@ -232,7 +232,7 @@ ssh -i ~/.ssh/your_key dan@10.0.0.166
 ssh-add ~/.ssh/your_key
 
 # Or create Docker context with key
-docker context create flowforge-remote \
+docker context create LeForge-remote \
   --docker "host=ssh://dan@10.0.0.166" \
   --ssh-key ~/.ssh/your_key
 ```
@@ -279,14 +279,14 @@ ssh dan@10.0.0.166 "sudo usermod -aG docker dan"
 ### Set Remote Context
 
 ```bash
-docker context create flowforge-remote --docker "host=ssh://dan@10.0.0.166"
-docker context use flowforge-remote
+docker context create LeForge-remote --docker "host=ssh://dan@10.0.0.166"
+docker context use LeForge-remote
 ```
 
 ### Deploy
 
 ```bash
-cd f:/Projects/lcncAK/flowforge
+cd f:/Projects/lcncAK/LeForge
 docker compose -f docker-compose.unified.yml up -d
 ```
 
@@ -299,7 +299,7 @@ docker compose -f docker-compose.unified.yml ps
 ### View Logs
 
 ```bash
-docker logs flowforge -f
+docker logs LeForge -f
 ```
 
 ### Access UI
@@ -330,13 +330,13 @@ docker compose -f docker-compose.unified.yml down
 
 ```
 # ~/.ssh/config
-Host flowforge
+Host LeForge
     HostName 10.0.0.166
     User dan
     IdentityFile ~/.ssh/your_key
 ```
 
-Then simply: `ssh flowforge`
+Then simply: `ssh LeForge`
 
 ### Network Security
 
@@ -357,9 +357,9 @@ Then simply: `ssh flowforge`
 ```
 ┌──────────────────────────────────────────────────────┐
 │  Your Machine (Windows)                              │
-│  f:/Projects/lcncAK/flowforge                        │
+│  f:/Projects/lcncAK/LeForge                        │
 │                                                      │
-│  Docker Context: flowforge-remote                   │
+│  Docker Context: LeForge-remote                   │
 │  Commands executed via SSH                          │
 └───────────────────────┬──────────────────────────────┘
                         │ SSH (dan@10.0.0.166)
@@ -369,7 +369,7 @@ Then simply: `ssh flowforge`
 │  Remote Docker Server (10.0.0.166)                  │
 │                                                      │
 │  ┌────────────────────────────────────────────────┐ │
-│  │  FlowForge Container (Port 3000)               │ │
+│  │  LeForge Container (Port 3000)               │ │
 │  │  - Frontend (React)                            │ │
 │  │  - Backend (Fastify)                           │ │
 │  └────────────────────────────────────────────────┘ │
@@ -396,8 +396,8 @@ Then simply: `ssh flowforge`
 
 - [ ] SSH key is set up for dan@10.0.0.166
 - [ ] Can SSH into server: `ssh dan@10.0.0.166`
-- [ ] Docker context created: `docker context create flowforge-remote`
-- [ ] Context switched: `docker context use flowforge-remote`
+- [ ] Docker context created: `docker context create LeForge-remote`
+- [ ] Context switched: `docker context use LeForge-remote`
 - [ ] Test Docker connection: `docker ps` (should show remote containers)
 - [ ] `.env` file configured
 - [ ] Deploy: `docker compose -f docker-compose.unified.yml up -d`
@@ -413,16 +413,16 @@ Your remote Docker setup is ready. Follow these steps:
 
 ```bash
 # 1. Create Docker context
-docker context create flowforge-remote --docker "host=ssh://dan@10.0.0.166"
+docker context create LeForge-remote --docker "host=ssh://dan@10.0.0.166"
 
 # 2. Switch to remote context
-docker context use flowforge-remote
+docker context use LeForge-remote
 
 # 3. Test connection
 docker ps
 
-# 4. Deploy FlowForge
-cd f:/Projects/lcncAK/flowforge
+# 4. Deploy LeForge
+cd f:/Projects/lcncAK/LeForge
 docker compose -f docker-compose.unified.yml up -d
 
 # 5. Access

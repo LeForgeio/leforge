@@ -1,5 +1,5 @@
 -- ============================================================================
--- FlowForge Plugin Manager - Registry Sources
+-- LeForge Plugin Manager - Registry Sources
 -- Migration: 002_create_registry_sources
 -- Description: Store marketplace registry sources (like Portainer app templates)
 -- ============================================================================

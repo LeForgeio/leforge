@@ -99,7 +99,7 @@ export function requireIntegrationEnabled(integrationId: string) {
       return reply.status(403).send({
         error: {
           code: 'INTEGRATION_DISABLED',
-          message: `The ${integrationId} integration is not enabled. Enable it in FlowForge settings.`,
+          message: `The ${integrationId} integration is not enabled. Enable it in LeForge settings.`,
         },
       });
     }
@@ -155,7 +155,7 @@ export function requireApiKeyAndIntegration(integrationId: string) {
       return reply.status(403).send({
         error: {
           code: 'INTEGRATION_DISABLED',
-          message: `The ${integrationId} integration is not enabled. Enable it in FlowForge settings.`,
+          message: `The ${integrationId} integration is not enabled. Enable it in LeForge settings.`,
         },
       });
     }

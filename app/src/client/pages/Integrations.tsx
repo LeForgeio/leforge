@@ -140,13 +140,13 @@ function ConnectorDetailDialog({
   onOpenChange,
   platform,
   connector,
-  flowforgeUrl,
+  LeForgeUrl,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   platform: PlatformConnector;
   connector: Integration;
-  flowforgeUrl: string;
+  LeForgeUrl: string;
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -174,10 +174,10 @@ function ConnectorDetailDialog({
 
           <TabsContent value="setup" className="space-y-4 mt-4">
             <div>
-              <h4 className="text-sm font-medium mb-2">1. FlowForge Endpoint URL</h4>
+              <h4 className="text-sm font-medium mb-2">1. LeForge Endpoint URL</h4>
               <div className="flex items-center gap-2 p-3 bg-accent/50 rounded-lg font-mono text-sm">
-                <span className="flex-1 truncate">{flowforgeUrl}</span>
-                <CopyButton value={flowforgeUrl} label="Endpoint URL" />
+                <span className="flex-1 truncate">{LeForgeUrl}</span>
+                <CopyButton value={LeForgeUrl} label="Endpoint URL" />
               </div>
             </div>
 
@@ -300,13 +300,13 @@ function PlatformDetailDialog({
   open,
   onOpenChange,
   platform,
-  flowforgeUrl,
+  LeForgeUrl,
   installedPluginIds,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   platform: PlatformConnector | null;
-  flowforgeUrl: string;
+  LeForgeUrl: string;
   installedPluginIds: string[];
 }) {
   const [selectedConnector, setSelectedConnector] = useState<Integration | null>(null);
@@ -350,7 +350,7 @@ function PlatformDetailDialog({
         }}
         platform={platform}
         connector={selectedConnector}
-        flowforgeUrl={flowforgeUrl}
+        LeForgeUrl={LeForgeUrl}
       />
     );
   }
@@ -480,8 +480,8 @@ export default function Integrations() {
 
   const installedPluginIds = pluginsData?.plugins?.map((p) => p.forgehookId) || [];
 
-  // Get FlowForge URL from current location
-  const flowforgeUrl = typeof window !== 'undefined' 
+  // Get LeForge URL from current location
+  const LeForgeUrl = typeof window !== 'undefined' 
     ? `${window.location.protocol}//${window.location.host}`
     : 'http://localhost:3000';
 
@@ -503,7 +503,7 @@ export default function Integrations() {
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Integrations</h1>
         <p className="text-muted-foreground">
-          Connect FlowForge to your workflow automation platforms
+          Connect LeForge to your workflow automation platforms
         </p>
       </div>
 
@@ -512,7 +512,7 @@ export default function Integrations() {
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
             <Cable className="w-4 h-4" />
-            Your FlowForge Endpoint
+            Your LeForge Endpoint
           </CardTitle>
           <CardDescription>
             Use this URL when configuring connectors in external platforms
@@ -520,8 +520,8 @@ export default function Integrations() {
         </CardHeader>
         <CardContent>
           <div className="flex items-center gap-2 p-3 bg-background rounded-lg font-mono text-sm">
-            <span className="flex-1 truncate">{flowforgeUrl}</span>
-            <CopyButton value={flowforgeUrl} label="FlowForge URL" />
+            <span className="flex-1 truncate">{LeForgeUrl}</span>
+            <CopyButton value={LeForgeUrl} label="LeForge URL" />
           </div>
         </CardContent>
       </Card>
@@ -640,7 +640,7 @@ export default function Integrations() {
         open={selectedPlatform !== null}
         onOpenChange={(open) => !open && setSelectedPlatform(null)}
         platform={selectedPlatform}
-        flowforgeUrl={flowforgeUrl}
+        LeForgeUrl={LeForgeUrl}
         installedPluginIds={installedPluginIds}
       />
     </div>

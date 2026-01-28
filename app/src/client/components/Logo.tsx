@@ -11,7 +11,7 @@ export function Logo({ className = '', width, height, variant = 'full' }: LogoPr
     return (
       <img
         src="/logo-icon.svg"
-        alt="FlowForge"
+        alt="LeForge"
         className={className}
         width={width}
         height={height}
@@ -23,7 +23,7 @@ export function Logo({ className = '', width, height, variant = 'full' }: LogoPr
   return (
     <img
       src="/logo.svg"
-      alt="FlowForge"
+      alt="LeForge"
       className={className}
       width={width}
       height={height}

@@ -28,11 +28,6 @@ export interface Config {
     password: string;
   };
 
-  // Kong
-  kong: {
-    adminUrl: string;
-  };
-
   // Plugin settings
   plugins: {
     portRangeStart: number;
@@ -53,30 +48,26 @@ export const config: Config = {
 
   dockerSocketPath: process.env.DOCKER_SOCKET_PATH || '/var/run/docker.sock',
   dockerHost: process.env.DOCKER_HOST,
-  dockerNetwork: process.env.DOCKER_NETWORK || 'flowforge-backend',
+  dockerNetwork: process.env.DOCKER_NETWORK || 'LeForge-backend',
 
   postgres: {
     host: process.env.POSTGRES_HOST || 'localhost',
     port: parseInt(process.env.POSTGRES_PORT || '5432', 10),
-    user: process.env.POSTGRES_USER || 'flowforge',
-    password: process.env.POSTGRES_PASSWORD || 'flowforge_password',
-    database: process.env.POSTGRES_DB || 'flowforge',
+    user: process.env.POSTGRES_USER || 'leforge',
+    password: process.env.POSTGRES_PASSWORD || 'leforge_password',
+    database: process.env.POSTGRES_DB || 'leforge',
   },
 
   redis: {
     host: process.env.REDIS_HOST || 'localhost',
     port: parseInt(process.env.REDIS_PORT || '6379', 10),
-    password: process.env.REDIS_PASSWORD || 'redis_password',
-  },
-
-  kong: {
-    adminUrl: process.env.KONG_ADMIN_URL || 'http://localhost:8001',
+    password: process.env.REDIS_PASSWORD || '',
   },
 
   plugins: {
     portRangeStart: parseInt(process.env.PLUGIN_PORT_RANGE_START || '4001', 10),
     portRangeEnd: parseInt(process.env.PLUGIN_PORT_RANGE_END || '4999', 10),
-    networkName: process.env.DOCKER_NETWORK || 'flowforge-backend',
+    networkName: process.env.DOCKER_NETWORK || 'LeForge-backend',
     volumePrefix: process.env.PLUGIN_VOLUME_PREFIX || 'forgehook-',
     containerPrefix: process.env.PLUGIN_CONTAINER_PREFIX || 'forgehook-',
   },

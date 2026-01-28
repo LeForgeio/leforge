@@ -269,7 +269,7 @@ function PluginRow({ plugin }: { plugin: InstalledPlugin }) {
                       title={plugin.runtime === 'container' 
                         ? 'Container: Runs in isolated Docker container' 
                         : plugin.runtime === 'core'
-                        ? 'Core: Built into FlowForge - always available'
+                        ? 'Core: Built into LeForge - always available'
                         : 'Embedded: Runs in-process for lower latency'}
                     >
                       {plugin.runtime === 'container' ? (
@@ -517,7 +517,7 @@ function PluginRow({ plugin }: { plugin: InstalledPlugin }) {
                   id="bundleUrl"
                   placeholder={isEmbedded 
                     ? 'https://example.com/plugin-v2.js' 
-                    : 'flowforge/my-plugin:v2.0.0'}
+                    : 'LeForge/my-plugin:v2.0.0'}
                   value={bundleUrl}
                   onChange={(e) => setBundleUrl(e.target.value)}
                 />

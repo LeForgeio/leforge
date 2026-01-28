@@ -25,22 +25,19 @@ const ENV_CHECKS: EnvVarCheck[] = [
   
   // Docker - required in production
   { name: 'DOCKER_SOCKET_PATH', required: false, defaultValue: '/var/run/docker.sock' },
-  { name: 'DOCKER_NETWORK', required: false, defaultValue: 'flowforge-backend' },
+  { name: 'DOCKER_NETWORK', required: false, defaultValue: 'LeForge-backend' },
   
   // PostgreSQL - warn if using defaults in production
   { name: 'POSTGRES_HOST', required: false, defaultValue: 'localhost' },
   { name: 'POSTGRES_PORT', required: false, defaultValue: '5432', validate: isValidPort },
-  { name: 'POSTGRES_USER', required: false, defaultValue: 'flowforge' },
-  { name: 'POSTGRES_PASSWORD', required: false, defaultValue: 'flowforge_password' },
-  { name: 'POSTGRES_DB', required: false, defaultValue: 'flowforge' },
+  { name: 'POSTGRES_USER', required: false, defaultValue: 'leforge' },
+  { name: 'POSTGRES_PASSWORD', required: false, defaultValue: 'leforge_password' },
+  { name: 'POSTGRES_DB', required: false, defaultValue: 'leforge' },
   
-  // Redis
+  // Redis (embedded - no password by default)
   { name: 'REDIS_HOST', required: false, defaultValue: 'localhost' },
   { name: 'REDIS_PORT', required: false, defaultValue: '6379', validate: isValidPort },
-  { name: 'REDIS_PASSWORD', required: false, defaultValue: 'redis_password' },
-  
-  // Kong
-  { name: 'KONG_ADMIN_URL', required: false, defaultValue: 'http://localhost:8001', validate: isValidUrl, message: 'Must be a valid URL' },
+  { name: 'REDIS_PASSWORD', required: false, defaultValue: '' },
   
   // Plugin settings
   { name: 'PLUGIN_PORT_RANGE_START', required: false, defaultValue: '4001', validate: isValidPort },
@@ -65,15 +62,6 @@ function isValidPort(value: string): boolean {
 
 function isValidLogLevel(value: string): boolean {
   return ['fatal', 'error', 'warn', 'info', 'debug', 'trace'].includes(value.toLowerCase());
-}
-
-function isValidUrl(value: string): boolean {
-  try {
-    new URL(value);
-    return true;
-  } catch {
-    return false;
-  }
 }
 
 /**
@@ -103,23 +91,12 @@ export function validateConfig(config: Config): ValidationResult {
   // Production-specific warnings
   if (isProduction) {
     // Warn about default passwords
-    if (process.env.POSTGRES_PASSWORD === 'flowforge_password' || !process.env.POSTGRES_PASSWORD) {
+    if (process.env.POSTGRES_PASSWORD === 'leforge_password' || !process.env.POSTGRES_PASSWORD) {
       warnings.push('POSTGRES_PASSWORD is using default value - change for production');
     }
-    if (process.env.REDIS_PASSWORD === 'redis_password' || !process.env.REDIS_PASSWORD) {
-      warnings.push('REDIS_PASSWORD is using default value - change for production');
-    }
     
-    // Warn about localhost in production
-    if (config.postgres.host === 'localhost') {
-      warnings.push('POSTGRES_HOST is localhost - expected internal hostname for production');
-    }
-    if (config.redis.host === 'localhost') {
-      warnings.push('REDIS_HOST is localhost - expected internal hostname for production');
-    }
-    if (config.kong.adminUrl.includes('localhost')) {
-      warnings.push('KONG_ADMIN_URL contains localhost - expected internal hostname for production');
-    }
+    // With embedded services, localhost is expected
+    // Only warn if using external services with localhost
   }
 
   // Port range validation
@@ -169,9 +146,6 @@ export function getSafeConfig(config: Config): Record<string, unknown> {
       host: config.redis.host,
       port: config.redis.port,
       password: '***REDACTED***',
-    },
-    kong: {
-      adminUrl: config.kong.adminUrl,
     },
     plugins: {
       portRangeStart: config.plugins.portRangeStart,

@@ -1,14 +1,14 @@
-# FlowForge Infrastructure
+# LeForge Infrastructure
 
-Production-ready infrastructure configuration for FlowForge platform.
+Production-ready infrastructure configuration for LeForge platform.
 
 ## Overview
 
-This directory contains all infrastructure components required to run FlowForge:
+This directory contains all infrastructure components required to run LeForge:
 
 | Service | Version | Port(s) | Purpose |
 |---------|---------|---------|---------|
-| PostgreSQL | 15-alpine | 5432 | Primary database for FlowForge and Kong |
+| PostgreSQL | 15-alpine | 5432 | Primary database for LeForge and Kong |
 | Redis | 7-alpine | 6379 | Caching, sessions, rate limiting |
 | Qdrant | latest | 6333, 6334 | Vector database for embeddings |
 | Kong Gateway | 3.4-alpine | 8000, 8001, 8443, 8444 | API Gateway |
@@ -69,7 +69,7 @@ infrastructure/
 │   │   └── postgresql.conf  # PostgreSQL settings
 │   └── init/
 │       ├── 00-create-databases.sh  # Multi-DB setup
-│       └── 01-init.sql            # FlowForge schema
+│       └── 01-init.sql            # LeForge schema
 └── redis/
     └── redis.conf         # Redis configuration
 ```
@@ -78,10 +78,10 @@ infrastructure/
 
 ### PostgreSQL
 
-- **Databases**: `flowforge_db` (application), `kong_db` (gateway)
+- **Databases**: `LeForge_db` (application), `kong_db` (gateway)
 - **Features**: UUID extension, pgcrypto, custom schema
 - **Health Check**: `pg_isready` every 10s
-- **Persistence**: Named volume `flowforge-postgres-data`
+- **Persistence**: Named volume `LeForge-postgres-data`
 
 ### Redis
 
@@ -89,7 +89,7 @@ infrastructure/
 - **Max Memory**: 512MB (configurable)
 - **Features**: Password protected, TCP keepalive
 - **Health Check**: Redis PING every 10s
-- **Persistence**: Named volume `flowforge-redis-data`
+- **Persistence**: Named volume `LeForge-redis-data`
 
 ### Qdrant
 
@@ -113,8 +113,8 @@ infrastructure/
 
 | Network | Subnet | Purpose |
 |---------|--------|---------|
-| flowforge-backend | 172.28.0.0/16 | Internal service communication |
-| flowforge-frontend | 172.29.0.0/16 | Public-facing services |
+| LeForge-backend | 172.28.0.0/16 | Internal service communication |
+| LeForge-frontend | 172.29.0.0/16 | Public-facing services |
 
 ## Resource Limits
 
@@ -139,27 +139,27 @@ infrastructure/
 
 ```bash
 # Check PostgreSQL logs
-docker logs flowforge-postgres
+docker logs LeForge-postgres
 
 # Test connection
-docker exec flowforge-postgres pg_isready -U flowforge
+docker exec LeForge-postgres pg_isready -U LeForge
 ```
 
 ### Redis Connection Issues
 
 ```bash
 # Check Redis logs
-docker logs flowforge-redis
+docker logs LeForge-redis
 
 # Test connection
-docker exec flowforge-redis redis-cli -a $REDIS_PASSWORD ping
+docker exec LeForge-redis redis-cli -a $REDIS_PASSWORD ping
 ```
 
 ### Kong Migration Issues
 
 ```bash
 # Check migration logs
-docker logs flowforge-kong-migrations
+docker logs LeForge-kong-migrations
 
 # Manually run migrations
 docker-compose run --rm kong-migrations kong migrations up
@@ -184,20 +184,20 @@ docker-compose run --rm kong-migrations kong migrations up
 
 ```bash
 # Create backup
-docker exec flowforge-postgres pg_dump -U flowforge flowforge_db > backup.sql
+docker exec LeForge-postgres pg_dump -U LeForge LeForge_db > backup.sql
 
 # Restore backup
-docker exec -i flowforge-postgres psql -U flowforge flowforge_db < backup.sql
+docker exec -i LeForge-postgres psql -U LeForge LeForge_db < backup.sql
 ```
 
 ### Redis Backup
 
 ```bash
 # Trigger RDB snapshot
-docker exec flowforge-redis redis-cli -a $REDIS_PASSWORD BGSAVE
+docker exec LeForge-redis redis-cli -a $REDIS_PASSWORD BGSAVE
 
 # Copy backup file
-docker cp flowforge-redis:/data/dump.rdb ./redis-backup.rdb
+docker cp LeForge-redis:/data/dump.rdb ./redis-backup.rdb
 ```
 
 ### Qdrant Backup

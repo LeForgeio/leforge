@@ -1,10 +1,10 @@
-# FlowForge Infrastructure Layer - Production Docker Compose
+# LeForge Infrastructure Layer - Production Docker Compose
 # Version: 1.0.0
-# Description: Production-ready infrastructure services for FlowForge
+# Description: Production-ready infrastructure services for LeForge
 
 version: '3.8'
 
-name: flowforge-infrastructure
+name: LeForge-infrastructure
 
 services:
   # ===========================================
@@ -12,12 +12,12 @@ services:
   # ===========================================
   postgres:
     image: postgres:15-alpine
-    container_name: flowforge-postgres
+    container_name: LeForge-postgres
     hostname: postgres
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-flowforge}
+      POSTGRES_USER: ${POSTGRES_USER:-LeForge}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
-      POSTGRES_DB: ${POSTGRES_DB:-flowforge_db}
+      POSTGRES_DB: ${POSTGRES_DB:-LeForge_db}
       PGDATA: /var/lib/postgresql/data/pgdata
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -28,7 +28,7 @@ services:
     networks:
       - backend
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-flowforge} -d ${POSTGRES_DB:-flowforge_db}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-LeForge} -d ${POSTGRES_DB:-LeForge_db}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -49,15 +49,15 @@ services:
         max-file: "5"
         labels: "service,environment"
     labels:
-      - "com.flowforge.service=postgres"
-      - "com.flowforge.tier=infrastructure"
+      - "com.LeForge.service=postgres"
+      - "com.LeForge.tier=infrastructure"
 
   # ===========================================
   # Redis Cache & Sessions
   # ===========================================
   redis:
     image: redis:7-alpine
-    container_name: flowforge-redis
+    container_name: LeForge-redis
     hostname: redis
     command: >
       redis-server
@@ -99,15 +99,15 @@ services:
         max-file: "3"
         labels: "service,environment"
     labels:
-      - "com.flowforge.service=redis"
-      - "com.flowforge.tier=infrastructure"
+      - "com.LeForge.service=redis"
+      - "com.LeForge.tier=infrastructure"
 
   # ===========================================
   # Qdrant Vector Database
   # ===========================================
   qdrant:
     image: qdrant/qdrant:latest
-    container_name: flowforge-qdrant
+    container_name: LeForge-qdrant
     hostname: qdrant
     environment:
       QDRANT__SERVICE__GRPC_PORT: 6334
@@ -146,15 +146,15 @@ services:
         max-file: "5"
         labels: "service,environment"
     labels:
-      - "com.flowforge.service=qdrant"
-      - "com.flowforge.tier=infrastructure"
+      - "com.LeForge.service=qdrant"
+      - "com.LeForge.tier=infrastructure"
 
   # ===========================================
   # Kong Gateway - Migrations
   # ===========================================
   kong-migrations:
     image: kong:3.9-alpine
-    container_name: flowforge-kong-migrations
+    container_name: LeForge-kong-migrations
     hostname: kong-migrations
     command: kong migrations bootstrap
     environment:
@@ -182,15 +182,15 @@ services:
         max-size: "10m"
         max-file: "2"
     labels:
-      - "com.flowforge.service=kong-migrations"
-      - "com.flowforge.tier=infrastructure"
+      - "com.LeForge.service=kong-migrations"
+      - "com.LeForge.tier=infrastructure"
 
   # ===========================================
   # Kong Gateway - Migration Up (for upgrades)
   # ===========================================
   kong-migrations-up:
     image: kong:3.9-alpine
-    container_name: flowforge-kong-migrations-up
+    container_name: LeForge-kong-migrations-up
     hostname: kong-migrations-up
     command: kong migrations up && kong migrations finish
     environment:
@@ -217,15 +217,15 @@ services:
         max-size: "10m"
         max-file: "2"
     labels:
-      - "com.flowforge.service=kong-migrations-up"
-      - "com.flowforge.tier=infrastructure"
+      - "com.LeForge.service=kong-migrations-up"
+      - "com.LeForge.tier=infrastructure"
 
   # ===========================================
   # Kong API Gateway
   # ===========================================
   kong:
     image: kong:3.9-alpine
-    container_name: flowforge-kong
+    container_name: LeForge-kong
     hostname: kong
     user: "${KONG_USER:-kong}"
     environment:
@@ -320,15 +320,15 @@ services:
         max-file: "10"
         labels: "service,environment"
     labels:
-      - "com.flowforge.service=kong"
-      - "com.flowforge.tier=gateway"
+      - "com.LeForge.service=kong"
+      - "com.LeForge.tier=gateway"
 
 # ===========================================
 # Networks
 # ===========================================
 networks:
   backend:
-    name: flowforge-backend
+    name: LeForge-backend
     driver: bridge
     ipam:
       driver: default
@@ -338,10 +338,10 @@ networks:
       com.docker.network.bridge.enable_icc: "true"
       com.docker.network.bridge.enable_ip_masquerade: "true"
     labels:
-      - "com.flowforge.network=backend"
+      - "com.LeForge.network=backend"
 
   frontend:
-    name: flowforge-frontend
+    name: LeForge-frontend
     driver: bridge
     ipam:
       driver: default
@@ -351,48 +351,48 @@ networks:
       com.docker.network.bridge.enable_icc: "true"
       com.docker.network.bridge.enable_ip_masquerade: "true"
     labels:
-      - "com.flowforge.network=frontend"
+      - "com.LeForge.network=frontend"
 
 # ===========================================
 # Volumes
 # ===========================================
 volumes:
   postgres_data:
-    name: flowforge-postgres-data
+    name: LeForge-postgres-data
     driver: local
     labels:
-      - "com.flowforge.volume=postgres-data"
-      - "com.flowforge.backup=true"
+      - "com.LeForge.volume=postgres-data"
+      - "com.LeForge.backup=true"
 
   redis_data:
-    name: flowforge-redis-data
+    name: LeForge-redis-data
     driver: local
     labels:
-      - "com.flowforge.volume=redis-data"
-      - "com.flowforge.backup=true"
+      - "com.LeForge.volume=redis-data"
+      - "com.LeForge.backup=true"
 
   qdrant_data:
-    name: flowforge-qdrant-data
+    name: LeForge-qdrant-data
     driver: local
     labels:
-      - "com.flowforge.volume=qdrant-data"
-      - "com.flowforge.backup=true"
+      - "com.LeForge.volume=qdrant-data"
+      - "com.LeForge.backup=true"
 
   qdrant_snapshots:
-    name: flowforge-qdrant-snapshots
+    name: LeForge-qdrant-snapshots
     driver: local
     labels:
-      - "com.flowforge.volume=qdrant-snapshots"
-      - "com.flowforge.backup=true"
+      - "com.LeForge.volume=qdrant-snapshots"
+      - "com.LeForge.backup=true"
 
   kong_prefix_vol:
-    name: flowforge-kong-prefix
+    name: LeForge-kong-prefix
     driver: local
     labels:
-      - "com.flowforge.volume=kong-prefix"
+      - "com.LeForge.volume=kong-prefix"
 
   kong_tmp_vol:
-    name: flowforge-kong-tmp
+    name: LeForge-kong-tmp
     driver: local
     labels:
-      - "com.flowforge.volume=kong-tmp"
+      - "com.LeForge.volume=kong-tmp"

@@ -57,7 +57,7 @@ export default function Services() {
       <div>
         <div className="mb-8">
           <h1 className="text-3xl font-bold">Services Catalog</h1>
-          <p className="text-muted-foreground mt-1">Explore all available FlowForge microservices</p>
+          <p className="text-muted-foreground mt-1">Explore all available LeForge microservices</p>
         </div>
         <Card className="p-8 text-center">
           <Plug className="w-12 h-12 mx-auto text-muted-foreground mb-4" />

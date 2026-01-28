@@ -1,8 +1,8 @@
 #!/bin/bash
 # ===========================================
-# FlowForge Database Initialization Script
+# LeForge Database Initialization Script
 # ===========================================
-# This script initializes both FlowForge and Kong databases
+# This script initializes both LeForge and Kong databases
 # Run this script after PostgreSQL is healthy
 # ===========================================
 
@@ -29,9 +29,9 @@ fi
 # Default values
 POSTGRES_HOST="${POSTGRES_HOST:-localhost}"
 POSTGRES_PORT="${POSTGRES_PORT:-5432}"
-POSTGRES_USER="${POSTGRES_USER:-flowforge}"
+POSTGRES_USER="${POSTGRES_USER:-LeForge}"
 POSTGRES_PASSWORD="${POSTGRES_PASSWORD:-}"
-POSTGRES_DB="${POSTGRES_DB:-flowforge_db}"
+POSTGRES_DB="${POSTGRES_DB:-LeForge_db}"
 
 KONG_PG_USER="${KONG_PG_USER:-kong}"
 KONG_PG_PASSWORD="${KONG_PG_PASSWORD:-}"
@@ -119,26 +119,26 @@ EOF
     fi
 }
 
-# Function to create FlowForge database schema
-create_flowforge_schema() {
-    print_status "Setting up FlowForge database schema..."
+# Function to create LeForge database schema
+create_LeForge_schema() {
+    print_status "Setting up LeForge database schema..."
     
-    # Create FlowForge database if not exists
+    # Create LeForge database if not exists
     if ! database_exists "$POSTGRES_DB"; then
-        print_status "Creating FlowForge database: $POSTGRES_DB"
+        print_status "Creating LeForge database: $POSTGRES_DB"
         PGPASSWORD="$POSTGRES_PASSWORD" psql -h "$POSTGRES_HOST" -p "$POSTGRES_PORT" -U "$POSTGRES_USER" -d "postgres" << EOF
 CREATE DATABASE $POSTGRES_DB;
 EOF
-        print_success "FlowForge database created"
+        print_success "LeForge database created"
     else
-        print_warning "FlowForge database already exists"
+        print_warning "LeForge database already exists"
     fi
     
     # Run initialization SQL
     if [ -f "$PROJECT_ROOT/infrastructure/postgres/init/01-init.sql" ]; then
-        print_status "Running FlowForge initialization SQL..."
+        print_status "Running LeForge initialization SQL..."
         PGPASSWORD="$POSTGRES_PASSWORD" psql -h "$POSTGRES_HOST" -p "$POSTGRES_PORT" -U "$POSTGRES_USER" -d "$POSTGRES_DB" -f "$PROJECT_ROOT/infrastructure/postgres/init/01-init.sql"
-        print_success "FlowForge schema initialized"
+        print_success "LeForge schema initialized"
     else
         print_warning "Initialization SQL not found at: $PROJECT_ROOT/infrastructure/postgres/init/01-init.sql"
     fi
@@ -146,13 +146,13 @@ EOF
 
 # Function to create additional tables
 create_additional_tables() {
-    print_status "Creating additional FlowForge tables..."
+    print_status "Creating additional LeForge tables..."
     
     PGPASSWORD="$POSTGRES_PASSWORD" psql -h "$POSTGRES_HOST" -p "$POSTGRES_PORT" -U "$POSTGRES_USER" -d "$POSTGRES_DB" << 'EOF'
--- Additional FlowForge tables
+-- Additional LeForge tables
 
 -- Service registry table
-CREATE TABLE IF NOT EXISTS flowforge.services (
+CREATE TABLE IF NOT EXISTS LeForge.services (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name VARCHAR(100) NOT NULL UNIQUE,
     display_name VARCHAR(255) NOT NULL,
@@ -166,10 +166,10 @@ CREATE TABLE IF NOT EXISTS flowforge.services (
 );
 
 -- Rate limit configurations
-CREATE TABLE IF NOT EXISTS flowforge.rate_limits (
+CREATE TABLE IF NOT EXISTS LeForge.rate_limits (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    api_key_id UUID REFERENCES flowforge.api_keys(id) ON DELETE CASCADE,
-    service_id UUID REFERENCES flowforge.services(id) ON DELETE CASCADE,
+    api_key_id UUID REFERENCES LeForge.api_keys(id) ON DELETE CASCADE,
+    service_id UUID REFERENCES LeForge.services(id) ON DELETE CASCADE,
     requests_per_minute INTEGER DEFAULT 60,
     requests_per_hour INTEGER DEFAULT 1000,
     requests_per_day INTEGER DEFAULT 10000,
@@ -179,10 +179,10 @@ CREATE TABLE IF NOT EXISTS flowforge.rate_limits (
 );
 
 -- Audit log table
-CREATE TABLE IF NOT EXISTS flowforge.audit_logs (
+CREATE TABLE IF NOT EXISTS LeForge.audit_logs (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID,
-    api_key_id UUID REFERENCES flowforge.api_keys(id) ON DELETE SET NULL,
+    api_key_id UUID REFERENCES LeForge.api_keys(id) ON DELETE SET NULL,
     action VARCHAR(100) NOT NULL,
     resource_type VARCHAR(100),
     resource_id UUID,
@@ -193,15 +193,15 @@ CREATE TABLE IF NOT EXISTS flowforge.audit_logs (
 );
 
 -- Create indexes
-CREATE INDEX IF NOT EXISTS idx_services_name ON flowforge.services(name);
-CREATE INDEX IF NOT EXISTS idx_services_status ON flowforge.services(status);
-CREATE INDEX IF NOT EXISTS idx_rate_limits_api_key ON flowforge.rate_limits(api_key_id);
-CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at ON flowforge.audit_logs(created_at);
-CREATE INDEX IF NOT EXISTS idx_audit_logs_api_key ON flowforge.audit_logs(api_key_id);
-CREATE INDEX IF NOT EXISTS idx_audit_logs_action ON flowforge.audit_logs(action);
+CREATE INDEX IF NOT EXISTS idx_services_name ON LeForge.services(name);
+CREATE INDEX IF NOT EXISTS idx_services_status ON LeForge.services(status);
+CREATE INDEX IF NOT EXISTS idx_rate_limits_api_key ON LeForge.rate_limits(api_key_id);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at ON LeForge.audit_logs(created_at);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_api_key ON LeForge.audit_logs(api_key_id);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_action ON LeForge.audit_logs(action);
 
 -- Insert default services
-INSERT INTO flowforge.services (name, display_name, description, version, endpoint_url, health_check_url)
+INSERT INTO LeForge.services (name, display_name, description, version, endpoint_url, health_check_url)
 VALUES 
     ('crypto-service', 'Cryptography Service', 'Encryption, hashing, and cryptographic operations', '1.0.0', 'http://crypto-service:3001', 'http://crypto-service:3001/health'),
     ('math-service', 'Mathematics Service', 'Mathematical calculations and formulas', '1.0.0', 'http://math-service:3002', 'http://math-service:3002/health'),
@@ -219,7 +219,7 @@ ON CONFLICT (name) DO UPDATE SET
     updated_at = NOW();
 
 -- Create updated_at trigger function
-CREATE OR REPLACE FUNCTION flowforge.update_updated_at_column()
+CREATE OR REPLACE FUNCTION LeForge.update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at = NOW();
@@ -228,17 +228,17 @@ END;
 $$ language 'plpgsql';
 
 -- Apply trigger to tables with updated_at
-DROP TRIGGER IF EXISTS update_services_updated_at ON flowforge.services;
+DROP TRIGGER IF EXISTS update_services_updated_at ON LeForge.services;
 CREATE TRIGGER update_services_updated_at
-    BEFORE UPDATE ON flowforge.services
+    BEFORE UPDATE ON LeForge.services
     FOR EACH ROW
-    EXECUTE FUNCTION flowforge.update_updated_at_column();
+    EXECUTE FUNCTION LeForge.update_updated_at_column();
 
-DROP TRIGGER IF EXISTS update_rate_limits_updated_at ON flowforge.rate_limits;
+DROP TRIGGER IF EXISTS update_rate_limits_updated_at ON LeForge.rate_limits;
 CREATE TRIGGER update_rate_limits_updated_at
-    BEFORE UPDATE ON flowforge.rate_limits
+    BEFORE UPDATE ON LeForge.rate_limits
     FOR EACH ROW
-    EXECUTE FUNCTION flowforge.update_updated_at_column();
+    EXECUTE FUNCTION LeForge.update_updated_at_column();
 
 COMMIT;
 EOF
@@ -252,11 +252,11 @@ verify_setup() {
     
     local errors=0
     
-    # Check FlowForge database
+    # Check LeForge database
     if database_exists "$POSTGRES_DB"; then
-        print_success "FlowForge database exists: $POSTGRES_DB"
+        print_success "LeForge database exists: $POSTGRES_DB"
     else
-        print_error "FlowForge database not found: $POSTGRES_DB"
+        print_error "LeForge database not found: $POSTGRES_DB"
         ((errors++))
     fi
     
@@ -276,9 +276,9 @@ verify_setup() {
         ((errors++))
     fi
     
-    # Check FlowForge tables
-    local table_count=$(PGPASSWORD="$POSTGRES_PASSWORD" psql -h "$POSTGRES_HOST" -p "$POSTGRES_PORT" -U "$POSTGRES_USER" -d "$POSTGRES_DB" -tAc "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'flowforge'")
-    print_status "FlowForge tables count: $table_count"
+    # Check LeForge tables
+    local table_count=$(PGPASSWORD="$POSTGRES_PASSWORD" psql -h "$POSTGRES_HOST" -p "$POSTGRES_PORT" -U "$POSTGRES_USER" -d "$POSTGRES_DB" -tAc "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'LeForge'")
+    print_status "LeForge tables count: $table_count"
     
     if [ $errors -eq 0 ]; then
         print_success "Database verification completed successfully!"
@@ -293,7 +293,7 @@ verify_setup() {
 main() {
     echo ""
     echo "=========================================="
-    echo "  FlowForge Database Initialization"
+    echo "  LeForge Database Initialization"
     echo "=========================================="
     echo ""
     
@@ -310,7 +310,7 @@ main() {
     
     print_status "Configuration:"
     print_status "  PostgreSQL Host: $POSTGRES_HOST:$POSTGRES_PORT"
-    print_status "  FlowForge DB: $POSTGRES_DB"
+    print_status "  LeForge DB: $POSTGRES_DB"
     print_status "  Kong DB: $KONG_PG_DATABASE"
     print_status "  Kong User: $KONG_PG_USER"
     echo ""
@@ -318,7 +318,7 @@ main() {
     # Execute initialization steps
     wait_for_postgres
     create_kong_database
-    create_flowforge_schema
+    create_LeForge_schema
     create_additional_tables
     verify_setup
     

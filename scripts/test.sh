@@ -1,9 +1,9 @@
 #!/bin/bash
-# FlowForge Test Script
+# LeForge Test Script
 
 set -e
 
-echo "🧪 Running FlowForge tests..."
+echo "🧪 Running LeForge tests..."
 
 # Test Node.js services
 echo "Testing crypto-service..."

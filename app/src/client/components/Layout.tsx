@@ -17,8 +17,8 @@ const navItems = [
   { path: '/docs', label: 'Documentation', icon: Book },
 ];
 
-// FlowForge Logo Component
-function FlowForgeLogo({ collapsed = false }: { collapsed?: boolean }) {
+// LeForge Logo Component
+function LeForgeLogo({ collapsed = false }: { collapsed?: boolean }) {
   return (
     <Link to="/" className="flex items-center gap-2.5 group">
       <div className="relative">
@@ -107,7 +107,7 @@ export default function Layout() {
         
         <div className="px-3 pt-2">
           <p className="text-[10px] text-muted-foreground/60 uppercase tracking-wider">
-            FlowForge v1.0.0
+            LeForge v1.0.0
           </p>
         </div>
       </div>
@@ -118,7 +118,7 @@ export default function Layout() {
     <div className="min-h-screen flex flex-col md:flex-row">
       {/* Mobile Header */}
       <header className="md:hidden bg-card/80 backdrop-blur-xl border-b border-border/50 p-4 flex items-center justify-between sticky top-0 z-50">
-        <FlowForgeLogo />
+        <LeForgeLogo />
         <Button 
           variant="ghost" 
           size="icon" 
@@ -143,7 +143,7 @@ export default function Layout() {
         mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
       )}>
         <div className="p-4 border-b border-border/50">
-          <FlowForgeLogo />
+          <LeForgeLogo />
         </div>
         {navContent}
       </aside>
@@ -151,7 +151,7 @@ export default function Layout() {
       {/* Desktop Sidebar */}
       <aside className="hidden md:flex w-64 bg-card/50 border-r border-border/50 flex-col sticky top-0 h-screen">
         <div className="p-4 border-b border-border/50">
-          <FlowForgeLogo />
+          <LeForgeLogo />
         </div>
         {navContent}
       </aside>

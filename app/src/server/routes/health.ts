@@ -20,7 +20,7 @@ export async function healthRoutes(fastify: FastifyInstance) {
 
     return reply.status(statusCode).send({
       status,
-      service: 'flowforge',
+      service: 'LeForge',
       version: getVersion(),
       environment: buildInfo.environment,
       nodeVersion: buildInfo.nodeVersion,
@@ -92,7 +92,7 @@ export async function healthRoutes(fastify: FastifyInstance) {
     const envFromDefault = Object.values(configSources).filter(s => s === 'default').length;
 
     return reply.send({
-      service: 'flowforge',
+      service: 'LeForge',
       version: getVersion(),
       build: buildInfo,
       uptime: {

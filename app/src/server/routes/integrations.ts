@@ -66,7 +66,7 @@ const PLATFORM_CONNECTORS: Platform[] = [
     id: 'nintex-forms',
     name: 'Nintex Forms',
     format: 'Form Plugins (JavaScript)',
-    description: 'Extend Nintex Forms with custom controls, validators, and data integrations using FlowForge services.',
+    description: 'Extend Nintex Forms with custom controls, validators, and data integrations using LeForge services.',
     status: 'in-development',
     documentationUrl: 'https://help.nintex.com/en-US/formplugins/Home.htm',
     categories: {
@@ -88,7 +88,7 @@ const PLATFORM_CONNECTORS: Platform[] = [
           'Download the plugin JavaScript file',
           'In Nintex Forms designer, go to Form Settings > Custom JavaScript',
           'Upload or paste the plugin code',
-          'Configure the FlowForge endpoint URL and API key',
+          'Configure the LeForge endpoint URL and API key',
           'Use NWC.FormPlugins.register() to activate the plugin',
         ],
         formEvents: ['NWC.FormReady', 'NWC.BeforeSave', 'NWC.AfterSave', 'NWC.ControlChange'],
@@ -150,10 +150,10 @@ const PLATFORM_CONNECTORS: Platform[] = [
       // Data Access - External Data Plugin
       {
         id: 'nf-data-lookup',
-        name: 'FlowForge Data Lookup',
+        name: 'LeForge Data Lookup',
         category: 'data-access',
         pluginId: 'gateway',
-        pluginName: 'FlowForge Gateway',
+        pluginName: 'LeForge Gateway',
         repositoryUrl: 'https://github.com/LeForgeio/registry/tree/master/integrations/nintex-forms/plugins/DataLookup',
         dataOperations: ['read', 'search'],
         formEvents: ['NWC.ControlChange'],
@@ -181,26 +181,26 @@ const PLATFORM_CONNECTORS: Platform[] = [
       dataAccess: true,
     },
     connectors: [
-      // Service Broker - FlowForge REST
+      // Service Broker - LeForge REST
       {
-        id: 'k2-flowforge-broker',
-        name: 'FlowForge REST Service Broker',
+        id: 'k2-LeForge-broker',
+        name: 'LeForge REST Service Broker',
         category: 'service-broker',
         pluginId: 'gateway',
-        pluginName: 'FlowForge Gateway',
-        repositoryUrl: 'https://github.com/LeForgeio/registry/tree/master/integrations/nintex-k2/service-brokers/FlowForgeRest',
+        pluginName: 'LeForge Gateway',
+        repositoryUrl: 'https://github.com/LeForgeio/registry/tree/master/integrations/nintex-k2/service-brokers/LeForgeRest',
         documentationUrl: 'https://help.nintex.com/en-US/nintexautomation/devref/current/Content/Extend/DeveloperReference/CustomServiceBrokers/CustomServiceBrokers.htm',
         setupSteps: [
           'Deploy the Service Broker DLL to K2 blackpearl server',
           'Register the Service Broker in K2 Management',
-          'Create a Service Instance with your FlowForge endpoint',
+          'Create a Service Instance with your LeForge endpoint',
           'Configure authentication with API key',
           'Service Objects will be available for SmartObject creation',
         ],
         dataOperations: ['create', 'read', 'update', 'delete', 'execute'],
         actions: [
-          { name: 'Execute Plugin', method: 'POST', path: '/execute', description: 'Execute any FlowForge plugin' },
-          { name: 'List Services', method: 'GET', path: '/services', description: 'Get available FlowForge services' },
+          { name: 'Execute Plugin', method: 'POST', path: '/execute', description: 'Execute any LeForge plugin' },
+          { name: 'List Services', method: 'GET', path: '/services', description: 'Get available LeForge services' },
         ],
       },
       // SmartObject - LLM Service
@@ -215,7 +215,7 @@ const PLATFORM_CONNECTORS: Platform[] = [
         dataOperations: ['execute'],
         setupSteps: [
           'Import the SmartObject definition into K2 Designer',
-          'Configure the FlowForge Service Instance',
+          'Configure the LeForge Service Instance',
           'Map input/output properties',
           'Use in workflows or SmartForms',
         ],
@@ -285,7 +285,7 @@ const PLATFORM_CONNECTORS: Platform[] = [
         name: 'Smart Lookup Control',
         category: 'form-control',
         pluginId: 'gateway',
-        pluginName: 'FlowForge Gateway',
+        pluginName: 'LeForge Gateway',
         controlType: 'dropdown',
         repositoryUrl: 'https://github.com/LeForgeio/registry/tree/master/integrations/nintex-k2/controls/SmartLookup',
         setupSteps: [
@@ -322,7 +322,7 @@ const PLATFORM_CONNECTORS: Platform[] = [
     id: 'nintex-cloud',
     name: 'Nintex Workflow Cloud',
     format: 'OpenAPI Xtension',
-    description: 'Extend Nintex Workflow Cloud with FlowForge AI and data processing capabilities.',
+    description: 'Extend Nintex Workflow Cloud with LeForge AI and data processing capabilities.',
     status: 'ready',
     documentationUrl: 'https://help.nintex.com/en-US/xtensions/Home.htm',
     categories: {
@@ -341,7 +341,7 @@ const PLATFORM_CONNECTORS: Platform[] = [
           'Download the Xtension JSON file',
           'Go to Nintex Workflow Cloud > Xtensions',
           'Click "Add custom connector" and upload the file',
-          'Configure the connector with your FlowForge URL and API key',
+          'Configure the connector with your LeForge URL and API key',
           'The actions will appear in the workflow designer',
         ],
         actions: [
@@ -395,12 +395,12 @@ const PLATFORM_CONNECTORS: Platform[] = [
         name: 'Gateway Xtension',
         category: 'workflow',
         pluginId: 'gateway',
-        pluginName: 'FlowForge Gateway',
+        pluginName: 'LeForge Gateway',
         downloadUrl: 'https://raw.githubusercontent.com/LeForgeio/registry/master/integrations/nintex-cloud/Gateway/xtension.json',
         repositoryUrl: 'https://github.com/LeForgeio/registry/tree/master/integrations/nintex-cloud/Gateway',
         actions: [
-          { name: 'List Services', method: 'GET', path: '/services', description: 'Get available FlowForge services' },
-          { name: 'Health Check', method: 'GET', path: '/health', description: 'Check FlowForge status' },
+          { name: 'List Services', method: 'GET', path: '/services', description: 'Get available LeForge services' },
+          { name: 'Health Check', method: 'GET', path: '/health', description: 'Check LeForge status' },
         ],
       },
     ],
@@ -413,7 +413,7 @@ const PLATFORM_CONNECTORS: Platform[] = [
     id: 'power-platform',
     name: 'Microsoft Power Platform',
     format: 'Custom Connectors + PCF Controls',
-    description: 'Connect FlowForge to Power Automate flows, Power Apps, and Dataverse with custom connectors and PCF components.',
+    description: 'Connect LeForge to Power Automate flows, Power Apps, and Dataverse with custom connectors and PCF components.',
     status: 'in-development',
     documentationUrl: 'https://learn.microsoft.com/en-us/connectors/custom-connectors/',
     categories: {
@@ -436,7 +436,7 @@ const PLATFORM_CONNECTORS: Platform[] = [
           'Go to Power Automate > Data > Custom Connectors',
           'Click "New custom connector" > "Import an OpenAPI file"',
           'Upload the connector file and configure security',
-          'Create a connection with your FlowForge API key',
+          'Create a connection with your LeForge API key',
         ],
         actions: [
           { name: 'Chat Completion', method: 'POST', path: '/chat', description: 'Generate AI chat responses' },
@@ -487,7 +487,7 @@ const PLATFORM_CONNECTORS: Platform[] = [
           'Download the PCF solution package (.zip)',
           'Import into your Power Apps environment',
           'Add the control to your Canvas or Model-driven app',
-          'Configure FlowForge connection in control properties',
+          'Configure LeForge connection in control properties',
         ],
         actions: [
           { name: 'Auto-complete', method: 'POST', path: '/complete', description: 'AI-powered text completion' },
@@ -508,24 +508,24 @@ const PLATFORM_CONNECTORS: Platform[] = [
           { name: 'Extract fields', method: 'POST', path: '/extract', description: 'Extract form fields from images' },
         ],
       },
-      // Virtual Table - FlowForge Data
+      // Virtual Table - LeForge Data
       {
         id: 'pa-virtual-table',
-        name: 'FlowForge Virtual Table',
+        name: 'LeForge Virtual Table',
         category: 'data-access',
         pluginId: 'gateway',
-        pluginName: 'FlowForge Gateway',
-        repositoryUrl: 'https://github.com/LeForgeio/registry/tree/master/integrations/power-platform/virtual-tables/FlowForgeData',
+        pluginName: 'LeForge Gateway',
+        repositoryUrl: 'https://github.com/LeForgeio/registry/tree/master/integrations/power-platform/virtual-tables/LeForgeData',
         documentationUrl: 'https://learn.microsoft.com/en-us/power-apps/maker/data-platform/create-edit-virtual-entities',
         dataOperations: ['read', 'list'],
         setupSteps: [
           'Register the virtual table provider in Dataverse',
           'Create virtual table entity definition',
-          'Configure FlowForge endpoint and authentication',
+          'Configure LeForge endpoint and authentication',
           'Use in Power Apps like any Dataverse table',
         ],
         actions: [
-          { name: 'Get records', method: 'GET', path: '/data', description: 'Retrieve records from FlowForge' },
+          { name: 'Get records', method: 'GET', path: '/data', description: 'Retrieve records from LeForge' },
           { name: 'Query data', method: 'POST', path: '/query', description: 'Query with filters' },
         ],
       },
@@ -539,7 +539,7 @@ const PLATFORM_CONNECTORS: Platform[] = [
     id: 'n8n',
     name: 'n8n',
     format: 'Community Nodes (TypeScript)',
-    description: 'Use FlowForge nodes in your n8n self-hosted automation workflows.',
+    description: 'Use LeForge nodes in your n8n self-hosted automation workflows.',
     status: 'in-development',
     documentationUrl: 'https://docs.n8n.io/integrations/community-nodes/',
     categories: {
@@ -547,30 +547,30 @@ const PLATFORM_CONNECTORS: Platform[] = [
     },
     connectors: [
       {
-        id: 'n8n-flowforge',
-        name: 'FlowForge Node',
+        id: 'n8n-LeForge',
+        name: 'LeForge Node',
         category: 'node',
-        pluginId: 'flowforge',
-        pluginName: 'FlowForge',
-        repositoryUrl: 'https://github.com/LeForgeio/registry/tree/master/integrations/n8n/nodes/FlowForge',
+        pluginId: 'LeForge',
+        pluginName: 'LeForge',
+        repositoryUrl: 'https://github.com/LeForgeio/registry/tree/master/integrations/n8n/nodes/LeForge',
         setupSteps: [
           'In n8n, go to Settings > Community Nodes',
-          'Install n8n-nodes-flowforge package',
-          'Create credentials with your FlowForge URL and API key',
-          'The FlowForge node will be available in the workflow editor',
+          'Install n8n-nodes-LeForge package',
+          'Create credentials with your LeForge URL and API key',
+          'The LeForge node will be available in the workflow editor',
         ],
         actions: [
-          { name: 'Execute Plugin', method: 'POST', path: '/execute', description: 'Call any FlowForge plugin endpoint' },
+          { name: 'Execute Plugin', method: 'POST', path: '/execute', description: 'Call any LeForge plugin endpoint' },
           { name: 'List Plugins', method: 'GET', path: '/plugins', description: 'Get installed plugins' },
         ],
       },
       {
         id: 'n8n-llm-node',
-        name: 'FlowForge AI Node',
+        name: 'LeForge AI Node',
         category: 'node',
         pluginId: 'llm-service',
         pluginName: 'LLM Service',
-        repositoryUrl: 'https://github.com/LeForgeio/registry/tree/master/integrations/n8n/nodes/FlowForgeAI',
+        repositoryUrl: 'https://github.com/LeForgeio/registry/tree/master/integrations/n8n/nodes/LeForgeAI',
         actions: [
           { name: 'Chat', method: 'POST', path: '/chat', description: 'AI chat completion' },
           { name: 'Generate', method: 'POST', path: '/generate', description: 'Text generation' },
@@ -587,7 +587,7 @@ const PLATFORM_CONNECTORS: Platform[] = [
     id: 'salesforce',
     name: 'Salesforce',
     format: 'External Services + Apex + LWC',
-    description: 'Call FlowForge services from Salesforce Flow Builder, Apex code, and Lightning Web Components.',
+    description: 'Call LeForge services from Salesforce Flow Builder, Apex code, and Lightning Web Components.',
     status: 'planned',
     documentationUrl: 'https://developer.salesforce.com/docs/atlas.en-us.externalservices.meta/externalservices/',
     categories: {
@@ -599,32 +599,32 @@ const PLATFORM_CONNECTORS: Platform[] = [
       // External Service
       {
         id: 'sf-external-service',
-        name: 'FlowForge External Service',
+        name: 'LeForge External Service',
         category: 'workflow',
         pluginId: 'gateway',
-        pluginName: 'FlowForge Gateway',
-        repositoryUrl: 'https://github.com/LeForgeio/registry/tree/master/integrations/salesforce/external-services/FlowForge',
+        pluginName: 'LeForge Gateway',
+        repositoryUrl: 'https://github.com/LeForgeio/registry/tree/master/integrations/salesforce/external-services/LeForge',
         setupSteps: [
           'Upload OpenAPI spec to Salesforce Setup > External Services',
-          'Create Named Credential for FlowForge endpoint',
+          'Create Named Credential for LeForge endpoint',
           'Generate Apex classes from the spec',
           'Use invocable methods in Flow Builder',
         ],
         actions: [
-          { name: 'Execute action', method: 'POST', path: '/execute', description: 'Execute FlowForge plugin' },
+          { name: 'Execute action', method: 'POST', path: '/execute', description: 'Execute LeForge plugin' },
         ],
       },
       // Apex Classes
       {
         id: 'sf-apex-wrapper',
-        name: 'FlowForge Apex Wrapper',
+        name: 'LeForge Apex Wrapper',
         category: 'data-access',
         pluginId: 'gateway',
-        pluginName: 'FlowForge Gateway',
-        repositoryUrl: 'https://github.com/LeForgeio/registry/tree/master/integrations/salesforce/apex/FlowForgeWrapper',
+        pluginName: 'LeForge Gateway',
+        repositoryUrl: 'https://github.com/LeForgeio/registry/tree/master/integrations/salesforce/apex/LeForgeWrapper',
         dataOperations: ['execute'],
         actions: [
-          { name: 'callFlowForge', method: 'POST', path: '/api', description: 'Generic FlowForge API call' },
+          { name: 'callLeForge', method: 'POST', path: '/api', description: 'Generic LeForge API call' },
           { name: 'chatCompletion', method: 'POST', path: '/chat', description: 'AI chat completion' },
         ],
       },
@@ -651,7 +651,7 @@ const PLATFORM_CONNECTORS: Platform[] = [
     id: 'servicenow',
     name: 'ServiceNow',
     format: 'IntegrationHub Spoke + UI Components',
-    description: 'Add FlowForge capabilities to ServiceNow Flow Designer workflows and Service Portal widgets.',
+    description: 'Add LeForge capabilities to ServiceNow Flow Designer workflows and Service Portal widgets.',
     status: 'planned',
     documentationUrl: 'https://developer.servicenow.com/dev.do#!/reference/api/latest',
     categories: {
@@ -663,29 +663,29 @@ const PLATFORM_CONNECTORS: Platform[] = [
       // IntegrationHub Spoke
       {
         id: 'snow-spoke',
-        name: 'FlowForge Spoke',
+        name: 'LeForge Spoke',
         category: 'workflow',
         pluginId: 'gateway',
-        pluginName: 'FlowForge Gateway',
-        repositoryUrl: 'https://github.com/LeForgeio/registry/tree/master/integrations/servicenow/spoke/FlowForge',
+        pluginName: 'LeForge Gateway',
+        repositoryUrl: 'https://github.com/LeForgeio/registry/tree/master/integrations/servicenow/spoke/LeForge',
         setupSteps: [
           'Import the Spoke application into ServiceNow',
           'Configure Connection & Credential Alias',
           'Actions will appear in Flow Designer',
         ],
         actions: [
-          { name: 'Execute Plugin', method: 'POST', path: '/execute', description: 'Execute FlowForge plugin' },
+          { name: 'Execute Plugin', method: 'POST', path: '/execute', description: 'Execute LeForge plugin' },
           { name: 'AI Chat', method: 'POST', path: '/chat', description: 'AI chat completion' },
         ],
       },
       // Scripted REST API
       {
         id: 'snow-scripted-rest',
-        name: 'FlowForge Scripted REST',
+        name: 'LeForge Scripted REST',
         category: 'data-access',
         pluginId: 'gateway',
-        pluginName: 'FlowForge Gateway',
-        repositoryUrl: 'https://github.com/LeForgeio/registry/tree/master/integrations/servicenow/scripted-rest/FlowForge',
+        pluginName: 'LeForge Gateway',
+        repositoryUrl: 'https://github.com/LeForgeio/registry/tree/master/integrations/servicenow/scripted-rest/LeForge',
         dataOperations: ['execute'],
       },
       // Service Portal Widget
@@ -708,7 +708,7 @@ const PLATFORM_CONNECTORS: Platform[] = [
     id: 'outsystems',
     name: 'OutSystems',
     format: 'Forge Component + UI Blocks',
-    description: 'Consume FlowForge REST APIs in OutSystems applications with ready-to-use UI blocks.',
+    description: 'Consume LeForge REST APIs in OutSystems applications with ready-to-use UI blocks.',
     status: 'planned',
     documentationUrl: 'https://success.outsystems.com/documentation/11/developing_an_application/integrate_with_external_systems/',
     categories: {
@@ -720,11 +720,11 @@ const PLATFORM_CONNECTORS: Platform[] = [
       // REST Integration
       {
         id: 'os-rest-integration',
-        name: 'FlowForge REST Integration',
+        name: 'LeForge REST Integration',
         category: 'data-access',
         pluginId: 'gateway',
-        pluginName: 'FlowForge Gateway',
-        repositoryUrl: 'https://github.com/LeForgeio/registry/tree/master/integrations/outsystems/rest/FlowForge',
+        pluginName: 'LeForge Gateway',
+        repositoryUrl: 'https://github.com/LeForgeio/registry/tree/master/integrations/outsystems/rest/LeForge',
         dataOperations: ['execute'],
         setupSteps: [
           'Import the Forge component into Service Studio',
@@ -752,7 +752,7 @@ const PLATFORM_CONNECTORS: Platform[] = [
     id: 'mendix',
     name: 'Mendix',
     format: 'Marketplace Module + Widgets',
-    description: 'Integrate FlowForge services into Mendix low-code applications with pluggable widgets.',
+    description: 'Integrate LeForge services into Mendix low-code applications with pluggable widgets.',
     status: 'planned',
     documentationUrl: 'https://docs.mendix.com/appstore/creating-content/connector-guide/',
     categories: {
@@ -764,11 +764,11 @@ const PLATFORM_CONNECTORS: Platform[] = [
       // Connector Module
       {
         id: 'mx-connector',
-        name: 'FlowForge Connector Module',
+        name: 'LeForge Connector Module',
         category: 'data-access',
         pluginId: 'gateway',
-        pluginName: 'FlowForge Gateway',
-        repositoryUrl: 'https://github.com/LeForgeio/registry/tree/master/integrations/mendix/modules/FlowForgeConnector',
+        pluginName: 'LeForge Gateway',
+        repositoryUrl: 'https://github.com/LeForgeio/registry/tree/master/integrations/mendix/modules/LeForgeConnector',
         dataOperations: ['execute'],
         setupSteps: [
           'Download module from Mendix Marketplace',
@@ -798,7 +798,7 @@ const PLATFORM_CONNECTORS: Platform[] = [
     id: 'zapier',
     name: 'Zapier',
     format: 'Zapier App',
-    description: 'Connect FlowForge to 5000+ apps with Zapier triggers and actions.',
+    description: 'Connect LeForge to 5000+ apps with Zapier triggers and actions.',
     status: 'planned',
     documentationUrl: 'https://platform.zapier.com/build/how-zapier-works',
     categories: {
@@ -807,13 +807,13 @@ const PLATFORM_CONNECTORS: Platform[] = [
     connectors: [
       {
         id: 'zapier-app',
-        name: 'FlowForge Zapier App',
+        name: 'LeForge Zapier App',
         category: 'workflow',
         pluginId: 'gateway',
-        pluginName: 'FlowForge Gateway',
+        pluginName: 'LeForge Gateway',
         repositoryUrl: 'https://github.com/LeForgeio/registry/tree/master/integrations/zapier',
         actions: [
-          { name: 'Execute Plugin', method: 'POST', path: '/execute', description: 'Run any FlowForge plugin' },
+          { name: 'Execute Plugin', method: 'POST', path: '/execute', description: 'Run any LeForge plugin' },
           { name: 'AI Chat', method: 'POST', path: '/chat', description: 'AI chat completion' },
           { name: 'Transform Data', method: 'POST', path: '/transform', description: 'Transform data formats' },
         ],
@@ -828,7 +828,7 @@ const PLATFORM_CONNECTORS: Platform[] = [
     id: 'make',
     name: 'Make (Integromat)',
     format: 'Make App',
-    description: 'Build complex FlowForge integrations with Make\'s visual automation platform.',
+    description: 'Build complex LeForge integrations with Make\'s visual automation platform.',
     status: 'planned',
     documentationUrl: 'https://www.make.com/en/help/apps/app-development',
     categories: {
@@ -837,13 +837,13 @@ const PLATFORM_CONNECTORS: Platform[] = [
     connectors: [
       {
         id: 'make-app',
-        name: 'FlowForge Make App',
+        name: 'LeForge Make App',
         category: 'workflow',
         pluginId: 'gateway',
-        pluginName: 'FlowForge Gateway',
+        pluginName: 'LeForge Gateway',
         repositoryUrl: 'https://github.com/LeForgeio/registry/tree/master/integrations/make',
         actions: [
-          { name: 'Execute Plugin', method: 'POST', path: '/execute', description: 'Run any FlowForge plugin' },
+          { name: 'Execute Plugin', method: 'POST', path: '/execute', description: 'Run any LeForge plugin' },
           { name: 'AI Operations', method: 'POST', path: '/ai', description: 'AI-powered operations' },
         ],
       },

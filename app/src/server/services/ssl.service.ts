@@ -48,8 +48,8 @@ class SSLService {
     validDays?: number;
   } = {}): Promise<{ certificate: string; privateKey: string; info: CertificateInfo }> {
     const {
-      commonName = 'FlowForge',
-      organization = 'FlowForge',
+      commonName = 'LeForge',
+      organization = 'LeForge',
       validDays = 365,
     } = options;
 

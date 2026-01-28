@@ -52,9 +52,9 @@ export function getPackageInfo(): PackageJson {
     return cachedPackageInfo;
   } catch {
     cachedPackageInfo = {
-      name: process.env.APP_NAME || 'flowforge',
+      name: process.env.APP_NAME || 'LeForge',
       version: getVersion(),
-      description: 'FlowForge Platform',
+      description: 'LeForge Platform',
     };
     return cachedPackageInfo;
   }

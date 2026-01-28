@@ -16,12 +16,12 @@ import { cn } from '@/lib/utils';
 const gettingStartedSteps = [
   {
     title: 'Install dependencies',
-    description: 'Use npm, yarn, or pnpm to install the FlowForge SDK',
-    code: `npm install @flowforge/sdk
+    description: 'Use npm, yarn, or pnpm to install the LeForge SDK',
+    code: `npm install @LeForge/sdk
 # or
-yarn add @flowforge/sdk
+yarn add @LeForge/sdk
 # or
-pnpm add @flowforge/sdk`,
+pnpm add @LeForge/sdk`,
     language: 'bash' as const,
   },
   {
@@ -29,23 +29,23 @@ pnpm add @flowforge/sdk`,
     description: 'Set your API key in environment variables or directly in code',
     code: `// Option 1: Environment variable
 // .env
-FLOWFORGE_API_KEY=your-api-key-here
+LeForge_API_KEY=your-api-key-here
 
 // Option 2: Direct configuration
-import { FlowForge } from '@flowforge/sdk';
+import { LeForge } from '@LeForge/sdk';
 
-const client = new FlowForge({
+const client = new LeForge({
   apiKey: 'your-api-key-here',
-  baseUrl: 'http://${API_HOST}:8000', // your FlowForge server
+  baseUrl: 'http://${API_HOST}:8000', // your LeForge server
 });`,
     language: 'javascript' as const,
   },
   {
     title: 'Make your first API call',
-    description: 'Start using FlowForge services',
-    code: `import { FlowForge } from '@flowforge/sdk';
+    description: 'Start using LeForge services',
+    code: `import { LeForge } from '@LeForge/sdk';
 
-const client = new FlowForge();
+const client = new LeForge();
 
 // Hash some data
 const hash = await client.crypto.hash({
@@ -66,11 +66,11 @@ console.log(result.data.result); // 8`,
 const integrationExamples = [
   {
     title: 'React / Next.js',
-    description: 'Use FlowForge in React applications with hooks',
+    description: 'Use LeForge in React applications with hooks',
     code: `import { useState } from 'react';
-import { FlowForge } from '@flowforge/sdk';
+import { LeForge } from '@LeForge/sdk';
 
-const client = new FlowForge();
+const client = new LeForge();
 
 export function HashGenerator() {
   const [result, setResult] = useState('');
@@ -96,10 +96,10 @@ export function HashGenerator() {
     title: 'Node.js / Express',
     description: 'Server-side integration with Express',
     code: `import express from 'express';
-import { FlowForge } from '@flowforge/sdk';
+import { LeForge } from '@LeForge/sdk';
 
 const app = express();
-const client = new FlowForge();
+const client = new LeForge();
 
 app.post('/api/hash', async (req, res) => {
   try {
@@ -118,15 +118,15 @@ app.listen(3000);`,
   },
   {
     title: 'Python',
-    description: 'Use FlowForge with Python requests',
+    description: 'Use LeForge with Python requests',
     code: `import requests
 
-FLOWFORGE_URL = 'http://localhost:8000'
+LeForge_URL = 'http://localhost:8000'
 API_KEY = 'your-api-key'
 
 def hash_data(data: str, algorithm: str = 'sha256'):
     response = requests.post(
-        f'{FLOWFORGE_URL}/api/v1/crypto/hash',
+        f'{LeForge_URL}/api/v1/crypto/hash',
         headers={
             'Content-Type': 'application/json',
             'X-API-Key': API_KEY,
@@ -173,7 +173,7 @@ export default function Documentation() {
     <div className="max-w-5xl">
       <div className="mb-8">
         <h1 className="text-3xl font-bold">Documentation</h1>
-        <p className="text-muted-foreground mt-1">Learn how to use FlowForge services</p>
+        <p className="text-muted-foreground mt-1">Learn how to use LeForge services</p>
       </div>
 
       <Tabs defaultValue="getting-started" className="space-y-6">
@@ -202,7 +202,7 @@ export default function Documentation() {
             <CardHeader>
               <CardTitle>Quick Start Guide</CardTitle>
               <CardDescription>
-                Get up and running with FlowForge in minutes
+                Get up and running with LeForge in minutes
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-8">
@@ -224,11 +224,11 @@ export default function Documentation() {
           <Card>
             <CardHeader>
               <CardTitle>Authentication</CardTitle>
-              <CardDescription>How to authenticate with FlowForge API</CardDescription>
+              <CardDescription>How to authenticate with LeForge API</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-sm text-muted-foreground">
-                FlowForge uses API keys for authentication. Include your API key in the{' '}
+                LeForge uses API keys for authentication. Include your API key in the{' '}
                 <code className="px-1 py-0.5 bg-muted rounded">X-API-Key</code> header with every request.
               </p>
               <CodeBlock

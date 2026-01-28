@@ -1,6 +1,6 @@
-# FlowForge SDKs
+# LeForge SDKs
 
-Client libraries for interacting with FlowForge services.
+Client libraries for interacting with LeForge services.
 
 ## Available SDKs
 
@@ -13,17 +13,17 @@ Client libraries for interacting with FlowForge services.
 ### JavaScript
 
 ```bash
-npm install @flowforge/sdk
+npm install @LeForge/sdk
 ```
 
 ### Python
 
 ```bash
-pip install flowforge-sdk
+pip install LeForge-sdk
 ```
 
 ### .NET
 
 ```bash
-dotnet add package FlowForge.SDK
+dotnet add package LeForge.SDK
 ```

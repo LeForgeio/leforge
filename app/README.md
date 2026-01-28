@@ -1,12 +1,12 @@
-# FlowForge - Unified Application
+# LeForge - Unified Application
 
-FlowForge is a self-hosted microservices platform for AI and compute workflows. This is the unified application that combines both the backend API and frontend UI in a single deployable package.
+LeForge is a self-hosted microservices platform for AI and compute workflows. This is the unified application that combines both the backend API and frontend UI in a single deployable package.
 
 ## Architecture
 
 ```text
 ┌─────────────────────────────────────────────────────────────┐
-│                      FlowForge App                         │
+│                      LeForge App                         │
 │                      (Port 4000)                           │
 ├─────────────────────────────────────────────────────────────┤
 │  ┌─────────────────┐      ┌─────────────────────────────┐  │
@@ -58,7 +58,7 @@ npm start
 
 ```bash
 # Build the Docker image
-docker build -t flowforge .
+docker build -t LeForge .
 
 # Run with Docker Compose (includes all infrastructure)
 docker compose -f docker-compose.unified.yml up -d
@@ -114,14 +114,14 @@ docker compose -f docker-compose.unified.yml up -d
 | `LOG_LEVEL` | `info` | Logging level |
 | `POSTGRES_HOST` | `localhost` | PostgreSQL host |
 | `POSTGRES_PORT` | `5432` | PostgreSQL port |
-| `POSTGRES_USER` | `flowforge` | PostgreSQL user |
-| `POSTGRES_PASSWORD` | `flowforge_password` | PostgreSQL password |
-| `POSTGRES_DB` | `flowforge` | PostgreSQL database |
+| `POSTGRES_USER` | `LeForge` | PostgreSQL user |
+| `POSTGRES_PASSWORD` | `LeForge_password` | PostgreSQL password |
+| `POSTGRES_DB` | `LeForge` | PostgreSQL database |
 | `REDIS_HOST` | `localhost` | Redis host |
 | `REDIS_PORT` | `6379` | Redis port |
 | `REDIS_PASSWORD` | `redis_password` | Redis password |
 | `DOCKER_SOCKET_PATH` | `/var/run/docker.sock` | Docker socket path |
-| `DOCKER_NETWORK` | `flowforge-network` | Docker network for plugins |
+| `DOCKER_NETWORK` | `LeForge-network` | Docker network for plugins |
 | `PLUGIN_PORT_RANGE_START` | `4001` | Plugin port range start |
 | `PLUGIN_PORT_RANGE_END` | `4999` | Plugin port range end |
 | `KONG_ADMIN_URL` | `http://localhost:8001` | Kong Admin API URL |

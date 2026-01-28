@@ -1,17 +1,17 @@
-# FlowForge .NET SDK
+# LeForge .NET SDK
 
 ## Installation
 
 ```bash
-dotnet add package FlowForge.SDK
+dotnet add package LeForge.SDK
 ```
 
 ## Usage
 
 ```csharp
-using FlowForge;
+using LeForge;
 
-var client = new FlowForgeClient(
+var client = new LeForgeClient(
     baseUrl: "http://localhost:8000",
     apiKey: "your-api-key"
 );

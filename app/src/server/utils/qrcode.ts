@@ -1,6 +1,6 @@
 /**
  * QR Code & Barcode Utilities
- * Built-in FlowForge core library for generating QR codes and barcodes
+ * Built-in LeForge core library for generating QR codes and barcodes
  * Pure TypeScript implementation - no external dependencies
  */
 

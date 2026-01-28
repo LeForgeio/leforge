@@ -206,7 +206,7 @@ export default function Playground() {
       <div className="h-full flex flex-col">
         <div className="mb-6">
           <h1 className="text-3xl font-bold">API Playground</h1>
-          <p className="text-muted-foreground mt-1">Test FlowForge API endpoints interactively</p>
+          <p className="text-muted-foreground mt-1">Test LeForge API endpoints interactively</p>
         </div>
         <Card className="p-8 text-center flex-1 flex flex-col items-center justify-center">
           <Plug className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
@@ -227,7 +227,7 @@ export default function Playground() {
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">API Playground</h1>
-          <p className="text-muted-foreground mt-1">Test FlowForge API endpoints interactively</p>
+          <p className="text-muted-foreground mt-1">Test LeForge API endpoints interactively</p>
         </div>
         <div className="flex items-center gap-2">
           <Dialog open={saveDialogOpen} onOpenChange={setSaveDialogOpen}>

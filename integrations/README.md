@@ -1,4 +1,4 @@
-# FlowForge Integrations
+# LeForge Integrations
 
 Pre-built integrations for popular workflow automation platforms.
 
@@ -10,4 +10,4 @@ Pre-built integrations for popular workflow automation platforms.
 
 ## Usage
 
-Each integration allows you to use FlowForge services directly within your workflow automation platform of choice.
+Each integration allows you to use LeForge services directly within your workflow automation platform of choice.

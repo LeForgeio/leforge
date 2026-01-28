@@ -29,7 +29,7 @@ export interface CreateApiKeyResponse {
  * Handles generation, validation, and management of API keys for external integrations
  */
 class ApiKeyService {
-  private readonly KEY_PREFIX = 'fhk_'; // FlowForge Hook key prefix
+  private readonly KEY_PREFIX = 'fhk_'; // LeForge Hook key prefix
   private readonly KEY_LENGTH = 32; // 32 bytes = 64 hex chars
 
   /**

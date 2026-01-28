@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "description": "Lightweight string manipulation utilities including slugify, camelCase, truncate, sanitize HTML, and more. Runs embedded without Docker overhead.",
   "author": {
-    "name": "FlowForge",
+    "name": "LeForge",
     "url": "https://github.com/LeForgeio/leforge"
   },
   "license": "MIT",

@@ -1,8 +1,8 @@
-# FlowForge - GitHub Copilot Instructions
+# LeForge - GitHub Copilot Instructions
 
 ## Project Overview
 
-FlowForge is a self-hosted microservices platform that provides AI and computational services for workflow automation tools like n8n, Make, and Zapier. It solves the gap where these platforms struggle: heavy computation, advanced AI/ML, complex file processing, and on-premise capabilities.
+LeForge is a self-hosted microservices platform that provides AI and computational services for workflow automation tools like n8n, Make, and Zapier. It solves the gap where these platforms struggle: heavy computation, advanced AI/ML, complex file processing, and on-premise capabilities.
 
 **Core Value Proposition:** On-premise AI & compute engine with unlimited executions, data sovereignty, and no per-call costs.
 
@@ -745,9 +745,9 @@ LOG_LEVEL=info
 # PostgreSQL
 POSTGRES_HOST=postgres
 POSTGRES_PORT=5432
-POSTGRES_USER=flowforge
+POSTGRES_USER=LeForge
 POSTGRES_PASSWORD=changeme
-POSTGRES_DB=flowforge_db
+POSTGRES_DB=LeForge_db
 
 # Kong PostgreSQL
 KONG_PG_HOST=postgres
@@ -794,9 +794,9 @@ API_GATEWAY_URL=http://localhost:8000
 version: '3.8'
 
 networks:
-  flowforge-backend:
+  LeForge-backend:
     driver: bridge
-  flowforge-frontend:
+  LeForge-frontend:
     driver: bridge
 
 volumes:
@@ -1009,8 +1009,8 @@ npm run build
 
 ### Docker
 ```bash
-docker build -t flowforge/service-name .
-docker run -p 3000:3000 flowforge/service-name
+docker build -t LeForge/service-name .
+docker run -p 3000:3000 LeForge/service-name
 ```
 
 ## Dependencies
@@ -1260,11 +1260,11 @@ async function getCachedOrFetch<T>(
 {
   "nodes": [
     {
-      "name": "FlowForge Crypto",
+      "name": "LeForge Crypto",
       "type": "n8n-nodes-base.httpRequest",
       "parameters": {
         "method": "POST",
-        "url": "http://flowforge:8000/api/v1/crypto/encrypt",
+        "url": "http://LeForge:8000/api/v1/crypto/encrypt",
         "authentication": "genericCredentialType",
         "genericAuthType": "jwtAuth",
         "jsonParameters": true,
@@ -1283,7 +1283,7 @@ async function getCachedOrFetch<T>(
 ````javascript
 // HTTP Module
 {
-  "url": "http://flowforge:8000/api/v1/llm/generate",
+  "url": "http://LeForge:8000/api/v1/llm/generate",
   "method": "POST",
   "headers": {
     "Authorization": "Bearer {{jwt_token}}",
@@ -1300,10 +1300,10 @@ async function getCachedOrFetch<T>(
 ````python
 import httpx
 
-async def call_flowforge_service():
+async def call_LeForge_service():
     async with httpx.AsyncClient() as client:
         response = await client.post(
-            "http://flowforge:8000/api/v1/math/calculate",
+            "http://LeForge:8000/api/v1/math/calculate",
             json={"expression": "2 + 2 * 10"},
             headers={"Authorization": f"Bearer {jwt_token}"}
         )
@@ -1426,7 +1426,7 @@ Provide Kong configuration and update docker-compose.yml."
 ### Database Connection Issues
 1. Verify PostgreSQL is running: `docker-compose ps postgres`
 2. Check credentials in `.env`
-3. Ensure database exists: `docker-compose exec postgres psql -U flowforge -l`
+3. Ensure database exists: `docker-compose exec postgres psql -U LeForge -l`
 4. Check network connectivity
 5. Review connection pool settings
 

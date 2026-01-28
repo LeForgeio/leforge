@@ -1,7 +1,7 @@
 /**
  * Core Plugin Service
  * 
- * Manages plugins that are built into the FlowForge core.
+ * Manages plugins that are built into the LeForge core.
  * These plugins don't require installation - they're always available.
  */
 
@@ -16,9 +16,9 @@ const CORE_PLUGINS: ForgeHookManifest[] = [
     id: 'qrcode-utils',
     name: 'QR Code & Barcode Generator',
     version: '1.0.0',
-    description: 'Generate QR codes and barcodes (Code128, EAN-13, UPC-A) with multiple output formats (SVG, Base64 PNG, matrix). Pure TypeScript implementation - zero external dependencies. Built into FlowForge core.',
+    description: 'Generate QR codes and barcodes (Code128, EAN-13, UPC-A) with multiple output formats (SVG, Base64 PNG, matrix). Pure TypeScript implementation - zero external dependencies. Built into LeForge core.',
     author: {
-      name: 'FlowForge Team',
+      name: 'LeForge Team',
       url: 'https://leforge.io',
     },
     license: 'MIT',

@@ -36,7 +36,7 @@ export function logStartupInfo(_config: Config): void {
     environment: buildInfo.environment,
     nodeVersion: buildInfo.nodeVersion,
     buildTime: buildInfo.buildTime || 'development',
-  }, 'FlowForge Starting');
+  }, 'LeForge Starting');
   logger.info('═══════════════════════════════════════════════════');
 }
 
@@ -92,6 +92,6 @@ export function logReady(config: Config, stats: { totalPlugins: number; runningP
     health: `http://localhost:${config.port}/health`,
     plugins: stats.totalPlugins,
     running: stats.runningPlugins,
-  }, 'FlowForge ready');
+  }, 'LeForge ready');
   logger.info('═══════════════════════════════════════════════════');
 }

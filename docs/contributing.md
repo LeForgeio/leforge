@@ -1,6 +1,6 @@
-# Contributing to FlowForge
+# Contributing to LeForge
 
-Thank you for your interest in contributing to FlowForge! This document provides guidelines and information for contributors.
+Thank you for your interest in contributing to LeForge! This document provides guidelines and information for contributors.
 
 ## Table of Contents
 
@@ -65,7 +65,7 @@ By participating in this project, you agree to abide by our Code of Conduct:
 
 # 2. Clone your fork
 git clone https://github.com/LeForgeio/leforge.git
-cd flowforge
+cd LeForge
 
 # 3. Add upstream remote
 git remote add upstream https://github.com/LeForgeio/leforge.git
@@ -353,7 +353,7 @@ class TestMathService:
 
 ## Release Process
 
-FlowForge uses semantic versioning (SemVer):
+LeForge uses semantic versioning (SemVer):
 
 - **MAJOR**: Breaking API changes
 - **MINOR**: New features (backward compatible)
@@ -367,4 +367,4 @@ Releases are automated via GitHub Actions when tags are pushed.
 - Join our community chat
 - Check existing documentation
 
-Thank you for contributing to FlowForge! 🚀
+Thank you for contributing to LeForge! 🚀

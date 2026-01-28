@@ -1,5 +1,5 @@
 -- ============================================================================
--- FlowForge Plugin Manager - Database Schema
+-- LeForge Plugin Manager - Database Schema
 -- Migration: 003_add_embedded_plugin_support
 -- Description: Add support for embedded (non-Docker) plugins
 -- ============================================================================

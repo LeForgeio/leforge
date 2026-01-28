@@ -2,183 +2,168 @@
 
 ## Project Overview
 
-**LeForge** is a self-hosted AI and compute platform for low-code apps and automations. It provides a unified microservices backend that extends the capabilities of low-code platforms (n8n, Power Automate, ServiceNow, Nintex, Salesforce, Mendix, etc.) with AI, cryptography, advanced math, and data processing services.
+**LeForge** is a self-hosted AI and compute platform for low-code apps and automations. It provides a unified platform that extends the capabilities of low-code platforms (n8n, Power Automate, ServiceNow, Nintex, Salesforce, Mendix, etc.) with AI, cryptography, advanced math, and data processing services.
+
+**Key Innovation**: LeForge implements the **Model Context Protocol (MCP)**, allowing AI agents like Claude, GPT, and Cursor to auto-discover and use all ForgeHook plugins as tools.
+
+## Architecture
+
+LeForge uses a **single container architecture**:
+
+```
+┌───────────────────────────────────────────────────────┐
+│              LeForge Container (:4000)                │
+│  ┌─────────────────────────────────────────────────┐  │
+│  │  Node.js App (Fastify + React)                  │  │
+│  │  - API Gateway (auth, rate limiting, CORS)      │  │
+│  │  - Plugin Manager                               │  │
+│  │  - MCP Server (AI agent protocol)               │  │
+│  │  - Web UI                                       │  │
+│  ├─────────────────────────────────────────────────┤  │
+│  │  PostgreSQL (plugin state, API keys)            │  │
+│  ├─────────────────────────────────────────────────┤  │
+│  │  Redis (caching, sessions)                      │  │
+│  └─────────────────────────────────────────────────┘  │
+└───────────────────────────────────────────────────────┘
+```
+
+Managed via `supervisord`:
+- Priority 10: PostgreSQL initialization
+- Priority 10: PostgreSQL server
+- Priority 15: Redis server  
+- Priority 20: Node.js application
 
 ## Repository Structure
 
 ```
-lcncAK/
-├── flowforge/                    # Main application
-│   ├── app/                      # Unified backend + frontend app
-│   │   ├── src/
-│   │   │   ├── client/          # React frontend (Vite + TailwindCSS)
-│   │   │   └── server/          # Fastify backend (TypeScript)
-│   │   │       ├── routes/      # API endpoints
-│   │   │       ├── services/    # Business logic
-│   │   │       ├── types/       # TypeScript types
-│   │   │       └── utils/       # Utilities
-│   │   ├── migrations/          # Database migrations
-│   │   └── registry/            # Embedded plugin bundles
-│   ├── gateway/                  # API Gateway config (optional)
-│   ├── services/                 # Microservices (crypto, math, llm)
-│   ├── infrastructure/           # Docker, Postgres, Redis configs
-│   ├── sdk/                      # Client SDKs (JS, Python, .NET)
-│   ├── integrations/             # Platform-specific integrations
-│   └── docs/                     # Documentation
-├── forgehooks-registry/          # Plugin registry repository
-│   ├── forgehooks-registry.json  # Main registry index
-│   ├── plugins/                  # Plugin manifests and bundles
-│   └── integrations/             # Platform connectors (Nintex, etc.)
-└── *.ps1                         # Test scripts
+flowforge/
+├── app/                      # Unified backend + frontend
+│   ├── src/
+│   │   ├── client/          # React 19 frontend (Vite + TailwindCSS)
+│   │   └── server/          # Fastify 5 backend (TypeScript)
+│   │       ├── routes/      # API endpoints (incl. mcp.ts)
+│   │       ├── services/    # Business logic (incl. mcp.service.ts)
+│   │       ├── types/       # TypeScript types
+│   │       └── utils/       # Utilities
+│   ├── migrations/          # Database migrations
+│   ├── registry/            # Embedded plugin bundles
+│   ├── Dockerfile           # Single container with PG + Redis + Node
+│   └── supervisord.conf     # Process manager config
+├── docker-compose.unified.yml  # Main compose file
+├── docker-compose.qdrant.yml   # Optional: Vector DB add-on
+├── docs/                     # Documentation
+└── scripts/                  # Utility scripts
 ```
 
 ## Key Concepts
 
-### ForgeHooks
-Plugins that extend FlowForge capabilities. Two runtime types:
-- **Container plugins**: Run in Docker containers (full isolation)
-- **Embedded plugins**: Run in-process via VM sandbox (lightweight, fast)
+### ForgeHooks (23 Total)
+Plugins that extend LeForge capabilities:
+- **Container plugins (9)**: Run in Docker containers (LLM, Crypto, PDF, etc.)
+- **Embedded plugins (11)**: Run in-process, zero latency (String, Date, JSON utils, etc.)
+- **Gateway plugins (3)**: Proxy to local AI tools (Ollama, LM Studio, Foundry)
+
+### MCP (Model Context Protocol)
+AI agents connect via `/mcp` endpoint and can:
+- List all ForgeHooks as **tools**
+- Read plugin metadata as **resources**
+- Use built-in **prompts** for workflow building
 
 ### Plugin Manifest (forgehook.json)
-Every plugin has a manifest defining:
-- `id`: Unique identifier (e.g., "formula-engine")
-- `name`, `version`, `description`
-- `runtime`: "container" | "embedded"
-- `endpoints`: API operations the plugin exposes
-- `image`: Docker image config (for container plugins)
-
-### Marketplace
-Aggregates plugins from multiple registry sources (GitHub, URLs, local).
-Users can browse, install, and manage plugins through the Web UI.
+```json
+{
+  "id": "formula-engine",
+  "name": "Formula Engine",
+  "version": "1.0.0",
+  "runtime": "embedded",
+  "endpoints": [
+    { "method": "POST", "path": "/evaluate", "description": "Evaluate formula" }
+  ]
+}
+```
 
 ## Tech Stack
 
 | Component | Technology |
 |-----------|------------|
-| Backend | Fastify + TypeScript |
-| Frontend | React 18 + Vite + TailwindCSS |
-| Database | PostgreSQL + better-sqlite3 (local) |
-| Gateway | Reverse proxy (Caddy/Traefik) |
-| Container Runtime | Docker |
-| Process Isolation | Node.js vm module |
-
-## Deployment
-
-### Local Development
-```bash
-cd flowforge/app
-npm install
-npm run dev
-```
-
-### Production (Remote Server)
-Server: `dan@10.0.0.166:/home/dan/flowforge`
-
-Deploy workflow:
-1. Push changes to git
-2. SSH and pull: `ssh dan@10.0.0.166 "cd /home/dan/flowforge && git pull"`
-3. Rebuild: `docker compose up -d --build app`
-
-### Docker Compose Services
-- `app`: Main application (port 3000)
-- `redis`: Cache layer
-- `postgres`: Database (optional, for production)
+| Backend | Fastify 5 + TypeScript |
+| Frontend | React 19 + Vite + TailwindCSS |
+| Database | PostgreSQL 15 (embedded in container) |
+| Cache | Redis 7 (embedded in container) |
+| Process Mgmt | supervisord |
+| AI Protocol | Model Context Protocol (MCP) |
+| Container | Docker |
 
 ## API Structure
 
-Base URL: `http://localhost:3000/api/v1/`
+Base URL: `http://localhost:4000/api/v1/`
 
 ### Core Endpoints
 | Route | Description |
 |-------|-------------|
 | `GET /health` | Health check |
 | `GET /plugins` | List installed plugins |
-| `POST /plugins/install` | Install plugin from manifest |
-| `GET /plugins/:id/logs` | Get plugin logs |
-| `POST /marketplace/install` | Install from marketplace |
+| `POST /plugins/install` | Install plugin |
 | `GET /marketplace` | Browse marketplace |
-| `POST /invoke/:pluginId/:operation` | Invoke plugin operation |
+
+### MCP Endpoints
+| Route | Description |
+|-------|-------------|
+| `GET /mcp` | SSE endpoint for MCP clients |
+| `GET /api/v1/mcp/tools` | List available tools |
+| `POST /api/v1/mcp/tools/:name/call` | Execute a tool |
+| `GET /api/v1/mcp/resources` | List resources |
+| `GET /api/v1/mcp/prompts` | List prompts |
 
 ### Plugin Invocation
 ```bash
-curl -X POST http://localhost:3000/api/v1/invoke/formula-engine/evaluate \
+curl -X POST http://localhost:4000/api/v1/invoke/formula-engine/evaluate \
   -H "Content-Type: application/json" \
   -d '{"formula": "SUM(1,2,3)"}'
+```
+
+## Deployment
+
+### Quick Start
+```bash
+docker run -d -p 4000:4000 --name leforge leforge/leforge:latest
+```
+
+### Docker Compose
+```bash
+docker compose -f docker-compose.unified.yml up -d
+```
+
+### With Qdrant (Vector Search)
+```bash
+docker compose -f docker-compose.unified.yml -f docker-compose.qdrant.yml up -d
 ```
 
 ## Common Tasks
 
 ### Adding a New Route
-1. Create file in `flowforge/app/src/server/routes/`
-2. Export route function: `export async function myRoutes(fastify: FastifyInstance) { ... }`
+1. Create file in `app/src/server/routes/`
+2. Export route function: `export async function myRoutes(fastify: FastifyInstance)`
 3. Register in `app.ts`: `await app.register(myRoutes);`
 
 ### Adding a New Service
-1. Create file in `flowforge/app/src/server/services/`
+1. Create file in `app/src/server/services/`
 2. Export singleton: `export const myService = new MyService();`
-3. Import in routes as needed
 
 ### Creating an Embedded Plugin
 1. Create plugin directory in `forgehooks-registry/plugins/{plugin-id}/`
 2. Add `forgehook.json` manifest with `runtime: "embedded"`
-3. Create `index.js` with exported operation functions
+3. Create `index.js` with exported functions
 4. Add entry to `forgehooks-registry.json`
-
-### Testing API
-```bash
-# From Windows
-curl http://localhost:3000/api/v1/health
-
-# Test plugins
-curl http://localhost:3000/api/v1/plugins
-```
-
-## Current State & Known Issues
-
-### Active Development
-- Embedded plugin system (runtime: "embedded")
-- Marketplace with multiple registry sources
-- Nintex integration connectors
-
-### Recent Fixes
-- Fixed marketplace install route at `/api/v1/marketplace/install`
-- Fixed plugins logs endpoint to handle embedded plugins
-- Added proper service imports in API routes
-
-### Environment Variables
-```bash
-NODE_ENV=production
-DATABASE_URL=postgresql://...
-REDIS_URL=redis://localhost:6379
-```
-
-## File Naming Conventions
-
-- Routes: `{resource}.ts` (e.g., `plugins.ts`, `marketplace.ts`)
-- Services: `{name}.service.ts` (e.g., `docker.service.ts`)
-- Types: `index.ts` in `types/` folder
-- Components: PascalCase (e.g., `PluginCard.tsx`)
-
-## Testing
-
-```bash
-# Run from project root
-./simple-test.ps1          # Basic connectivity test
-./test-kong.ps1            # Kong gateway tests
-./kong-tests.ps1           # Comprehensive Kong tests
-```
 
 ## Important Notes
 
-1. **Docker Context**: The app runs inside Docker but manages other containers via Docker socket mount.
+1. **Single Container**: PostgreSQL, Redis, and Node.js all run in one container via supervisord.
 
-2. **Embedded vs Container**: Prefer embedded plugins for lightweight, CPU-bound operations. Use container plugins for isolated environments or specific dependencies.
+2. **Port 4000**: The app listens on port 4000 (not 3000).
 
-3. **Hot Reload**: Frontend uses Vite HMR. Backend requires restart for changes.
+3. **MCP Support**: All ForgeHooks are automatically exposed as MCP tools for AI agents.
 
-4. **Port Mapping**: 
-   - 3000: App (internal and external)
-   - 5432: PostgreSQL
-   - 6379: Redis
+4. **Embedded Plugins**: Preferred for lightweight operations (zero network latency).
 
-5. **Registry Sources**: Can add GitHub repos, direct URLs, or local files as plugin sources.
+5. **Optional Qdrant**: Only needed for vector search / RAG applications.

@@ -1,5 +1,5 @@
 -- ============================================================================
--- FlowForge Plugin Manager - Database Schema
+-- LeForge Plugin Manager - Database Schema
 -- Migration: 004_add_plugin_version_tracking
 -- Description: Add version tracking for plugin updates
 -- ============================================================================

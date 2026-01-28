@@ -1,6 +1,6 @@
-# Getting Started with FlowForge
+# Getting Started with LeForge
 
-This guide will help you get FlowForge up and running quickly.
+This guide will help you get LeForge up and running quickly.
 
 ## Prerequisites
 
@@ -32,7 +32,7 @@ docker info
 
 ```bash
 git clone https://github.com/LeForgeio/leforge.git
-cd flowforge
+cd LeForge
 ```
 
 ### 2. Configure Environment
@@ -65,12 +65,12 @@ docker-compose ps
 
 # Expected output:
 # NAME                        STATUS
-# flowforge-kong              healthy
-# flowforge-postgres          healthy
-# flowforge-redis             healthy
-# flowforge-qdrant            healthy
-# flowforge-crypto-service    healthy
-# flowforge-math-service      healthy
+# LeForge-kong              healthy
+# LeForge-postgres          healthy
+# LeForge-redis             healthy
+# LeForge-qdrant            healthy
+# LeForge-crypto-service    healthy
+# LeForge-math-service      healthy
 # ... (other services)
 ```
 
@@ -107,7 +107,7 @@ curl -X POST http://localhost:8000/api/v1/crypto/hash \
   -H "Content-Type: application/json" \
   -d '{
     "algorithm": "sha256",
-    "data": "Hello, FlowForge!"
+    "data": "Hello, LeForge!"
   }'
 ```
 
@@ -254,7 +254,7 @@ curl http://localhost:8001/status
 
 ```bash
 # Check PostgreSQL
-docker-compose exec postgres psql -U flowforge -c "SELECT 1"
+docker-compose exec postgres psql -U LeForge -c "SELECT 1"
 
 # Check Redis
 docker-compose exec redis redis-cli -a <password> ping

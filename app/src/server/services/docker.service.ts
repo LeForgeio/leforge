@@ -375,10 +375,27 @@ export class DockerService extends EventEmitter {
         `ENVIRONMENT=production`,
       ];
 
+      // Redis is embedded in the LeForge app container
       if (manifest.dependencies?.services?.includes('redis')) {
-        env.push(`REDIS_HOST=flowforge-redis`);
+        env.push(`REDIS_HOST=LeForge-app`);
         env.push(`REDIS_PORT=${config.redis.port}`);
         env.push(`REDIS_PASSWORD=${config.redis.password}`);
+      }
+
+      // PostgreSQL is embedded in the LeForge app container
+      if (manifest.dependencies?.services?.includes('postgres')) {
+        env.push(`POSTGRES_HOST=LeForge-app`);
+        env.push(`POSTGRES_PORT=${config.postgres.port}`);
+        env.push(`POSTGRES_USER=${config.postgres.user}`);
+        env.push(`POSTGRES_PASSWORD=${config.postgres.password}`);
+        env.push(`POSTGRES_DB=${config.postgres.database}`);
+      }
+
+      // Qdrant is optional (add-on container)
+      if (manifest.dependencies?.services?.includes('qdrant')) {
+        env.push(`QDRANT_HOST=${process.env.QDRANT_HOST || 'LeForge-qdrant'}`);
+        env.push(`QDRANT_PORT=${process.env.QDRANT_PORT || '6333'}`);
+        env.push(`QDRANT_URL=${process.env.QDRANT_URL || 'http://LeForge-qdrant:6333'}`);
       }
 
       for (const [key, value] of Object.entries(plugin.environment)) {
@@ -685,10 +702,27 @@ export class DockerService extends EventEmitter {
         `ENVIRONMENT=production`,
       ];
 
+      // Redis is embedded in the LeForge app container
       if (newManifest.dependencies?.services?.includes('redis')) {
-        env.push(`REDIS_HOST=flowforge-redis`);
+        env.push(`REDIS_HOST=LeForge-app`);
         env.push(`REDIS_PORT=${config.redis.port}`);
         env.push(`REDIS_PASSWORD=${config.redis.password}`);
+      }
+
+      // PostgreSQL is embedded in the LeForge app container
+      if (newManifest.dependencies?.services?.includes('postgres')) {
+        env.push(`POSTGRES_HOST=LeForge-app`);
+        env.push(`POSTGRES_PORT=${config.postgres.port}`);
+        env.push(`POSTGRES_USER=${config.postgres.user}`);
+        env.push(`POSTGRES_PASSWORD=${config.postgres.password}`);
+        env.push(`POSTGRES_DB=${config.postgres.database}`);
+      }
+
+      // Qdrant is optional (add-on container)
+      if (newManifest.dependencies?.services?.includes('qdrant')) {
+        env.push(`QDRANT_HOST=${process.env.QDRANT_HOST || 'LeForge-qdrant'}`);
+        env.push(`QDRANT_PORT=${process.env.QDRANT_PORT || '6333'}`);
+        env.push(`QDRANT_URL=${process.env.QDRANT_URL || 'http://LeForge-qdrant:6333'}`);
       }
 
       for (const [key, value] of Object.entries(plugin.environment)) {

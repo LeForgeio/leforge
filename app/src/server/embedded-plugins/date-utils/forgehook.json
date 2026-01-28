@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "description": "Lightweight date and time manipulation utilities including formatting, parsing, relative time, timezone conversion, and date math. Runs embedded without Docker overhead.",
   "author": {
-    "name": "FlowForge",
+    "name": "LeForge",
     "url": "https://github.com/LeForgeio/leforge"
   },
   "license": "MIT",

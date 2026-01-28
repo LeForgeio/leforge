@@ -48,7 +48,7 @@ const INTEGRATION_ID = 'nintex';
  * 
  * All endpoints require:
  * 1. Valid API key (via Authorization header or X-API-Key)
- * 2. Nintex integration to be enabled in FlowForge settings
+ * 2. Nintex integration to be enabled in LeForge settings
  */
 export async function nintexRoutes(fastify: FastifyInstance) {
   

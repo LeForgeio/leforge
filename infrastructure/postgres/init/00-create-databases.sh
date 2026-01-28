@@ -39,7 +39,7 @@ EOSQL
 
 # Main initialization
 echo "=========================================="
-echo "  FlowForge PostgreSQL Initialization"
+echo "  LeForge PostgreSQL Initialization"
 echo "=========================================="
 
 # Create Kong database and user

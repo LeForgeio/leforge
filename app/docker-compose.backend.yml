@@ -9,17 +9,17 @@ services:
   # ==========================================================================
   postgres:
     image: postgres:15-alpine
-    container_name: flowforge-postgres
+    container_name: LeForge-postgres
     environment:
-      POSTGRES_USER: flowforge
-      POSTGRES_PASSWORD: flowforge_password
-      POSTGRES_DB: flowforge
+      POSTGRES_USER: LeForge
+      POSTGRES_PASSWORD: LeForge_password
+      POSTGRES_DB: LeForge
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U flowforge -d flowforge"]
+      test: ["CMD-SHELL", "pg_isready -U LeForge -d LeForge"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -30,7 +30,7 @@ services:
   # ==========================================================================
   redis:
     image: redis:7-alpine
-    container_name: flowforge-redis
+    container_name: LeForge-redis
     command: redis-server --appendonly yes --requirepass redis_password
     volumes:
       - redis_data:/data
@@ -44,11 +44,11 @@ services:
     restart: unless-stopped
 
   # ==========================================================================
-  # FlowForge Backend API
+  # LeForge Backend API
   # ==========================================================================
-  flowforge-api:
-    image: flowforge:latest
-    container_name: flowforge-api
+  LeForge-api:
+    image: LeForge:latest
+    container_name: LeForge-api
     environment:
       NODE_ENV: development
       PORT: 4000
@@ -57,9 +57,9 @@ services:
       # Database
       POSTGRES_HOST: postgres
       POSTGRES_PORT: 5432
-      POSTGRES_USER: flowforge
-      POSTGRES_PASSWORD: flowforge_password
-      POSTGRES_DB: flowforge
+      POSTGRES_USER: LeForge
+      POSTGRES_PASSWORD: LeForge_password
+      POSTGRES_DB: LeForge
       
       # Redis
       REDIS_HOST: redis
@@ -68,7 +68,7 @@ services:
       
       # Docker
       DOCKER_SOCKET_PATH: /var/run/docker.sock
-      DOCKER_NETWORK: flowforge-network
+      DOCKER_NETWORK: LeForge-network
       
       # Plugins
       PLUGIN_PORT_RANGE_START: 5001
@@ -95,7 +95,7 @@ services:
 
 networks:
   default:
-    name: flowforge-network
+    name: LeForge-network
     driver: bridge
 
 volumes:

@@ -1,17 +1,17 @@
-# FlowForge JavaScript SDK
+# LeForge JavaScript SDK
 
 ## Installation
 
 ```bash
-npm install @flowforge/sdk
+npm install @LeForge/sdk
 ```
 
 ## Usage
 
 ```typescript
-import { FlowForgeClient } from '@flowforge/sdk';
+import { LeForgeClient } from '@LeForge/sdk';
 
-const client = new FlowForgeClient({
+const client = new LeForgeClient({
   baseUrl: 'http://localhost:8000',
   apiKey: 'your-api-key',
 });

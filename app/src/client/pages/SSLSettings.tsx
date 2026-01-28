@@ -1,4 +1,4 @@
-﻿import { useState } from 'react';
+import { useState } from 'react';
 import {
   Shield,
   ShieldCheck,
@@ -114,7 +114,7 @@ function CertificateCard({ cert, onActivate, onDelete }: {
                 )}
               </div>
               <p className="text-sm text-gray-400">
-                CN: {cert.commonName || 'Unknown'} â€¢ Issued by: {cert.issuer || 'Unknown'}
+                CN: {cert.commonName || 'Unknown'} • Issued by: {cert.issuer || 'Unknown'}
               </p>
               <div className="flex items-center gap-3 text-xs text-gray-500">
                 {cert.validUntil && (
@@ -187,9 +187,9 @@ export default function SSLSettings() {
   const [showUploadDialog, setShowUploadDialog] = useState(false);
   
   // Generate form state
-  const [genName, setGenName] = useState('FlowForge Self-Signed');
-  const [genCommonName, setGenCommonName] = useState('flowforge.local');
-  const [genOrg, setGenOrg] = useState('FlowForge');
+  const [genName, setGenName] = useState('LeForge Self-Signed');
+  const [genCommonName, setGenCommonName] = useState('LeForge.local');
+  const [genOrg, setGenOrg] = useState('LeForge');
   const [genDays, setGenDays] = useState('365');
   
   // Upload form state
@@ -203,7 +203,7 @@ export default function SSLSettings() {
       await updateSettings.mutateAsync({ httpsEnabled: enabled });
       toast({
         title: enabled ? 'HTTPS Enabled' : 'HTTPS Disabled',
-        description: 'Restart FlowForge to apply changes.',
+        description: 'Restart LeForge to apply changes.',
       });
     } catch (error) {
       toast({
@@ -278,7 +278,7 @@ export default function SSLSettings() {
       await activateCertificate.mutateAsync(id);
       toast({
         title: 'Certificate Activated',
-        description: 'Restart FlowForge to apply changes.',
+        description: 'Restart LeForge to apply changes.',
       });
     } catch {
       toast({
@@ -548,7 +548,7 @@ export default function SSLSettings() {
               <Input
                 value={genName}
                 onChange={(e) => setGenName(e.target.value)}
-                placeholder="FlowForge Self-Signed"
+                placeholder="LeForge Self-Signed"
                 className="bg-white/5 border-white/10"
               />
             </div>
@@ -557,7 +557,7 @@ export default function SSLSettings() {
               <Input
                 value={genCommonName}
                 onChange={(e) => setGenCommonName(e.target.value)}
-                placeholder="flowforge.local"
+                placeholder="LeForge.local"
                 className="bg-white/5 border-white/10"
               />
               <p className="text-xs text-gray-500 mt-1">
@@ -569,7 +569,7 @@ export default function SSLSettings() {
               <Input
                 value={genOrg}
                 onChange={(e) => setGenOrg(e.target.value)}
-                placeholder="FlowForge"
+                placeholder="LeForge"
                 className="bg-white/5 border-white/10"
               />
             </div>
