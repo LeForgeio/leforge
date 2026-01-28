@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-**FlowForge** is a self-hosted AI and compute platform for workflow automation tools. It provides a unified microservices backend that extends the capabilities of workflow automation platforms (n8n, Make, Zapier, Power Automate, etc.) with AI, cryptography, advanced math, and data processing services.
+**LeForge** is a self-hosted AI and compute platform for low-code apps and automations. It provides a unified microservices backend that extends the capabilities of low-code platforms (n8n, Power Automate, ServiceNow, Nintex, Salesforce, Mendix, etc.) with AI, cryptography, advanced math, and data processing services.
 
 ## Repository Structure
 
@@ -19,7 +19,7 @@ lcncAK/
 │   │   │       └── utils/       # Utilities
 │   │   ├── migrations/          # Database migrations
 │   │   └── registry/            # Embedded plugin bundles
-│   ├── gateway/                  # Kong API Gateway config
+│   ├── gateway/                  # API Gateway config (optional)
 │   ├── services/                 # Microservices (crypto, math, llm)
 │   ├── infrastructure/           # Docker, Postgres, Redis configs
 │   ├── sdk/                      # Client SDKs (JS, Python, .NET)
@@ -58,7 +58,7 @@ Users can browse, install, and manage plugins through the Web UI.
 | Backend | Fastify + TypeScript |
 | Frontend | React 18 + Vite + TailwindCSS |
 | Database | PostgreSQL + better-sqlite3 (local) |
-| Gateway | Kong API Gateway |
+| Gateway | Reverse proxy (Caddy/Traefik) |
 | Container Runtime | Docker |
 | Process Isolation | Node.js vm module |
 
@@ -81,9 +81,8 @@ Deploy workflow:
 
 ### Docker Compose Services
 - `app`: Main application (port 3000)
-- `kong`: API Gateway (port 8000/8001)
-- `kong-db`: PostgreSQL for Kong
 - `redis`: Cache layer
+- `postgres`: Database (optional, for production)
 
 ## API Structure
 
@@ -125,13 +124,13 @@ curl -X POST http://localhost:3000/api/v1/invoke/formula-engine/evaluate \
 3. Create `index.js` with exported operation functions
 4. Add entry to `forgehooks-registry.json`
 
-### Testing Kong Gateway
+### Testing API
 ```bash
 # From Windows
-curl http://localhost:8000/api/v1/health
+curl http://localhost:3000/api/v1/health
 
-# Test via Kong admin
-curl http://localhost:8001/services
+# Test plugins
+curl http://localhost:3000/api/v1/plugins
 ```
 
 ## Current State & Known Issues
@@ -151,7 +150,6 @@ curl http://localhost:8001/services
 NODE_ENV=production
 DATABASE_URL=postgresql://...
 REDIS_URL=redis://localhost:6379
-KONG_ADMIN_URL=http://kong:8001
 ```
 
 ## File Naming Conventions
@@ -180,8 +178,7 @@ KONG_ADMIN_URL=http://kong:8001
 
 4. **Port Mapping**: 
    - 3000: App (internal and external)
-   - 8000: Kong proxy
-   - 8001: Kong admin
    - 5432: PostgreSQL
+   - 6379: Redis
 
 5. **Registry Sources**: Can add GitHub repos, direct URLs, or local files as plugin sources.
