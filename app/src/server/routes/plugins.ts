@@ -215,10 +215,11 @@ export async function pluginRoutes(fastify: FastifyInstance) {
   // ============================================================================
   // Start Plugin
   // ============================================================================
-  fastify.post<{ Params: PluginParams }>(
+  fastify.post<{ Params: PluginParams; Body: { pullLatest?: boolean } }>(
     '/api/v1/plugins/:pluginId/start',
     async (request, reply) => {
       const { pluginId } = request.params;
+      const { pullLatest } = request.body || {};
       
       // Try Docker service first, then database for embedded plugins
       let plugin = dockerService.getPlugin(pluginId);
@@ -241,13 +242,13 @@ export async function pluginRoutes(fastify: FastifyInstance) {
         } else if (plugin.runtime === 'gateway') {
           await gatewayService.startPlugin(pluginId);
         } else {
-          await dockerService.startPlugin(pluginId);
+          await dockerService.startPlugin(pluginId, { pullLatest });
         }
 
         return reply.send({
           id: plugin.id,
           status: 'running',
-          message: 'Plugin started successfully',
+          message: pullLatest ? 'Plugin started with latest image' : 'Plugin started successfully',
         });
 
       } catch (error) {
@@ -784,6 +785,88 @@ export async function pluginRoutes(fastify: FastifyInstance) {
           error: {
             code: 'HISTORY_FAILED',
             message: error instanceof Error ? error.message : 'Failed to get history',
+          },
+        });
+      }
+    }
+  );
+
+  // ============================================================================
+  // Check for Plugin Updates (Container Plugins)
+  // ============================================================================
+  fastify.get<{ Params: PluginParams }>(
+    '/api/v1/plugins/:pluginId/check-update',
+    async (request, reply) => {
+      const { pluginId } = request.params;
+
+      const dbPlugin = await databaseService.getPlugin(pluginId);
+      if (!dbPlugin) {
+        return reply.status(404).send({
+          error: {
+            code: 'PLUGIN_NOT_FOUND',
+            message: `Plugin ${pluginId} not found`,
+          },
+        });
+      }
+
+      // Only container plugins can check for updates this way
+      if (dbPlugin.runtime !== 'container' || !dbPlugin.manifest.image) {
+        return reply.send({
+          pluginId,
+          hasUpdate: false,
+          message: 'Update check not available for this plugin type',
+        });
+      }
+
+      try {
+        const { repository, tag } = dbPlugin.manifest.image;
+        const result = await dockerService.checkImageUpdate(repository, tag || 'latest');
+
+        return reply.send({
+          pluginId,
+          hasUpdate: result.hasUpdate,
+          localDigest: result.localDigest,
+          remoteDigest: result.remoteDigest,
+          error: result.error,
+        });
+
+      } catch (error) {
+        logger.error({ pluginId, error }, 'Failed to check for updates');
+        return reply.status(500).send({
+          error: {
+            code: 'UPDATE_CHECK_FAILED',
+            message: error instanceof Error ? error.message : 'Failed to check for updates',
+          },
+        });
+      }
+    }
+  );
+
+  // ============================================================================
+  // Check All Plugins for Updates
+  // ============================================================================
+  fastify.get(
+    '/api/v1/plugins/check-updates',
+    async (request, reply) => {
+      try {
+        const results = await dockerService.checkAllPluginUpdates();
+        const updates: Record<string, { hasUpdate: boolean; error?: string }> = {};
+        
+        for (const [pluginId, result] of results.entries()) {
+          updates[pluginId] = result;
+        }
+
+        return reply.send({
+          updates,
+          checkedAt: new Date().toISOString(),
+        });
+
+      } catch (error) {
+        logger.error({ error }, 'Failed to check for plugin updates');
+        return reply.status(500).send({
+          error: {
+            code: 'UPDATE_CHECK_FAILED',
+            message: error instanceof Error ? error.message : 'Failed to check for updates',
           },
         });
       }

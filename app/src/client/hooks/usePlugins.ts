@@ -47,9 +47,11 @@ async function installPlugin(request: {
   return response.json();
 }
 
-async function startPlugin(pluginId: string): Promise<void> {
+async function startPlugin(pluginId: string, options?: { pullLatest?: boolean }): Promise<void> {
   const response = await fetch(`${API_BASE}/plugins/${pluginId}/start`, {
     method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(options || {}),
   });
   if (!response.ok) {
     const error = await response.json();
@@ -163,6 +165,37 @@ async function fetchPluginLogs(pluginId: string, tail: number = 100): Promise<st
   return data.logs;
 }
 
+// Check for updates on a single plugin
+interface PluginUpdateCheck {
+  pluginId: string;
+  hasUpdate: boolean;
+  localDigest: string | null;
+  remoteDigest: string | null;
+  error?: string;
+}
+
+async function checkPluginUpdate(pluginId: string): Promise<PluginUpdateCheck> {
+  const response = await fetch(`${API_BASE}/plugins/${pluginId}/check-update`);
+  if (!response.ok) {
+    throw new Error('Failed to check for update');
+  }
+  return response.json();
+}
+
+// Check for updates on all plugins
+interface AllPluginUpdates {
+  updates: Record<string, { hasUpdate: boolean; error?: string }>;
+  checkedAt: string;
+}
+
+async function checkAllPluginUpdates(): Promise<AllPluginUpdates> {
+  const response = await fetch(`${API_BASE}/plugins/check-updates`);
+  if (!response.ok) {
+    throw new Error('Failed to check for updates');
+  }
+  return response.json();
+}
+
 // =============================================================================
 // React Query Hooks
 // =============================================================================
@@ -209,9 +242,11 @@ export function useStartPlugin() {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: startPlugin,
+    mutationFn: ({ pluginId, options }: { pluginId: string; options?: { pullLatest?: boolean } }) => 
+      startPlugin(pluginId, options),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['plugins'] });
+      queryClient.invalidateQueries({ queryKey: ['plugin-updates'] });
     },
   });
 }
@@ -293,6 +328,28 @@ export function usePluginUpdateHistory(pluginId: string | undefined, enabled: bo
     queryKey: ['plugins', 'updates', pluginId],
     queryFn: () => fetchPluginUpdateHistory(pluginId!),
     enabled: !!pluginId && enabled,
+  });
+}
+
+// Hook to check if a single plugin has an update available
+export function usePluginUpdateCheck(pluginId: string | undefined, enabled: boolean = true) {
+  return useQuery({
+    queryKey: ['plugin-updates', 'single', pluginId],
+    queryFn: () => checkPluginUpdate(pluginId!),
+    enabled: !!pluginId && enabled,
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+    refetchInterval: 5 * 60 * 1000, // Recheck every 5 minutes
+  });
+}
+
+// Hook to check all plugins for updates
+export function useAllPluginUpdates(enabled: boolean = true) {
+  return useQuery({
+    queryKey: ['plugin-updates', 'all'],
+    queryFn: checkAllPluginUpdates,
+    enabled,
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+    refetchInterval: 5 * 60 * 1000, // Recheck every 5 minutes
   });
 }
 

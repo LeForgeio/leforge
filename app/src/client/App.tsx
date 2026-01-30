@@ -1,6 +1,7 @@
 import { useEffect, Component, ReactNode } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import Layout from './components/Layout';
+import { ProtectedRoute, PublicOnlyRoute, RequireRole } from './components/ProtectedRoute';
 import Dashboard from './pages/Dashboard';
 import Services from './pages/Services';
 import Playground from './pages/Playground';
@@ -10,6 +11,9 @@ import Marketplace from './pages/Marketplace';
 import InstalledPlugins from './pages/InstalledPlugins';
 import Integrations from './pages/Integrations';
 import SSLSettings from './pages/SSLSettings';
+import AdminUsers from './pages/AdminUsers';
+import AdminSettings from './pages/AdminSettings';
+import Login from './pages/Login';
 import { useThemeStore } from './store';
 import { Toaster } from './components/ui/toaster';
 import { Button } from './components/ui/button';
@@ -99,7 +103,19 @@ export default function App() {
   return (
     <ErrorBoundary>
       <Routes>
-        <Route path="/" element={<Layout />}>
+        {/* Public route - Login */}
+        <Route path="/login" element={
+          <PublicOnlyRoute>
+            <Login />
+          </PublicOnlyRoute>
+        } />
+        
+        {/* Protected routes - require authentication */}
+        <Route path="/" element={
+          <ProtectedRoute>
+            <Layout />
+          </ProtectedRoute>
+        }>
           <Route index element={<Dashboard />} />
           <Route path="services" element={<Services />} />
           <Route path="marketplace" element={<Marketplace />} />
@@ -109,6 +125,17 @@ export default function App() {
           <Route path="api-keys" element={<ApiKeys />} />
           <Route path="ssl" element={<SSLSettings />} />
           <Route path="docs" element={<Documentation />} />
+          {/* Admin Routes - require admin role */}
+          <Route path="admin/users" element={
+            <RequireRole roles={['admin']}>
+              <AdminUsers />
+            </RequireRole>
+          } />
+          <Route path="admin/settings" element={
+            <RequireRole roles={['admin']}>
+              <AdminSettings />
+            </RequireRole>
+          } />
           <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>

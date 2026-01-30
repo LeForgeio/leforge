@@ -1,13 +1,199 @@
-import { FastifyRequest, FastifyReply, HookHandlerDoneFunction } from 'fastify';
+import { FastifyRequest, FastifyReply } from 'fastify';
 import { apiKeyService, ApiKey } from '../services/api-key.service.js';
 import { integrationsService } from '../services/integrations.service.js';
+import { authService, User, UserRole, ROLE_PERMISSIONS } from '../services/auth.service.js';
+import { config } from '../config/index.js';
 import { logger } from '../utils/logger.js';
 
-// Extend FastifyRequest to include validated API key
+// Extend FastifyRequest to include validated API key and user
 declare module 'fastify' {
   interface FastifyRequest {
     apiKey?: ApiKey;
     integrationId?: string;
+    user?: User;
+  }
+}
+
+// =============================================================================
+// Role-based Access Control Helpers
+// =============================================================================
+
+/**
+ * Check if user has a specific permission
+ */
+export function hasPermission(user: User | undefined, permission: keyof typeof ROLE_PERMISSIONS.admin): boolean {
+  if (!user) return false;
+  return ROLE_PERMISSIONS[user.role]?.[permission] ?? false;
+}
+
+/**
+ * Create a middleware that requires a specific role
+ */
+export function requireRole(...allowedRoles: UserRole[]) {
+  return async function (request: FastifyRequest, reply: FastifyReply): Promise<void> {
+    // First ensure we have a session
+    await requireSession(request, reply);
+    if (reply.sent) return;
+
+    if (!request.user || !allowedRoles.includes(request.user.role)) {
+      const roleList = allowedRoles.join(' or ');
+      return reply.status(403).send({
+        error: {
+          code: 'FORBIDDEN',
+          message: `This action requires ${roleList} role`,
+        },
+      });
+    }
+  };
+}
+
+/**
+ * Create a middleware that requires a specific permission
+ */
+export function requirePermission(permission: keyof typeof ROLE_PERMISSIONS.admin) {
+  return async function (request: FastifyRequest, reply: FastifyReply): Promise<void> {
+    // First ensure we have a session
+    await requireSession(request, reply);
+    if (reply.sent) return;
+
+    if (!hasPermission(request.user, permission)) {
+      return reply.status(403).send({
+        error: {
+          code: 'FORBIDDEN',
+          message: `You don't have permission to perform this action`,
+        },
+      });
+    }
+  };
+}
+
+// =============================================================================
+// Session/JWT Authentication
+// =============================================================================
+
+/**
+ * Extract JWT token from request (cookie or Authorization header)
+ */
+function extractSessionToken(request: FastifyRequest): string | null {
+  // Check cookie first
+  const cookieToken = request.cookies?.[config.auth.sessionCookieName];
+  if (cookieToken) {
+    return cookieToken;
+  }
+
+  // Check Authorization header (Bearer token, but not API keys)
+  const authHeader = request.headers.authorization;
+  if (authHeader?.startsWith('Bearer ') && !authHeader.includes('fhk_')) {
+    return authHeader.substring(7);
+  }
+
+  return null;
+}
+
+/**
+ * Session authentication hook for UI access
+ * Use this to protect routes that require user login
+ */
+export async function requireSession(
+  request: FastifyRequest,
+  reply: FastifyReply
+): Promise<void> {
+  // If auth is disabled, allow all requests
+  if (!authService.isAuthEnabled()) {
+    request.user = {
+      id: 'anonymous',
+      username: 'anonymous',
+      displayName: 'Anonymous',
+      role: 'admin',
+      authProvider: 'local',
+    };
+    return;
+  }
+
+  // Check if this is a public path
+  if (authService.isPublicPath(request.url)) {
+    return;
+  }
+
+  const token = extractSessionToken(request);
+
+  if (!token) {
+    logger.debug({ url: request.url }, 'Request without session token');
+    return reply.status(401).send({
+      error: {
+        code: 'UNAUTHORIZED',
+        message: 'Authentication required',
+      },
+    });
+  }
+
+  const user = authService.getUserFromToken(token);
+
+  if (!user) {
+    logger.debug({ url: request.url }, 'Invalid or expired session');
+    // Clear invalid cookie
+    reply.clearCookie(config.auth.sessionCookieName, { path: '/' });
+    return reply.status(401).send({
+      error: {
+        code: 'UNAUTHORIZED',
+        message: 'Session expired or invalid',
+      },
+    });
+  }
+
+  // Attach user to request
+  request.user = user;
+}
+
+/**
+ * Optional session check - doesn't fail, just attaches user if authenticated
+ */
+export async function optionalSession(
+  request: FastifyRequest,
+  _reply: FastifyReply
+): Promise<void> {
+  // If auth is disabled, set anonymous user
+  if (!authService.isAuthEnabled()) {
+    request.user = {
+      id: 'anonymous',
+      username: 'anonymous',
+      displayName: 'Anonymous',
+      role: 'admin',
+      authProvider: 'local',
+    };
+    return;
+  }
+
+  const token = extractSessionToken(request);
+  if (token) {
+    const user = authService.getUserFromToken(token);
+    if (user) {
+      request.user = user;
+    }
+  }
+}
+
+/**
+ * Require admin role
+ */
+export async function requireAdmin(
+  request: FastifyRequest,
+  reply: FastifyReply
+): Promise<void> {
+  // First ensure we have a session
+  await requireSession(request, reply);
+  
+  // Check if already sent response
+  if (reply.sent) return;
+
+  // Check admin role
+  if (request.user?.role !== 'admin') {
+    return reply.status(403).send({
+      error: {
+        code: 'FORBIDDEN',
+        message: 'Admin access required',
+      },
+    });
   }
 }
 

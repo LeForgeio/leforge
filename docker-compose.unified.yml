@@ -50,6 +50,28 @@ services:
       PLUGIN_PORT_RANGE_START: 4001
       PLUGIN_PORT_RANGE_END: 4999
       LOG_LEVEL: ${LOG_LEVEL:-info}
+      # ===========================================
+      # Authentication
+      # ===========================================
+      # Set LEFORGE_ADMIN_PASSWORD to enable authentication
+      # Leave empty/unset to disable authentication
+      LEFORGE_ADMIN_USER: ${LEFORGE_ADMIN_USER:-admin}
+      LEFORGE_ADMIN_PASSWORD: ${LEFORGE_ADMIN_PASSWORD:-}
+      # JWT secret - MUST be set in production for security
+      # Generate with: openssl rand -hex 64
+      LEFORGE_JWT_SECRET: ${LEFORGE_JWT_SECRET:-}
+      # JWT token expiration (default: 24h)
+      LEFORGE_JWT_EXPIRES_IN: ${LEFORGE_JWT_EXPIRES_IN:-24h}
+      # Auth mode: 'local', 'oidc', or 'both'
+      LEFORGE_AUTH_MODE: ${LEFORGE_AUTH_MODE:-local}
+      # ===========================================
+      # OIDC/SSO Configuration (Optional)
+      # ===========================================
+      # LEFORGE_OIDC_ISSUER: ${LEFORGE_OIDC_ISSUER:-}
+      # LEFORGE_OIDC_CLIENT_ID: ${LEFORGE_OIDC_CLIENT_ID:-}
+      # LEFORGE_OIDC_CLIENT_SECRET: ${LEFORGE_OIDC_CLIENT_SECRET:-}
+      # LEFORGE_OIDC_REDIRECT_URI: ${LEFORGE_OIDC_REDIRECT_URI:-}
+      # LEFORGE_OIDC_SCOPES: ${LEFORGE_OIDC_SCOPES:-openid profile email}
     volumes:
       # Mount Docker socket to manage containers
       - /var/run/docker.sock:/var/run/docker.sock

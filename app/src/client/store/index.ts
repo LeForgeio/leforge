@@ -5,9 +5,74 @@ import { persist } from 'zustand/middleware';
 // Auth Store
 // =============================================================================
 
+export type UserRole = 'admin' | 'developer' | 'user';
+
+export interface AuthUser {
+  id: string;
+  username: string;
+  displayName: string;
+  email?: string;
+  role: UserRole;
+}
+
+// Role permissions (mirrored from server)
+export const ROLE_PERMISSIONS = {
+  admin: {
+    canManageUsers: true,
+    canManageSettings: true,
+    canManagePlugins: true,
+    canManageApiKeys: true,
+    canManageIntegrations: true,
+    canManageSSL: true,
+    canUsePlayground: true,
+    canViewDashboard: true,
+    canViewDocs: true,
+  },
+  developer: {
+    canManageUsers: false,
+    canManageSettings: false,
+    canManagePlugins: true,
+    canManageApiKeys: true,
+    canManageIntegrations: true,
+    canManageSSL: false,
+    canUsePlayground: true,
+    canViewDashboard: true,
+    canViewDocs: true,
+  },
+  user: {
+    canManageUsers: false,
+    canManageSettings: false,
+    canManagePlugins: false,
+    canManageApiKeys: true,
+    canManageIntegrations: false,
+    canManageSSL: false,
+    canUsePlayground: true,
+    canViewDashboard: true,
+    canViewDocs: true,
+  },
+} as const;
+
+export type Permission = keyof typeof ROLE_PERMISSIONS.admin;
+
+export function hasPermission(role: UserRole | undefined, permission: Permission): boolean {
+  if (!role) return false;
+  return ROLE_PERMISSIONS[role]?.[permission] ?? false;
+}
+
 interface AuthState {
-  apiKey: string | null;
+  // Session auth (user login)
+  user: AuthUser | null;
+  token: string | null;
   isAuthenticated: boolean;
+  authEnabled: boolean | null; // null = unknown (not yet checked)
+  
+  // Actions
+  setAuth: (user: AuthUser, token: string) => void;
+  clearAuth: () => void;
+  setAuthEnabled: (enabled: boolean) => void;
+  
+  // Legacy API key support (for playground/integrations)
+  apiKey: string | null;
   setApiKey: (key: string) => void;
   clearApiKey: () => void;
 }
@@ -15,13 +80,38 @@ interface AuthState {
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
-      apiKey: null,
+      user: null,
+      token: null,
       isAuthenticated: false,
-      setApiKey: (key: string) => set({ apiKey: key, isAuthenticated: true }),
-      clearApiKey: () => set({ apiKey: null, isAuthenticated: false }),
+      authEnabled: null,
+      apiKey: null,
+      
+      setAuth: (user: AuthUser, token: string) => set({ 
+        user, 
+        token, 
+        isAuthenticated: true 
+      }),
+      
+      clearAuth: () => set({ 
+        user: null, 
+        token: null, 
+        isAuthenticated: false 
+      }),
+      
+      setAuthEnabled: (enabled: boolean) => set({ authEnabled: enabled }),
+      
+      setApiKey: (key: string) => set({ apiKey: key }),
+      clearApiKey: () => set({ apiKey: null }),
     }),
     {
       name: 'LeForge-auth',
+      // Only persist certain fields
+      partialize: (state) => ({
+        token: state.token,
+        user: state.user,
+        isAuthenticated: state.isAuthenticated,
+        apiKey: state.apiKey,
+      }),
     }
   )
 );

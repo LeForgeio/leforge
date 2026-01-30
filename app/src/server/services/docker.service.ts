@@ -280,6 +280,116 @@ export class DockerService extends EventEmitter {
     }
   }
 
+  /**
+   * Get local image digest for comparison
+   */
+  async getLocalImageDigest(repository: string, tag: string = 'latest'): Promise<string | null> {
+    try {
+      const imageRef = `${repository}:${tag}`;
+      const image = this.docker.getImage(imageRef);
+      const info = await image.inspect();
+      // RepoDigests contains the digest in format: repo@sha256:...
+      const repoDigest = info.RepoDigests?.find(d => d.startsWith(repository));
+      if (repoDigest) {
+        const digestMatch = repoDigest.match(/@(sha256:[a-f0-9]+)/);
+        return digestMatch ? digestMatch[1] : null;
+      }
+      // Fallback to image ID
+      return info.Id;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Check if a remote image has an update available by comparing digests
+   * Uses Docker Hub API to fetch remote digest
+   */
+  async checkImageUpdate(repository: string, tag: string = 'latest'): Promise<{
+    hasUpdate: boolean;
+    localDigest: string | null;
+    remoteDigest: string | null;
+    error?: string;
+  }> {
+    const localDigest = await this.getLocalImageDigest(repository, tag);
+    
+    try {
+      // For Docker Hub images, query the registry API
+      // Format: namespace/repo or library/repo for official images
+      let namespace = 'library';
+      let repo = repository;
+      
+      if (repository.includes('/')) {
+        [namespace, repo] = repository.split('/');
+      }
+
+      // Get auth token for Docker Hub
+      const tokenResponse = await fetch(
+        `https://auth.docker.io/token?service=registry.docker.io&scope=repository:${namespace}/${repo}:pull`
+      );
+      
+      if (!tokenResponse.ok) {
+        return { hasUpdate: false, localDigest, remoteDigest: null, error: 'Failed to get auth token' };
+      }
+      
+      const { token } = await tokenResponse.json() as { token: string };
+
+      // Fetch manifest to get digest
+      const manifestResponse = await fetch(
+        `https://registry-1.docker.io/v2/${namespace}/${repo}/manifests/${tag}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Accept': 'application/vnd.docker.distribution.manifest.v2+json, application/vnd.oci.image.manifest.v1+json',
+          },
+        }
+      );
+
+      if (!manifestResponse.ok) {
+        return { hasUpdate: false, localDigest, remoteDigest: null, error: 'Failed to fetch manifest' };
+      }
+
+      // Docker-Content-Digest header contains the digest
+      const remoteDigest = manifestResponse.headers.get('docker-content-digest');
+      
+      if (!remoteDigest || !localDigest) {
+        return { hasUpdate: false, localDigest, remoteDigest };
+      }
+
+      const hasUpdate = localDigest !== remoteDigest;
+      
+      logger.debug({ repository, tag, localDigest, remoteDigest, hasUpdate }, 'Image update check');
+      
+      return { hasUpdate, localDigest, remoteDigest };
+      
+    } catch (error) {
+      logger.warn({ error, repository, tag }, 'Failed to check for image update');
+      return { 
+        hasUpdate: false, 
+        localDigest, 
+        remoteDigest: null, 
+        error: error instanceof Error ? error.message : 'Unknown error' 
+      };
+    }
+  }
+
+  /**
+   * Check all container plugins for available updates
+   */
+  async checkAllPluginUpdates(): Promise<Map<string, { hasUpdate: boolean; error?: string }>> {
+    const results = new Map<string, { hasUpdate: boolean; error?: string }>();
+    
+    for (const [pluginId, plugin] of this.plugins.entries()) {
+      if (plugin.runtime === 'container' && plugin.manifest.image) {
+        const { repository, tag } = plugin.manifest.image;
+        const result = await this.checkImageUpdate(repository, tag || 'latest');
+        results.set(pluginId, { hasUpdate: result.hasUpdate, error: result.error });
+      }
+    }
+    
+    return results;
+  }
+
   // ==========================================================================
   // Network Management
   // ==========================================================================
@@ -467,7 +577,7 @@ export class DockerService extends EventEmitter {
     }
   }
 
-  async startPlugin(pluginId: string): Promise<void> {
+  async startPlugin(pluginId: string, options?: { pullLatest?: boolean }): Promise<void> {
     const plugin = this.plugins.get(pluginId);
     if (!plugin) {
       throw new Error(`Plugin ${pluginId} not found`);
@@ -477,15 +587,129 @@ export class DockerService extends EventEmitter {
       throw new Error(`Plugin ${pluginId} has no container`);
     }
 
-    logger.info({ pluginId }, 'Starting plugin');
+    logger.info({ pluginId, pullLatest: options?.pullLatest }, 'Starting plugin');
     plugin.status = 'starting';
     this.emitEvent('plugin:starting', pluginId);
 
     await databaseService.updatePlugin(pluginId, { status: 'starting' });
 
     try {
-      const container = this.docker.getContainer(plugin.containerId);
-      await container.start();
+      // If pullLatest is requested and this is a container plugin with an image
+      if (options?.pullLatest && plugin.manifest.image) {
+        const { repository, tag } = plugin.manifest.image;
+        const imageRef = `${repository}:${tag || 'latest'}`;
+        
+        logger.info({ pluginId, imageRef }, 'Pulling latest image before start');
+        
+        // Pull the latest image
+        await this.pullImage(repository, tag || 'latest');
+        
+        // Check if the image actually changed
+        const updateCheck = await this.checkImageUpdate(repository, tag || 'latest');
+        
+        if (updateCheck.hasUpdate || !updateCheck.localDigest) {
+          logger.info({ pluginId }, 'New image available, recreating container');
+          
+          // Remove old container
+          const oldContainer = this.docker.getContainer(plugin.containerId);
+          try {
+            await oldContainer.remove({ force: true });
+          } catch {
+            // Ignore if already removed
+          }
+          
+          // Recreate container with same config but new image
+          const containerName = plugin.containerName || `${config.plugins.containerPrefix}${plugin.forgehookId}`;
+          const manifest = plugin.manifest;
+          
+          const env: string[] = [
+            `PORT=${manifest.port}`,
+            `NODE_ENV=production`,
+            `ENVIRONMENT=production`,
+          ];
+
+          if (manifest.dependencies?.services?.includes('redis')) {
+            env.push(`REDIS_HOST=LeForge-app`);
+            env.push(`REDIS_PORT=${config.redis.port}`);
+            env.push(`REDIS_PASSWORD=${config.redis.password}`);
+          }
+
+          if (manifest.dependencies?.services?.includes('postgres')) {
+            env.push(`POSTGRES_HOST=LeForge-app`);
+            env.push(`POSTGRES_PORT=${config.postgres.port}`);
+            env.push(`POSTGRES_USER=${config.postgres.user}`);
+            env.push(`POSTGRES_PASSWORD=${config.postgres.password}`);
+            env.push(`POSTGRES_DB=${config.postgres.database}`);
+          }
+
+          if (manifest.dependencies?.services?.includes('qdrant')) {
+            env.push(`QDRANT_HOST=${process.env.QDRANT_HOST || 'LeForge-qdrant'}`);
+            env.push(`QDRANT_PORT=${process.env.QDRANT_PORT || '6333'}`);
+            env.push(`QDRANT_URL=${process.env.QDRANT_URL || 'http://LeForge-qdrant:6333'}`);
+          }
+
+          for (const [key, value] of Object.entries(plugin.environment)) {
+            env.push(`${key}=${value}`);
+          }
+
+          if (manifest.environment) {
+            for (const envVar of manifest.environment) {
+              if (envVar.default && !plugin.environment[envVar.name]) {
+                env.push(`${envVar.name}=${envVar.default}`);
+              }
+            }
+          }
+
+          const volumeBinds: string[] = [];
+          if (manifest.volumes) {
+            for (const vol of manifest.volumes) {
+              const volumeName = `${config.plugins.volumePrefix}${vol.name}`;
+              volumeBinds.push(`${volumeName}:${vol.containerPath}${vol.readOnly ? ':ro' : ''}`);
+            }
+          }
+
+          const newContainer = await this.docker.createContainer({
+            name: containerName,
+            Image: imageRef,
+            Env: env,
+            ExposedPorts: {
+              [`${manifest.port}/tcp`]: {},
+            },
+            HostConfig: {
+              PortBindings: {
+                [`${manifest.port}/tcp`]: [{ HostPort: String(plugin.hostPort) }],
+              },
+              NetworkMode: config.plugins.networkName,
+              Binds: volumeBinds,
+              RestartPolicy: { Name: 'unless-stopped' },
+              Memory: this.parseMemory(manifest.resources?.memory || '512m'),
+              NanoCpus: this.parseCpu(manifest.resources?.cpu || '1'),
+            },
+            Healthcheck: manifest.healthCheck ? {
+              Test: ['CMD', 'curl', '-f', `http://localhost:${manifest.port}${manifest.healthCheck.path || '/health'}`],
+              Interval: (manifest.healthCheck.interval || 30) * 1000000000,
+              Timeout: (manifest.healthCheck.timeout || 10) * 1000000000,
+              Retries: manifest.healthCheck.retries || 3,
+            } : undefined,
+          });
+
+          plugin.containerId = newContainer.id;
+          
+          await databaseService.updatePlugin(pluginId, {
+            containerId: newContainer.id,
+          });
+          
+          await newContainer.start();
+        } else {
+          // No update, just start existing container
+          const container = this.docker.getContainer(plugin.containerId);
+          await container.start();
+        }
+      } else {
+        // Normal start without pulling
+        const container = this.docker.getContainer(plugin.containerId);
+        await container.start();
+      }
 
       plugin.status = 'running';
       plugin.startedAt = new Date();

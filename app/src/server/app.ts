@@ -3,6 +3,7 @@ import cors from '@fastify/cors';
 import fastifyStatic from '@fastify/static';
 import websocket from '@fastify/websocket';
 import multipart from '@fastify/multipart';
+import cookie from '@fastify/cookie';
 import path from 'path';
 import fs from 'fs';
 import { config } from './config/index.js';
@@ -19,11 +20,15 @@ import { apiKeysRoutes } from './routes/api-keys.js';
 import { integrationsRoutes } from './routes/integrations.js';
 import { sslRoutes } from './routes/ssl.js';
 import { mcpRoutes } from './routes/mcp.js';
+import { authRoutes } from './routes/auth.js';
+import { adminRoutes } from './routes/admin.js';
 import utilsRoutes from './routes/utils.js';
 import { dockerService } from './services/docker.service.js';
 import { marketplaceService } from './services/marketplace.service.js';
 import { embeddedPluginService } from './services/embedded-plugin.service.js';
 import { corePluginService } from './services/core-plugin.service.js';
+import { authService } from './services/auth.service.js';
+import { requireSession } from './middleware/auth.js';
 
 export async function buildApp(): Promise<FastifyInstance> {
   const app = Fastify({
@@ -46,6 +51,11 @@ export async function buildApp(): Promise<FastifyInstance> {
   await app.register(cors, {
     origin: true,
     credentials: true,
+  });
+
+  await app.register(cookie, {
+    secret: config.auth.jwtSecret, // For signed cookies if needed
+    hook: 'onRequest',
   });
 
   await app.register(websocket);
@@ -113,6 +123,31 @@ export async function buildApp(): Promise<FastifyInstance> {
     }, 'Request completed');
   });
 
+  // Session authentication for protected API routes
+  app.addHook('onRequest', async (request, reply) => {
+    // Only check API routes (not static files, websockets)
+    if (!request.url.startsWith('/api/')) {
+      return;
+    }
+
+    // Invoke endpoints use API key auth, not session auth
+    if (request.url.startsWith('/api/v1/invoke') || request.url.startsWith('/api/v1/nintex')) {
+      return;
+    }
+
+    await requireSession(request, reply);
+  });
+
+  // Log auth status on startup
+  if (authService.isAuthEnabled()) {
+    logger.info({ 
+      user: config.auth.adminUser, 
+      mode: config.auth.authMode 
+    }, 'Authentication enabled');
+  } else {
+    logger.warn('Authentication is DISABLED - set LEFORGE_ADMIN_PASSWORD to enable');
+  }
+
   // Error handler
   app.setErrorHandler((error, request, reply) => {
     const err = error as Error & { statusCode?: number };
@@ -135,6 +170,8 @@ export async function buildApp(): Promise<FastifyInstance> {
 
   // Register API routes
   await app.register(healthRoutes);
+  await app.register(authRoutes);  // Auth routes (login, logout, etc.)
+  await app.register(adminRoutes); // Admin routes (user management, settings)
   await app.register(pluginRoutes);
   await app.register(registryRoutes);
   await app.register(marketplaceRoutes);

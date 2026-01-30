@@ -22,6 +22,7 @@ import {
   Container,
   Code2,
   Cpu,
+  ArrowUpCircle,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -58,6 +59,7 @@ import {
   useUploadPluginUpdate,
   useRollbackPlugin,
   usePluginUpdateHistory,
+  useAllPluginUpdates,
 } from '@/hooks/usePlugins';
 import { InstalledPlugin, PluginStatus, CATEGORY_INFO } from '@/types/forgehook';
 import { formatDistanceToNow } from 'date-fns';
@@ -95,7 +97,7 @@ function PluginStatusBadge({ status }: { status: PluginStatus }) {
   );
 }
 
-function PluginRow({ plugin }: { plugin: InstalledPlugin }) {
+function PluginRow({ plugin, hasUpdate }: { plugin: InstalledPlugin; hasUpdate?: boolean }) {
   const [showLogs, setShowLogs] = useState(false);
   const [showUninstall, setShowUninstall] = useState(false);
   const [showUpdate, setShowUpdate] = useState(false);
@@ -125,11 +127,17 @@ function PluginRow({ plugin }: { plugin: InstalledPlugin }) {
   // Check if this is an embedded or core plugin (no container management needed)
   const isEmbedded = plugin.runtime === 'embedded' || plugin.runtime === 'core';
   const isCore = plugin.runtime === 'core';
+  const isContainer = plugin.runtime === 'container';
   
-  const handleStart = async () => {
+  const handleStart = async (pullLatest?: boolean) => {
     try {
-      await startMutation.mutateAsync(plugin.id);
-      toast({ title: 'Plugin started', description: `${pluginName} is now running.` });
+      await startMutation.mutateAsync({ pluginId: plugin.id, options: pullLatest ? { pullLatest } : undefined });
+      toast({ 
+        title: pullLatest ? 'Plugin updated and started' : 'Plugin started', 
+        description: pullLatest 
+          ? `${pluginName} has been updated to the latest version and is now running.`
+          : `${pluginName} is now running.` 
+      });
     } catch (error) {
       toast({ 
         title: 'Failed to start', 
@@ -282,6 +290,17 @@ function PluginRow({ plugin }: { plugin: InstalledPlugin }) {
                       {plugin.runtime === 'container' ? 'Container' : plugin.runtime === 'core' ? 'Core' : 'Embedded'}
                     </Badge>
                   )}
+                  {/* Update Available Badge */}
+                  {hasUpdate && isContainer && (
+                    <Badge 
+                      variant="outline" 
+                      className="gap-1 text-xs px-1.5 py-0 shrink-0 border-amber-500/50 bg-amber-500/10 text-amber-600 animate-pulse"
+                      title="A newer version of this container image is available. Stop and start with 'Pull Latest' to update."
+                    >
+                      <ArrowUpCircle className="w-3 h-3" />
+                      Update Available
+                    </Badge>
+                  )}
                 </div>
                 <p className="text-sm text-muted-foreground truncate max-w-full">
                   {plugin.manifest?.description || plugin.description || 'No description'}
@@ -341,15 +360,45 @@ function PluginRow({ plugin }: { plugin: InstalledPlugin }) {
                     </Button>
                   </>
                 ) : plugin.status === 'stopped' || plugin.status === 'error' ? (
-                  <Button 
-                    variant="outline" 
-                    size="icon"
-                    onClick={handleStart}
-                    disabled={isActioning}
-                    title="Start"
-                  >
-                    <Play className="w-4 h-4" />
-                  </Button>
+                  hasUpdate && isContainer ? (
+                    // Show dropdown with update option when update is available
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          disabled={isActioning}
+                          className="gap-1 border-amber-500/50 bg-amber-500/10 text-amber-600 hover:bg-amber-500/20"
+                        >
+                          <Play className="w-4 h-4" />
+                          <ArrowUpCircle className="w-3 h-3" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => handleStart(false)}>
+                          <Play className="w-4 h-4 mr-2" />
+                          Start (Current Version)
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          onClick={() => handleStart(true)}
+                          className="text-amber-600"
+                        >
+                          <ArrowUpCircle className="w-4 h-4 mr-2" />
+                          Start with Update (Pull Latest)
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  ) : (
+                    <Button 
+                      variant="outline" 
+                      size="icon"
+                      onClick={() => handleStart(false)}
+                      disabled={isActioning}
+                      title="Start"
+                    >
+                      <Play className="w-4 h-4" />
+                    </Button>
+                  )
                 ) : null}
                 
                 <DropdownMenu>
@@ -672,6 +721,7 @@ export default function InstalledPlugins() {
   const [statusFilter, setStatusFilter] = useState<PluginStatus | 'all'>('all');
   
   const { data, isLoading } = useInstalledPlugins();
+  const { data: updateData } = useAllPluginUpdates();
   
   // Filter plugins
   const filteredPlugins = data?.plugins.filter(plugin => {
@@ -689,6 +739,9 @@ export default function InstalledPlugins() {
   const runningCount = data?.plugins.filter(p => p.status === 'running').length || 0;
   const stoppedCount = data?.plugins.filter(p => p.status === 'stopped').length || 0;
   const errorCount = data?.plugins.filter(p => p.status === 'error').length || 0;
+  const updatesAvailable = updateData?.updates 
+    ? Object.values(updateData.updates).filter(u => u.hasUpdate).length 
+    : 0;
   
   return (
     <div className="space-y-6">
@@ -712,7 +765,7 @@ export default function InstalledPlugins() {
       </div>
       
       {/* Stats */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-5 gap-4">
         <Card className="bg-white/5 border-white/10">
           <CardContent className="pt-6">
             <div className="text-2xl font-bold text-white">{data?.total || 0}</div>
@@ -735,6 +788,20 @@ export default function InstalledPlugins() {
           <CardContent className="pt-6">
             <div className="text-2xl font-bold text-red-400">{errorCount}</div>
             <p className="text-sm text-gray-400">Errors</p>
+          </CardContent>
+        </Card>
+        <Card className={cn(
+          "bg-white/5 border-white/10",
+          updatesAvailable > 0 && "border-amber-500/30 bg-amber-500/5"
+        )}>
+          <CardContent className="pt-6">
+            <div className={cn(
+              "text-2xl font-bold",
+              updatesAvailable > 0 ? "text-amber-400" : "text-gray-400"
+            )}>
+              {updatesAvailable}
+            </div>
+            <p className="text-sm text-gray-400">Updates Available</p>
           </CardContent>
         </Card>
       </div>
@@ -799,7 +866,11 @@ export default function InstalledPlugins() {
       ) : (
         <div className="space-y-4">
           {filteredPlugins.map((plugin) => (
-            <PluginRow key={plugin.id} plugin={plugin} />
+            <PluginRow 
+              key={plugin.id} 
+              plugin={plugin} 
+              hasUpdate={updateData?.updates?.[plugin.id]?.hasUpdate}
+            />
           ))}
         </div>
       )}

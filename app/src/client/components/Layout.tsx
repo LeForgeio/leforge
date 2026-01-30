@@ -1,20 +1,26 @@
 import { useState } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { Sun, Moon, Home, Box, Play, Key, Github, Book, Menu, X, Package, Store, Sparkles, Shield, Cable } from 'lucide-react';
-import { useThemeStore, useAuthStore } from '../store';
+import { Sun, Moon, Home, Box, Play, Key, Github, Book, Menu, X, Package, Store, Sparkles, Shield, Cable, LogOut, User, Users, Settings, ChevronDown } from 'lucide-react';
+import { useThemeStore, hasPermission } from '../store';
+import { useAuth } from '../hooks/useAuth';
 import { Button } from './ui/button';
 import { cn } from '../lib/utils';
 
 const navItems = [
-  { path: '/', label: 'Dashboard', icon: Home },
-  { path: '/services', label: 'Services', icon: Box },
-  { path: '/marketplace', label: 'Marketplace', icon: Store },
-  { path: '/plugins', label: 'Installed Plugins', icon: Package },
-  { path: '/integrations', label: 'Integrations', icon: Cable },
-  { path: '/playground', label: 'API Playground', icon: Play },
-  { path: '/api-keys', label: 'API Keys', icon: Key },
-  { path: '/ssl', label: 'SSL / TLS', icon: Shield },
-  { path: '/docs', label: 'Documentation', icon: Book },
+  { path: '/', label: 'Dashboard', icon: Home, permission: 'canViewDashboard' as const },
+  { path: '/services', label: 'Services', icon: Box, permission: 'canViewDashboard' as const },
+  { path: '/marketplace', label: 'Marketplace', icon: Store, permission: 'canManagePlugins' as const },
+  { path: '/plugins', label: 'Installed Plugins', icon: Package, permission: 'canManagePlugins' as const },
+  { path: '/integrations', label: 'Integrations', icon: Cable, permission: 'canManageIntegrations' as const },
+  { path: '/playground', label: 'API Playground', icon: Play, permission: 'canUsePlayground' as const },
+  { path: '/api-keys', label: 'API Keys', icon: Key, permission: 'canManageApiKeys' as const },
+  { path: '/ssl', label: 'SSL / TLS', icon: Shield, permission: 'canManageSSL' as const },
+  { path: '/docs', label: 'Documentation', icon: Book, permission: 'canViewDocs' as const },
+];
+
+const adminItems = [
+  { path: '/admin/users', label: 'User Management', icon: Users },
+  { path: '/admin/settings', label: 'System Settings', icon: Settings },
 ];
 
 // LeForge Logo Component
@@ -39,13 +45,29 @@ function LeForgeLogo({ collapsed = false }: { collapsed?: boolean }) {
 export default function Layout() {
   const location = useLocation();
   const { isDark, toggle } = useThemeStore();
-  const { isAuthenticated } = useAuthStore();
+  const { user, isAuthenticated, authEnabled, logout, isLoggingOut } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [adminExpanded, setAdminExpanded] = useState(location.pathname.startsWith('/admin'));
+
+  const isAdmin = user?.role === 'admin';
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+  };
+
+  // Filter nav items based on user permissions
+  const visibleNavItems = navItems.filter(item => 
+    !user || hasPermission(user.role, item.permission)
+  );
 
   const navContent = (
     <>
-      <nav className="flex-1 px-3 py-4 space-y-1">
-        {navItems.map((item) => {
+      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+        {visibleNavItems.map((item) => {
           const Icon = item.icon;
           const isActive = location.pathname === item.path;
           return (
@@ -60,7 +82,7 @@ export default function Layout() {
                   : 'text-muted-foreground hover:bg-accent hover:text-foreground'
               )}
             >
-              <Icon className={cn('w-[18px] h-[18px]', isActive && 'text-primary')} />
+              <Icon className={cn('w-4.5 h-4.5', isActive && 'text-primary')} />
               <span className="text-sm">{item.label}</span>
               {isActive && (
                 <div className="ml-auto w-1.5 h-1.5 rounded-full bg-primary" />
@@ -68,6 +90,44 @@ export default function Layout() {
             </Link>
           );
         })}
+
+        {/* Admin Section */}
+        {isAdmin && (
+          <div className="pt-4 mt-4 border-t border-border/50">
+            <button
+              onClick={() => setAdminExpanded(!adminExpanded)}
+              className="flex items-center gap-3 px-3 py-2.5 w-full rounded-lg text-muted-foreground hover:bg-accent hover:text-foreground transition-all duration-200"
+            >
+              <Shield className="w-4.5 h-4.5 text-red-500" />
+              <span className="text-sm font-medium">Administration</span>
+              <ChevronDown className={cn('w-4 h-4 ml-auto transition-transform', adminExpanded && 'rotate-180')} />
+            </button>
+            {adminExpanded && (
+              <div className="ml-4 mt-1 space-y-1">
+                {adminItems.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = location.pathname === item.path;
+                  return (
+                    <Link
+                      key={item.path}
+                      to={item.path}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={cn(
+                        'flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200',
+                        isActive
+                          ? 'bg-red-500/10 text-red-500 font-medium'
+                          : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                      )}
+                    >
+                      <Icon className={cn('w-4 h-4', isActive && 'text-red-500')} />
+                      <span className="text-sm">{item.label}</span>
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
       </nav>
 
       <div className="px-3 py-4 border-t border-border/50 space-y-3">
@@ -83,17 +143,40 @@ export default function Layout() {
           </Button>
         </div>
         
-        <div className="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-accent/50">
-          <div className={cn(
-            'w-2 h-2 rounded-full ring-2 ring-offset-1 ring-offset-background',
-            isAuthenticated 
-              ? 'bg-emerald-500 ring-emerald-500/30' 
-              : 'bg-amber-500 ring-amber-500/30'
-          )} />
-          <span className="text-xs text-muted-foreground">
-            {isAuthenticated ? 'API Key Active' : 'No API Key'}
-          </span>
-        </div>
+        {/* User info and logout */}
+        {authEnabled && isAuthenticated && user && (
+          <div className="px-3 py-2 rounded-lg bg-accent/50 space-y-2">
+            <div className="flex items-center gap-2.5">
+              <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center">
+                <User className="w-3.5 h-3.5 text-primary" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate">{user.displayName}</p>
+                <p className="text-xs text-muted-foreground truncate">{user.role}</p>
+              </div>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleLogout}
+              disabled={isLoggingOut}
+              className="w-full h-8 text-xs justify-start gap-2"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              {isLoggingOut ? 'Signing out...' : 'Sign out'}
+            </Button>
+          </div>
+        )}
+        
+        {/* Auth disabled indicator */}
+        {authEnabled === false && (
+          <div className="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-amber-500/10">
+            <div className="w-2 h-2 rounded-full bg-amber-500 ring-2 ring-offset-1 ring-offset-background ring-amber-500/30" />
+            <span className="text-xs text-amber-600 dark:text-amber-400">
+              Auth Disabled
+            </span>
+          </div>
+        )}
 
         <a
           href="https://github.com/LeForgeio/leforge"
