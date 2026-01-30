@@ -33,6 +33,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - QR code generation array bounds error in finder pattern placement
 
+### Documentation
+
+- Updated getting-started.md to reflect unified single-container architecture (port 4000)
+- Updated architecture.md with current single-container design and MCP protocol
+- Rewrote leforge-website README from Next.js boilerplate to project documentation
+- Updated app/README.md with MCP endpoints and consistent naming
+- Updated all SDK READMEs (JavaScript, Python, .NET) with correct port and examples
+- Standardized package naming to lowercase (`@leforge/sdk`, `leforge-sdk`)
+
 ## [1.2.0] - 2026-01-20
 
 ### Added

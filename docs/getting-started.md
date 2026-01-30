@@ -7,9 +7,9 @@ This guide will help you get LeForge up and running quickly.
 Before you begin, ensure you have the following installed:
 
 - **Docker**: Version 20.10 or higher
-- **Docker Compose**: Version 2.0 or higher
-- **Git**: For cloning the repository
-- **4GB+ RAM**: Recommended for running all services
+- **Docker Compose**: Version 2.0 or higher (optional)
+- **Git**: For cloning the repository (optional)
+- **2GB+ RAM**: Minimum for single container deployment
 
 ### Verify Installation
 
@@ -18,7 +18,7 @@ Before you begin, ensure you have the following installed:
 docker --version
 # Expected: Docker version 20.10.x or higher
 
-# Check Docker Compose version
+# Check Docker Compose version (optional)
 docker compose version
 # Expected: Docker Compose version v2.x.x
 
@@ -28,82 +28,88 @@ docker info
 
 ## Quick Start
 
-### 1. Clone the Repository
+### Option 1: One-Line Deploy (Recommended)
 
 ```bash
+docker run -d -p 4000:4000 --name leforge leforge/leforge:latest
+```
+
+That's it! LeForge is now running with PostgreSQL, Redis, and the Node.js app all in one container.
+
+### Option 2: Docker Compose
+
+```bash
+# Clone the repository
 git clone https://github.com/LeForgeio/leforge.git
-cd LeForge
-```
+cd leforge
 
-### 2. Configure Environment
-
-```bash
-# Copy the example environment file
-cp .env.example .env
-
-# Edit the .env file with your preferred settings (optional for development)
-# nano .env
-```
-
-### 3. Start All Services
-
-```bash
-# Start in detached mode
-docker-compose up -d
+# Start LeForge
+docker compose -f docker-compose.unified.yml up -d
 
 # Watch the logs
-docker-compose logs -f
+docker compose logs -f
 ```
 
-### 4. Verify Services
-
-Wait for all services to be healthy (usually 1-2 minutes):
+### Option 3: With Vector Search (Qdrant)
 
 ```bash
-# Check service status
-docker-compose ps
-
-# Expected output:
-# NAME                        STATUS
-# LeForge-kong              healthy
-# LeForge-postgres          healthy
-# LeForge-redis             healthy
-# LeForge-qdrant            healthy
-# LeForge-crypto-service    healthy
-# LeForge-math-service      healthy
-# ... (other services)
+docker compose -f docker-compose.unified.yml -f docker-compose.qdrant.yml up -d
 ```
 
-### 5. Access the Services
+### Verify Installation
+
+Wait for services to be healthy (usually 30-60 seconds):
+
+```bash
+# Check health
+curl http://localhost:4000/api/v1/health
+
+# Expected response:
+{
+  "status": "healthy",
+  "version": "1.2.0",
+  "timestamp": "2026-01-30T12:00:00.000Z"
+}
+```
+
+### Access the Services
 
 | Service | URL | Description |
 |---------|-----|-------------|
-| Web UI | http://localhost:3000 | Management dashboard |
-| API Gateway | http://localhost:8000 | Main API endpoint |
-| Kong Admin | http://localhost:8001 | Gateway administration |
+| Web UI / API | http://localhost:4000 | Dashboard and all APIs |
+| MCP Endpoint | http://localhost:4000/mcp | AI Agent protocol |
+| Health Check | http://localhost:4000/api/v1/health | Service status |
 
 ## Your First API Call
 
 ### Test the Health Endpoint
 
 ```bash
-curl http://localhost:8000/api/v1/crypto/health
+curl http://localhost:4000/api/v1/health
+```
+
+### Evaluate a Formula (Embedded Plugin)
+
+```bash
+curl -X POST http://localhost:4000/api/v1/invoke/formula-engine/evaluate \
+  -H "Content-Type: application/json" \
+  -d '{"formula": "SUM(1,2,3,4,5)"}'
 ```
 
 Expected response:
 ```json
 {
-  "status": "healthy",
-  "service": "crypto-service",
-  "version": "1.0.0",
-  "timestamp": "2026-01-17T12:00:00.000Z"
+  "success": true,
+  "result": 15
 }
 ```
 
-### Hash Some Data
+### Hash Some Data (Container Plugin)
+
+First, install the crypto-service plugin from the Marketplace UI, then:
 
 ```bash
-curl -X POST http://localhost:8000/api/v1/crypto/hash \
+curl -X POST http://localhost:4000/api/v1/invoke/crypto-service/hash \
   -H "Content-Type: application/json" \
   -d '{
     "algorithm": "sha256",
@@ -111,40 +117,16 @@ curl -X POST http://localhost:8000/api/v1/crypto/hash \
   }'
 ```
 
-Expected response:
-```json
-{
-  "success": true,
-  "data": {
-    "hash": "8f7d9a3b2c1e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a",
-    "algorithm": "sha256",
-    "encoding": "hex"
-  },
-  "requestId": "req-abc123"
-}
-```
-
-### Perform a Calculation
+### Use MCP Protocol (AI Agents)
 
 ```bash
-curl -X POST http://localhost:8000/api/v1/math/calculate \
-  -H "Content-Type: application/json" \
-  -d '{
-    "expression": "2 + 2 * 3",
-    "precision": 2
-  }'
-```
+# List available tools for AI agents
+curl http://localhost:4000/api/v1/mcp/tools
 
-Expected response:
-```json
-{
-  "success": true,
-  "data": {
-    "result": 8,
-    "expression": "2 + 2 * 3"
-  },
-  "requestId": "req-def456"
-}
+# Call a tool
+curl -X POST http://localhost:4000/api/v1/mcp/tools/formula-engine__post_evaluate/call \
+  -H "Content-Type: application/json" \
+  -d '{"formula": "AVERAGE(10,20,30)"}'
 ```
 
 ## Development Mode
@@ -152,130 +134,93 @@ Expected response:
 For active development with hot reload:
 
 ```bash
-# Start with development overrides
-docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
+cd app
 
-# Or use the helper script
-./scripts/start-dev.sh
+# Install dependencies
+npm install
+
+# Run both frontend and backend in dev mode
+npm run dev
 ```
 
 Development mode includes:
-- Hot reload for all services
-- Debug ports exposed
-- Adminer for database management (http://localhost:8080)
-- Redis Commander (http://localhost:8081)
+- Hot reload for frontend and backend
+- Frontend on port 3000 (proxied to backend)
+- Backend on port 4000
 
 ## Configuration
 
 ### Environment Variables
 
-Key variables in `.env`:
-
-```bash
-# Service Ports
-CRYPTO_SERVICE_PORT=3001
-MATH_SERVICE_PORT=3002
-# ... etc
-
-# Database
-POSTGRES_PASSWORD=your_secure_password
-REDIS_PASSWORD=your_secure_password
-
-# Security
-JWT_SECRET=your_jwt_secret_key
-
-# Logging
-LOG_LEVEL=debug  # debug, info, warn, error
-```
-
-### Service-Specific Configuration
-
-Each service can be configured via environment variables:
-
-```bash
-# Crypto Service
-CRYPTO_DEFAULT_ALGORITHM=sha256
-
-# Math Service
-MATH_MAX_PRECISION=15
-
-# Image Service
-IMAGE_MAX_SIZE_MB=50
-IMAGE_ALLOWED_FORMATS=jpeg,png,webp
-```
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `PORT` | `4000` | Server port |
+| `NODE_ENV` | `development` | Environment |
+| `LOG_LEVEL` | `info` | Logging level |
+| `POSTGRES_HOST` | `localhost` | PostgreSQL host |
+| `POSTGRES_PORT` | `5432` | PostgreSQL port |
+| `POSTGRES_USER` | `leforge` | PostgreSQL user |
+| `POSTGRES_PASSWORD` | `leforge_password` | PostgreSQL password |
+| `POSTGRES_DB` | `leforge` | PostgreSQL database |
+| `REDIS_HOST` | `localhost` | Redis host |
+| `REDIS_PORT` | `6379` | Redis port |
+| `DOCKER_SOCKET_PATH` | `/var/run/docker.sock` | Docker socket path |
 
 ## Common Commands
 
 ```bash
-# Start all services
-docker-compose up -d
+# Start LeForge
+docker compose -f docker-compose.unified.yml up -d
 
-# Stop all services
-docker-compose down
+# Stop LeForge
+docker compose -f docker-compose.unified.yml down
 
-# View logs for a specific service
-docker-compose logs -f crypto-service
+# View logs
+docker compose -f docker-compose.unified.yml logs -f
 
-# Restart a specific service
-docker-compose restart crypto-service
-
-# Rebuild and start
-docker-compose up -d --build
+# Restart
+docker compose -f docker-compose.unified.yml restart
 
 # Remove all data (volumes)
-docker-compose down -v
+docker compose -f docker-compose.unified.yml down -v
 ```
 
 ## Troubleshooting
 
-### Services Not Starting
+### Container Not Starting
 
 ```bash
-# Check service logs
-docker-compose logs <service-name>
+# Check container logs
+docker logs leforge
 
 # Common issues:
-# - Port conflicts: Change ports in .env
+# - Port 4000 in use: Change port mapping (-p 4001:4000)
 # - Memory issues: Increase Docker memory allocation
-# - Database not ready: Wait and restart the service
-```
-
-### Kong Gateway Errors
-
-```bash
-# Check Kong logs
-docker-compose logs kong
-
-# Verify Kong is running
-curl http://localhost:8001/status
 ```
 
 ### Database Connection Issues
 
-```bash
-# Check PostgreSQL
-docker-compose exec postgres psql -U LeForge -c "SELECT 1"
-
-# Check Redis
-docker-compose exec redis redis-cli -a <password> ping
-```
+The database runs inside the container. If you see connection errors, the container may still be initializing. Wait 30-60 seconds and try again.
 
 ### Reset Everything
 
 ```bash
-# Stop and remove all containers, networks, and volumes
-docker-compose down -v --remove-orphans
+# Stop and remove container with data
+docker rm -f leforge
+docker volume rm leforge_data  # If using named volume
 
 # Start fresh
-docker-compose up -d
+docker run -d -p 4000:4000 --name leforge leforge/leforge:latest
 ```
 
 ## Next Steps
 
 1. **Explore the API**: Check out the [API Reference](api-reference.md)
 2. **Understand the Architecture**: Read the [Architecture Guide](architecture.md)
-3. **Deploy to Production**: See the [Deployment Guide](deployment.md)
-4. **Contribute**: Read our [Contributing Guide](contributing.md)
+3. **Install Plugins**: Browse the Marketplace at http://localhost:4000/marketplace
+4. **Connect AI Agents**: Use the MCP endpoint at http://localhost:4000/mcp
+5. **Deploy to Production**: See the [Deployment Guide](deployment.md)
+6. **Contribute**: Read our [Contributing Guide](contributing.md)
 
 ## Getting Help
 

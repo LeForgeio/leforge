@@ -1,19 +1,19 @@
 # LeForge - Unified Application
 
-LeForge is a self-hosted microservices platform for AI and compute workflows. This is the unified application that combines both the backend API and frontend UI in a single deployable package.
+LeForge is a self-hosted AI and compute platform for workflow automation tools. This is the unified application that combines both the backend API and frontend UI in a single deployable package.
 
 ## Architecture
 
 ```text
 ┌─────────────────────────────────────────────────────────────┐
-│                      LeForge App                         │
-│                      (Port 4000)                           │
+│                      LeForge App                            │
+│                      (Port 4000)                            │
 ├─────────────────────────────────────────────────────────────┤
 │  ┌─────────────────┐      ┌─────────────────────────────┐  │
 │  │   Fastify API   │      │      Static Frontend        │  │
 │  │   /api/v1/*     │      │      React SPA              │  │
 │  │   /health       │      │      (Vite built)           │  │
-│  │   /ws/events    │      │      /, /marketplace, etc   │  │
+│  │   /mcp          │      │      /, /marketplace, etc   │  │
 │  └────────┬────────┘      └─────────────────────────────┘  │
 │           │                                                 │
 │  ┌────────┴────────┐                                        │
@@ -58,7 +58,7 @@ npm start
 
 ```bash
 # Build the Docker image
-docker build -t LeForge .
+docker build -t leforge .
 
 # Run with Docker Compose (includes all infrastructure)
 docker compose -f docker-compose.unified.yml up -d
@@ -81,6 +81,14 @@ docker compose -f docker-compose.unified.yml up -d
 - `POST /api/v1/plugins/:id/restart` - Restart a plugin
 - `DELETE /api/v1/plugins/:id` - Uninstall a plugin
 - `GET /api/v1/plugins/:id/logs` - Get plugin logs
+
+### MCP (Model Context Protocol)
+
+- `GET /mcp` - SSE endpoint for AI agent connections
+- `GET /api/v1/mcp/tools` - List available tools
+- `POST /api/v1/mcp/tools/:name/call` - Execute a tool
+- `GET /api/v1/mcp/resources` - List resources
+- `GET /api/v1/mcp/prompts` - List prompts
 
 ### Registry
 
@@ -114,17 +122,16 @@ docker compose -f docker-compose.unified.yml up -d
 | `LOG_LEVEL` | `info` | Logging level |
 | `POSTGRES_HOST` | `localhost` | PostgreSQL host |
 | `POSTGRES_PORT` | `5432` | PostgreSQL port |
-| `POSTGRES_USER` | `LeForge` | PostgreSQL user |
-| `POSTGRES_PASSWORD` | `LeForge_password` | PostgreSQL password |
-| `POSTGRES_DB` | `LeForge` | PostgreSQL database |
+| `POSTGRES_USER` | `leforge` | PostgreSQL user |
+| `POSTGRES_PASSWORD` | `leforge_password` | PostgreSQL password |
+| `POSTGRES_DB` | `leforge` | PostgreSQL database |
 | `REDIS_HOST` | `localhost` | Redis host |
 | `REDIS_PORT` | `6379` | Redis port |
 | `REDIS_PASSWORD` | `redis_password` | Redis password |
 | `DOCKER_SOCKET_PATH` | `/var/run/docker.sock` | Docker socket path |
-| `DOCKER_NETWORK` | `LeForge-network` | Docker network for plugins |
+| `DOCKER_NETWORK` | `leforge-network` | Docker network for plugins |
 | `PLUGIN_PORT_RANGE_START` | `4001` | Plugin port range start |
 | `PLUGIN_PORT_RANGE_END` | `4999` | Plugin port range end |
-| `KONG_ADMIN_URL` | `http://localhost:8001` | Kong Admin API URL |
 
 ## Project Structure
 
