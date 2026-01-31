@@ -81,7 +81,7 @@ function ScopeSelector({
   onScopesChange: (scopes: string[]) => void;
 }) {
   const { data: scopesData, isLoading } = useAvailableScopes();
-  const scopes = scopesData?.scopes || [];
+  const scopes = useMemo(() => scopesData?.scopes || [], [scopesData?.scopes]);
 
   // Group scopes by category
   const groupedScopes = useMemo(() => {
@@ -459,8 +459,9 @@ function UsageStatsPanel({ keyId }: { keyId: string }) {
                     })}
                   </span>
                   <div className="flex-1 h-4 bg-muted rounded-sm overflow-hidden">
+                    {/* Dynamic width percentage for data visualization - inline style required */}
                     <div
-                      className="h-full bg-primary/60 rounded-sm"
+                      className="h-full bg-primary/60 rounded-sm transition-all"
                       style={{ width: `${width}%` }}
                     />
                   </div>
@@ -512,10 +513,11 @@ export default function AdminApiKeys() {
   const [editForm, setEditForm] = useState<UpdateApiKeyInput>({});
 
   // Filter keys
+  const allKeys = keysData?.keys;
   const filteredKeys = useMemo(() => {
-    if (!keysData?.keys) return [];
+    if (!allKeys) return [];
 
-    return keysData.keys.filter((key) => {
+    return allKeys.filter((key) => {
       // Search filter
       if (
         searchQuery &&
@@ -540,7 +542,7 @@ export default function AdminApiKeys() {
           return true;
       }
     });
-  }, [keysData?.keys, searchQuery, statusFilter]);
+  }, [allKeys, searchQuery, statusFilter]);
 
   // Handlers
   const handleCreate = async () => {

@@ -29,10 +29,10 @@ function LeForgeLogo({ collapsed = false }: { collapsed?: boolean }) {
   return (
     <Link to="/" className="flex items-center gap-2.5 group">
       <div className="relative">
-        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary via-purple-500 to-pink-500 flex items-center justify-center shadow-lg shadow-primary/25 group-hover:shadow-primary/40 transition-shadow">
+        <div className="w-8 h-8 rounded-lg bg-linear-to-br from-primary via-purple-500 to-pink-500 flex items-center justify-center shadow-lg shadow-primary/25 group-hover:shadow-primary/40 transition-shadow">
           <Sparkles className="w-4.5 h-4.5 text-white" />
         </div>
-        <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-primary via-purple-500 to-pink-500 blur-lg opacity-40 group-hover:opacity-60 transition-opacity -z-10" />
+        <div className="absolute inset-0 rounded-lg bg-linear-to-br from-primary via-purple-500 to-pink-500 blur-lg opacity-40 group-hover:opacity-60 transition-opacity -z-10" />
       </div>
       {!collapsed && (
         <span className="text-lg font-semibold tracking-tight">

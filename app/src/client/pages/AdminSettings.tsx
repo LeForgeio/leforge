@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { 
   Settings, 
   Shield, 
@@ -42,24 +42,24 @@ export default function AdminSettings() {
   const { data: authSettings, isLoading: authLoading } = useAuthSettings();
   const updateAuthSettings = useUpdateAuthSettings();
   const [localAuthSettings, setLocalAuthSettings] = useState<Partial<AuthSettings>>({});
+  const [authInitialized, setAuthInitialized] = useState(false);
   
   // OIDC Settings
   const { data: oidcSettings, isLoading: oidcLoading } = useOidcSettings();
   const updateOidcSettings = useUpdateOidcSettings();
   const [localOidcSettings, setLocalOidcSettings] = useState<Partial<OidcSettings & { clientSecret?: string }>>({});
+  const [oidcInitialized, setOidcInitialized] = useState(false);
 
-  // Sync local state with fetched data
-  useEffect(() => {
-    if (authSettings) {
-      setLocalAuthSettings(authSettings);
-    }
-  }, [authSettings]);
+  // Sync local state with fetched data (only once when data first arrives)
+  if (authSettings && !authInitialized) {
+    setLocalAuthSettings(authSettings);
+    setAuthInitialized(true);
+  }
 
-  useEffect(() => {
-    if (oidcSettings) {
-      setLocalOidcSettings(oidcSettings);
-    }
-  }, [oidcSettings]);
+  if (oidcSettings && !oidcInitialized) {
+    setLocalOidcSettings(oidcSettings);
+    setOidcInitialized(true);
+  }
 
   const handleSaveAuthSettings = async () => {
     try {
