@@ -553,18 +553,12 @@ export async function agentRoutes(fastify: FastifyInstance) {
       
       const check = await llmService.checkProvider(provider);
       
-      if (!check.available) {
-        return reply.status(503).send({
-          error: {
-            code: 'PROVIDER_UNAVAILABLE',
-            message: check.error || `Provider ${provider} is not available`,
-          },
-        });
-      }
-      
+      // Return 200 with availability status - let the UI handle gracefully
       return reply.send({
         provider,
+        available: check.available,
         models: check.models || [],
+        error: check.available ? undefined : (check.error || `Provider ${provider} is not available`),
       });
     }
   );

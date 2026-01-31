@@ -141,7 +141,7 @@ async function fetchLLMProviders(): Promise<{ providers: LLMProviderStatus[] }> 
   return response.json();
 }
 
-async function fetchProviderModels(provider: string): Promise<{ provider: string; models: string[] }> {
+async function fetchProviderModels(provider: string): Promise<{ provider: string; available: boolean; models: string[]; error?: string }> {
   const response = await fetch(`${API_BASE}/llm/models/${provider}`);
   if (!response.ok) {
     const error = await response.json();
@@ -274,5 +274,6 @@ export function useProviderModels(provider: string | undefined) {
     queryFn: () => fetchProviderModels(provider!),
     enabled: !!provider,
     staleTime: 60000,
+    retry: false, // Don't retry - provider status is cached
   });
 }

@@ -320,6 +320,68 @@ docker compose -f docker-compose.unified.yml down
 
 ---
 
+## 🌐 Cloudflare Tunnel (cloudflared)
+
+LeForge uses Cloudflare Tunnel for public access via `app.leforge.io`. The tunnel runs in a separate container (`cloudflared`) on the `LeForge-backend` network.
+
+### Network Configuration
+
+The `cloudflared` container expects to reach the LeForge app at hostname `leforge-app:4000`. After deploying the `leforge` container, you must connect it to the cloudflared network with the correct alias:
+
+```bash
+# Connect leforge container to cloudflared's network with alias
+docker network connect --alias leforge-app LeForge-backend leforge
+```
+
+### Verify Tunnel Connectivity
+
+```bash
+# Check cloudflared logs for errors
+docker logs cloudflared --tail 50
+
+# Test public endpoint
+curl https://app.leforge.io/health
+```
+
+### Troubleshooting 502 Bad Gateway
+
+If you see 502 errors on `app.leforge.io`:
+
+1. **Check container is running**:
+   ```bash
+   docker ps | grep leforge
+   ```
+
+2. **Verify network connectivity**:
+   ```bash
+   # Check leforge is on LeForge-backend network
+   docker inspect leforge --format '{{json .NetworkSettings.Networks}}' | jq
+   ```
+
+3. **Reconnect to network**:
+   ```bash
+   docker network connect --alias leforge-app LeForge-backend leforge
+   ```
+
+4. **Check cloudflared logs**:
+   ```bash
+   docker logs cloudflared --tail 30
+   ```
+   
+   Look for: `lookup leforge-app on 127.0.0.11:53: server misbehaving` - this means the alias isn't set up.
+
+### After Each Redeployment
+
+When you redeploy the `leforge` container (e.g., `docker compose down/up`), you must reconnect it to the cloudflared network:
+
+```bash
+docker network connect --alias leforge-app LeForge-backend leforge
+```
+
+Consider adding this to your deployment script or docker-compose configuration.
+
+---
+
 ## 🔐 Security Considerations
 
 ### SSH Key Security

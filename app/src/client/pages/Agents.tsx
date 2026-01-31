@@ -408,12 +408,17 @@ function AgentDialog({ open, onOpenChange, agent, onSave, isSaving }: AgentDialo
             </div>
             <div className="space-y-2">
               <Label>Model</Label>
+              {modelsData && !modelsData.available && (
+                <p className="text-xs text-amber-500">
+                  {provider} is not available: {modelsData.error}
+                </p>
+              )}
               <Select value={model} onValueChange={setModel}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {(modelsData?.models || ['llama3.2', 'llama3.1', 'mistral', 'codellama']).map(m => (
+                  {(modelsData?.models?.length ? modelsData.models : ['llama3.2', 'llama3.1', 'mistral', 'codellama']).map(m => (
                     <SelectItem key={m} value={m}>{m}</SelectItem>
                   ))}
                 </SelectContent>
