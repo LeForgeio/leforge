@@ -785,6 +785,7 @@ export default function Agents() {
   const { toast } = useToast();
   const { data: agentsData, isLoading } = useAgents();
   const { data: recentRunsData } = useRecentRuns(5);
+  const { data: ollamaStatus } = useProviderModels('ollama');
   const createAgent = useCreateAgent();
   const updateAgent = useUpdateAgent();
   const deleteAgentMutation = useDeleteAgent();
@@ -880,6 +881,36 @@ export default function Agents() {
 
   return (
     <div className="space-y-6">
+      {/* Ollama Required Banner */}
+      {ollamaStatus && !ollamaStatus.available && (
+        <Card className="border-amber-500/50 bg-amber-500/5">
+          <CardContent className="p-4">
+            <div className="flex items-start gap-4">
+              <div className="p-2 rounded-lg bg-amber-500/10">
+                <AlertCircle className="w-5 h-5 text-amber-500" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-semibold text-amber-200">Ollama Not Available</h3>
+                <p className="text-sm text-muted-foreground mt-1">
+                  The Agent Runtime requires Ollama to run local LLMs. Install the Ollama plugin from the Marketplace to enable AI agents.
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Error: {ollamaStatus.error}
+                </p>
+              </div>
+              <Button 
+                variant="outline" 
+                className="border-amber-500/50 hover:bg-amber-500/10"
+                onClick={() => window.location.href = '/marketplace?search=ollama'}
+              >
+                <Cpu className="w-4 h-4 mr-2" />
+                Install Ollama
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
