@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { Sun, Moon, Home, Box, Play, Key, Github, Book, Menu, X, Package, Store, Sparkles, Shield, Cable, LogOut, User, Users, Settings, ChevronDown } from 'lucide-react';
+import { Sun, Moon, Home, Box, Play, Key, Github, Book, Menu, X, Package, Store, Sparkles, Shield, Cable, LogOut, User, Users, Settings, ChevronDown, Bot } from 'lucide-react';
 import { useThemeStore, hasPermission } from '../store';
 import { useAuth } from '../hooks/useAuth';
 import { Button } from './ui/button';
@@ -12,6 +12,7 @@ const navItems = [
   { path: '/marketplace', label: 'Marketplace', icon: Store, permission: 'canManagePlugins' as const },
   { path: '/plugins', label: 'Installed Plugins', icon: Package, permission: 'canManagePlugins' as const },
   { path: '/integrations', label: 'Integrations', icon: Cable, permission: 'canManageIntegrations' as const },
+  { path: '/agents', label: 'AI Agents', icon: Bot, permission: 'canUsePlayground' as const },
   { path: '/playground', label: 'API Playground', icon: Play, permission: 'canUsePlayground' as const },
   { path: '/api-keys', label: 'API Keys', icon: Key, permission: 'canManageApiKeys' as const },
   { path: '/ssl', label: 'SSL / TLS', icon: Shield, permission: 'canManageSSL' as const },

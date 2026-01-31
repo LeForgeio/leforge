@@ -23,6 +23,7 @@ import { mcpRoutes } from './routes/mcp.js';
 import { authRoutes } from './routes/auth.js';
 import { adminRoutes } from './routes/admin.js';
 import utilsRoutes from './routes/utils.js';
+import { agentRoutes } from './routes/agents.js';
 import { dockerService } from './services/docker.service.js';
 import { marketplaceService } from './services/marketplace.service.js';
 import { embeddedPluginService } from './services/embedded-plugin.service.js';
@@ -183,6 +184,7 @@ export async function buildApp(): Promise<FastifyInstance> {
   await app.register(nintexRoutes);
   await app.register(sslRoutes);
   await app.register(mcpRoutes);
+  await app.register(agentRoutes);  // Agent runtime (create, run, list agents)
   await app.register(utilsRoutes, { prefix: '/api/v1/utils' });
 
   // Initialize marketplace service

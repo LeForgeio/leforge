@@ -420,3 +420,8 @@ export type BuiltInIntegrationId =
   | 'zapier'
   | 'n8n'
   | 'power-automate';
+
+// ==========================================================================
+// Agent Runtime Types (re-export from agent.types.ts)
+// ==========================================================================
+export * from './agent.types.js';

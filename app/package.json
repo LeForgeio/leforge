@@ -6,14 +6,14 @@
   "main": "dist/server/index.js",
   "scripts": {
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
-    "dev:server": "ts-node-dev --respawn --transpile-only src/server/index.ts",
+    "dev:server": "tsx watch src/server/index.ts",
     "dev:client": "vite",
     "build": "npm run build:client && npm run build:server",
     "build:client": "tsc -p tsconfig.client.json && vite build",
     "build:server": "tsc -p tsconfig.server.json",
     "start": "node dist/server/index.js",
     "preview": "vite preview",
-    "migrate": "ts-node scripts/run-migration.ts",
+    "migrate": "tsx scripts/run-migration.ts",
     "test": "vitest",
     "test:server": "jest --config jest.server.config.js --passWithNoTests",
     "lint": "eslint src",
@@ -29,7 +29,7 @@
     "@fastify/multipart": "^9.4.0",
     "@fastify/static": "^9.0.0",
     "@fastify/websocket": "^11.2.0",
-    "@radix-ui/react-alert-dialog": "^1.0.5",
+    "@radix-ui/react-alert-dialog": "^1.1.15",
     "@radix-ui/react-avatar": "^1.0.4",
     "@radix-ui/react-dialog": "^1.0.5",
     "@radix-ui/react-dropdown-menu": "^2.0.6",
@@ -55,7 +55,7 @@
     "dotenv": "^17.2.3",
     "fastify": "^5.7.1",
     "jsonwebtoken": "^9.0.3",
-    "lucide-react": "^0.562.0",
+    "lucide-react": "^0.563.0",
     "pg": "^8.11.0",
     "pino": "^10.2.1",
     "pino-pretty": "^13.1.3",
@@ -94,11 +94,14 @@
     "prettier": "^3.1.0",
     "tailwindcss": "^4.1.18",
     "ts-jest": "^29.4.6",
-    "ts-node": "^10.9.0",
-    "ts-node-dev": "^2.0.0",
+    "tsx": "^4.21.0",
     "typescript": "^5.3.0",
     "vite": "^7.3.1",
     "vitest": "^4.0.17"
+  },
+  "overrides": {
+    "glob": "^10.0.0",
+    "rimraf": "^5.0.0"
   },
   "engines": {
     "node": ">=20.0.0"

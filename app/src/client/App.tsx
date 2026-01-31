@@ -10,6 +10,7 @@ import Documentation from './pages/Documentation';
 import Marketplace from './pages/Marketplace';
 import InstalledPlugins from './pages/InstalledPlugins';
 import Integrations from './pages/Integrations';
+import Agents from './pages/Agents';
 import SSLSettings from './pages/SSLSettings';
 import AdminUsers from './pages/AdminUsers';
 import AdminSettings from './pages/AdminSettings';
@@ -122,6 +123,7 @@ export default function App() {
           <Route path="marketplace" element={<Marketplace />} />
           <Route path="plugins" element={<InstalledPlugins />} />
           <Route path="integrations" element={<Integrations />} />
+          <Route path="agents" element={<Agents />} />
           <Route path="playground" element={<Playground />} />
           <Route path="api-keys" element={<ApiKeys />} />
           <Route path="ssl" element={<SSLSettings />} />
