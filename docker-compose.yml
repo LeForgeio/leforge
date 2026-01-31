@@ -19,7 +19,7 @@
 #   docker compose -f docker-compose.minimal.yml -f docker-compose.qdrant.yml up -d
 # ===========================================
 
-name: LeForge
+name: leforge
 
 services:
   # ===========================================
@@ -27,19 +27,19 @@ services:
   # ===========================================
   postgres:
     image: postgres:16-alpine
-    container_name: LeForge-postgres
+    container_name: leforge-postgres
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-LeForge}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-LeForge_password}
-      POSTGRES_DB: ${POSTGRES_DB:-LeForge}
+      POSTGRES_USER: ${POSTGRES_USER:-leforge}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-leforge_password}
+      POSTGRES_DB: ${POSTGRES_DB:-leforge}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     networks:
-      - LeForge-network
+      - leforge-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-LeForge}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-leforge}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -48,11 +48,12 @@ services:
   # ===========================================
   # LeForge App - All-in-one backend + frontend + gateway
   # ===========================================
-  LeForge:
+  leforge:
     build:
       context: ./app
       dockerfile: Dockerfile
-    container_name: LeForge-app
+    image: leforge:latest
+    container_name: leforge
     environment:
       NODE_ENV: ${NODE_ENV:-production}
       PORT: 3000
@@ -60,13 +61,13 @@ services:
       # PostgreSQL (required) - use container hostname
       POSTGRES_HOST: postgres
       POSTGRES_PORT: 5432
-      POSTGRES_USER: ${POSTGRES_USER:-LeForge}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-LeForge_password}
-      POSTGRES_DB: ${POSTGRES_DB:-LeForge}
+      POSTGRES_USER: ${POSTGRES_USER:-leforge}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-leforge_password}
+      POSTGRES_DB: ${POSTGRES_DB:-leforge}
       
       # Docker socket for plugin container management
       DOCKER_SOCKET_PATH: /var/run/docker.sock
-      DOCKER_NETWORK: LeForge-network
+      DOCKER_NETWORK: leforge-network
       
       # Plugin port allocation
       PLUGIN_PORT_RANGE_START: ${PLUGIN_PORT_START:-4001}
@@ -92,12 +93,12 @@ services:
       
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - LeForge_data:/app/data
+      - leforge_data:/app/data
     ports:
       - "${APP_PORT:-3000}:3000"
       - "${APP_HTTPS_PORT:-3443}:3443"
     networks:
-      - LeForge-network
+      - leforge-network
     depends_on:
       postgres:
         condition: service_healthy
@@ -112,15 +113,15 @@ services:
 # Networks
 # ===========================================
 networks:
-  LeForge-network:
+  leforge-network:
     driver: bridge
-    name: LeForge-network
+    name: leforge-network
 
 # ===========================================
 # Volumes
 # ===========================================
 volumes:
   postgres_data:
-    name: LeForge-postgres-data
-  LeForge_data:
-    name: LeForge-data
+    name: leforge-postgres-data
+  leforge_data:
+    name: leforge-data

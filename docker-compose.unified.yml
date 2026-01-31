@@ -28,7 +28,8 @@ services:
     build:
       context: ./app
       dockerfile: Dockerfile
-    container_name: leforge-app
+    image: leforge:latest
+    container_name: leforge
     environment:
       NODE_ENV: production
       PORT: 4000

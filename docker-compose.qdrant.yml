@@ -17,14 +17,14 @@
 services:
   qdrant:
     image: qdrant/qdrant:latest
-    container_name: LeForge-qdrant
+    container_name: leforge-qdrant
     volumes:
       - qdrant_data:/qdrant/storage
     ports:
       - "${QDRANT_HTTP_PORT:-6333}:6333"
       - "${QDRANT_GRPC_PORT:-6334}:6334"
     networks:
-      - LeForge-network
+      - leforge-network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:6333/health"]
       interval: 10s
@@ -32,11 +32,11 @@ services:
       retries: 5
     restart: unless-stopped
 
-  LeForge:
+  leforge:
     environment:
       QDRANT_ENABLED: "true"
       QDRANT_URL: http://qdrant:6333
 
 volumes:
   qdrant_data:
-    name: LeForge-qdrant-data
+    name: leforge-qdrant-data

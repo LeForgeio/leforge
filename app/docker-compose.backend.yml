@@ -9,7 +9,7 @@ services:
   # ==========================================================================
   postgres:
     image: postgres:15-alpine
-    container_name: LeForge-postgres
+    container_name: leforge-postgres
     environment:
       POSTGRES_USER: LeForge
       POSTGRES_PASSWORD: LeForge_password
@@ -30,7 +30,7 @@ services:
   # ==========================================================================
   redis:
     image: redis:7-alpine
-    container_name: LeForge-redis
+    container_name: leforge-redis
     command: redis-server --appendonly yes --requirepass redis_password
     volumes:
       - redis_data:/data
@@ -46,9 +46,9 @@ services:
   # ==========================================================================
   # LeForge Backend API
   # ==========================================================================
-  LeForge-api:
+  leforge-api:
     image: LeForge:latest
-    container_name: LeForge-api
+    container_name: leforge-api
     environment:
       NODE_ENV: development
       PORT: 4000
@@ -68,7 +68,7 @@ services:
       
       # Docker
       DOCKER_SOCKET_PATH: /var/run/docker.sock
-      DOCKER_NETWORK: LeForge-network
+      DOCKER_NETWORK: leforge-network
       
       # Plugins
       PLUGIN_PORT_RANGE_START: 5001
@@ -95,7 +95,7 @@ services:
 
 networks:
   default:
-    name: LeForge-network
+    name: leforge-network
     driver: bridge
 
 volumes:

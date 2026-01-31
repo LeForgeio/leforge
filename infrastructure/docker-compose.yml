@@ -4,7 +4,7 @@
 
 version: '3.8'
 
-name: LeForge-infrastructure
+name: leforge-infrastructure
 
 services:
   # ===========================================
@@ -12,7 +12,7 @@ services:
   # ===========================================
   postgres:
     image: postgres:15-alpine
-    container_name: LeForge-postgres
+    container_name: leforge-postgres
     hostname: postgres
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-LeForge}
@@ -49,15 +49,15 @@ services:
         max-file: "5"
         labels: "service,environment"
     labels:
-      - "com.LeForge.service=postgres"
-      - "com.LeForge.tier=infrastructure"
+      - "com.leforge.service=postgres"
+      - "com.leforge.tier=infrastructure"
 
   # ===========================================
   # Redis Cache & Sessions
   # ===========================================
   redis:
     image: redis:7-alpine
-    container_name: LeForge-redis
+    container_name: leforge-redis
     hostname: redis
     command: >
       redis-server
@@ -99,15 +99,15 @@ services:
         max-file: "3"
         labels: "service,environment"
     labels:
-      - "com.LeForge.service=redis"
-      - "com.LeForge.tier=infrastructure"
+      - "com.leforge.service=redis"
+      - "com.leforge.tier=infrastructure"
 
   # ===========================================
   # Qdrant Vector Database
   # ===========================================
   qdrant:
     image: qdrant/qdrant:latest
-    container_name: LeForge-qdrant
+    container_name: leforge-qdrant
     hostname: qdrant
     environment:
       QDRANT__SERVICE__GRPC_PORT: 6334
@@ -146,15 +146,15 @@ services:
         max-file: "5"
         labels: "service,environment"
     labels:
-      - "com.LeForge.service=qdrant"
-      - "com.LeForge.tier=infrastructure"
+      - "com.leforge.service=qdrant"
+      - "com.leforge.tier=infrastructure"
 
   # ===========================================
   # Kong Gateway - Migrations
   # ===========================================
   kong-migrations:
     image: kong:3.9-alpine
-    container_name: LeForge-kong-migrations
+    container_name: leforge-kong-migrations
     hostname: kong-migrations
     command: kong migrations bootstrap
     environment:
@@ -182,15 +182,15 @@ services:
         max-size: "10m"
         max-file: "2"
     labels:
-      - "com.LeForge.service=kong-migrations"
-      - "com.LeForge.tier=infrastructure"
+      - "com.leforge.service=kong-migrations"
+      - "com.leforge.tier=infrastructure"
 
   # ===========================================
   # Kong Gateway - Migration Up (for upgrades)
   # ===========================================
   kong-migrations-up:
     image: kong:3.9-alpine
-    container_name: LeForge-kong-migrations-up
+    container_name: leforge-kong-migrations-up
     hostname: kong-migrations-up
     command: kong migrations up && kong migrations finish
     environment:
@@ -217,15 +217,15 @@ services:
         max-size: "10m"
         max-file: "2"
     labels:
-      - "com.LeForge.service=kong-migrations-up"
-      - "com.LeForge.tier=infrastructure"
+      - "com.leforge.service=kong-migrations-up"
+      - "com.leforge.tier=infrastructure"
 
   # ===========================================
   # Kong API Gateway
   # ===========================================
   kong:
     image: kong:3.9-alpine
-    container_name: LeForge-kong
+    container_name: leforge-kong
     hostname: kong
     user: "${KONG_USER:-kong}"
     environment:
@@ -320,15 +320,15 @@ services:
         max-file: "10"
         labels: "service,environment"
     labels:
-      - "com.LeForge.service=kong"
-      - "com.LeForge.tier=gateway"
+      - "com.leforge.service=kong"
+      - "com.leforge.tier=gateway"
 
 # ===========================================
 # Networks
 # ===========================================
 networks:
   backend:
-    name: LeForge-backend
+    name: leforge-backend
     driver: bridge
     ipam:
       driver: default
@@ -338,10 +338,10 @@ networks:
       com.docker.network.bridge.enable_icc: "true"
       com.docker.network.bridge.enable_ip_masquerade: "true"
     labels:
-      - "com.LeForge.network=backend"
+      - "com.leforge.network=backend"
 
   frontend:
-    name: LeForge-frontend
+    name: leforge-frontend
     driver: bridge
     ipam:
       driver: default
@@ -351,48 +351,48 @@ networks:
       com.docker.network.bridge.enable_icc: "true"
       com.docker.network.bridge.enable_ip_masquerade: "true"
     labels:
-      - "com.LeForge.network=frontend"
+      - "com.leforge.network=frontend"
 
 # ===========================================
 # Volumes
 # ===========================================
 volumes:
   postgres_data:
-    name: LeForge-postgres-data
+    name: leforge-postgres-data
     driver: local
     labels:
-      - "com.LeForge.volume=postgres-data"
-      - "com.LeForge.backup=true"
+      - "com.leforge.volume=postgres-data"
+      - "com.leforge.backup=true"
 
   redis_data:
-    name: LeForge-redis-data
+    name: leforge-redis-data
     driver: local
     labels:
-      - "com.LeForge.volume=redis-data"
-      - "com.LeForge.backup=true"
+      - "com.leforge.volume=redis-data"
+      - "com.leforge.backup=true"
 
   qdrant_data:
-    name: LeForge-qdrant-data
+    name: leforge-qdrant-data
     driver: local
     labels:
-      - "com.LeForge.volume=qdrant-data"
-      - "com.LeForge.backup=true"
+      - "com.leforge.volume=qdrant-data"
+      - "com.leforge.backup=true"
 
   qdrant_snapshots:
-    name: LeForge-qdrant-snapshots
+    name: leforge-qdrant-snapshots
     driver: local
     labels:
-      - "com.LeForge.volume=qdrant-snapshots"
-      - "com.LeForge.backup=true"
+      - "com.leforge.volume=qdrant-snapshots"
+      - "com.leforge.backup=true"
 
   kong_prefix_vol:
-    name: LeForge-kong-prefix
+    name: leforge-kong-prefix
     driver: local
     labels:
-      - "com.LeForge.volume=kong-prefix"
+      - "com.leforge.volume=kong-prefix"
 
   kong_tmp_vol:
-    name: LeForge-kong-tmp
+    name: leforge-kong-tmp
     driver: local
     labels:
-      - "com.LeForge.volume=kong-tmp"
+      - "com.leforge.volume=kong-tmp"

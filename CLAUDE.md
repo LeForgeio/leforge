@@ -124,14 +124,36 @@ curl -X POST http://localhost:4000/api/v1/invoke/formula-engine/evaluate \
 
 ## Deployment
 
+### Docker Naming Conventions
+
+**IMPORTANT**: All Docker resources use lowercase `leforge` prefix consistently:
+
+| Resource | Name | Notes |
+|----------|------|-------|
+| Service | `leforge` | In docker-compose.unified.yml |
+| Container | `leforge` | Single main container |
+| Image | `leforge:latest` | Built image tag |
+| Network | `leforge-network` | Bridge network |
+| Volume (PostgreSQL) | `leforge-postgres-data` | Database persistence |
+| Volume (Redis) | `leforge-redis-data` | Cache persistence |
+| Volume (Plugins) | `leforge-plugin-data` | Plugin data |
+
+Never use: `LeForge-app`, `leforge-app`, `LeForge-postgres`, etc.
+
 ### Quick Start
 ```bash
-docker run -d -p 4000:4000 --name leforge leforge/leforge:latest
+docker run -d -p 4000:4000 --name leforge leforge:latest
 ```
 
 ### Docker Compose
 ```bash
 docker compose -f docker-compose.unified.yml up -d
+
+# Check status
+docker ps --filter "name=leforge"
+
+# View logs
+docker logs leforge
 ```
 
 ### With Qdrant (Vector Search)
