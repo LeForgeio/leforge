@@ -90,11 +90,11 @@ export const config: Config = {
   // Authentication configuration
   auth: {
     adminUser: process.env.LEFORGE_ADMIN_USER || 'admin',
-    adminPassword: process.env.LEFORGE_ADMIN_PASSWORD || '', // Empty = auth disabled
+    adminPassword: process.env.LEFORGE_ADMIN_PASSWORD || 'admin', // Default password for development
     jwtSecret,
     jwtExpiresIn: process.env.LEFORGE_JWT_EXPIRES_IN || '24h',
     sessionCookieName: 'leforge_session',
-    secureCookies: process.env.NODE_ENV === 'production',
+    secureCookies: process.env.LEFORGE_SECURE_COOKIES === 'true' || (process.env.LEFORGE_SECURE_COOKIES !== 'false' && process.env.NODE_ENV === 'production'),
     authMode: (process.env.LEFORGE_AUTH_MODE as 'local' | 'oidc' | 'both') || 'local',
     oidc: process.env.LEFORGE_OIDC_ISSUER ? {
       issuer: process.env.LEFORGE_OIDC_ISSUER,
@@ -119,7 +119,7 @@ export const config: Config = {
 
   dockerSocketPath: process.env.DOCKER_SOCKET_PATH || '/var/run/docker.sock',
   dockerHost: process.env.DOCKER_HOST,
-  dockerNetwork: process.env.DOCKER_NETWORK || 'LeForge-backend',
+  dockerNetwork: process.env.DOCKER_NETWORK || 'leforge-network',
 
   postgres: {
     host: process.env.POSTGRES_HOST || 'localhost',
@@ -138,7 +138,7 @@ export const config: Config = {
   plugins: {
     portRangeStart: parseInt(process.env.PLUGIN_PORT_RANGE_START || '4001', 10),
     portRangeEnd: parseInt(process.env.PLUGIN_PORT_RANGE_END || '4999', 10),
-    networkName: process.env.DOCKER_NETWORK || 'LeForge-backend',
+    networkName: process.env.DOCKER_NETWORK || 'leforge-network',
     volumePrefix: process.env.PLUGIN_VOLUME_PREFIX || 'forgehook-',
     containerPrefix: process.env.PLUGIN_CONTAINER_PREFIX || 'forgehook-',
   },

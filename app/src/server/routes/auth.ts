@@ -304,6 +304,96 @@ export async function authRoutes(app: FastifyInstance): Promise<void> {
       });
     }
   );
+
+  /**
+   * POST /api/v1/auth/reset-password
+   * Reset password for a user (admin only) or self
+   */
+  app.post<{ Body: { username?: string; currentPassword?: string; newPassword: string } }>(
+    `${prefix}/reset-password`,
+    {
+      preHandler: async (request, reply) => {
+        const token = extractToken(request);
+        if (!token) {
+          return reply.status(401).send({ error: 'Authentication required' });
+        }
+        const user = authService.getUserFromToken(token);
+        if (!user) {
+          return reply.status(401).send({ error: 'Invalid token' });
+        }
+        request.user = user;
+      },
+    },
+    async (request: FastifyRequest<{ Body: { username?: string; currentPassword?: string; newPassword: string } }>, reply: FastifyReply) => {
+      const { username, currentPassword, newPassword } = request.body;
+      const currentUser = request.user!;
+
+      if (!newPassword || newPassword.length < 4) {
+        return reply.status(400).send({ error: 'New password must be at least 4 characters' });
+      }
+
+      // If username provided and different from current user, require admin
+      const targetUsername = username || currentUser.username;
+      const isChangingOwnPassword = targetUsername === currentUser.username;
+
+      if (!isChangingOwnPassword && currentUser.role !== 'admin') {
+        return reply.status(403).send({ error: 'Admin access required to change other users\' passwords' });
+      }
+
+      // For own password changes, require current password verification
+      if (isChangingOwnPassword && !currentPassword) {
+        return reply.status(400).send({ error: 'Current password required when changing your own password' });
+      }
+
+      if (isChangingOwnPassword && currentPassword) {
+        const authResult = await authService.authenticateLocal(currentUser.username, currentPassword);
+        if (!authResult.success) {
+          return reply.status(401).send({ error: 'Current password is incorrect' });
+        }
+      }
+
+      // Hash new password
+      const hashedPassword = await authService.hashPassword(newPassword);
+
+      // For config-based admin, we can't update the password - return the hash
+      if (targetUsername === config.auth.adminUser && currentUser.id === 'admin') {
+        logger.info({ targetUsername, changedBy: currentUser.username }, 'Password hash generated for config admin');
+        return reply.send({
+          success: true,
+          message: 'Password hash generated. Update LEFORGE_ADMIN_PASSWORD environment variable and restart.',
+          hash: hashedPassword,
+        });
+      }
+
+      // For database users, update directly
+      try {
+        const { userService } = await import('../services/user.service.js');
+        const dbUser = await userService.getInternalUserByUsername(targetUsername);
+        
+        if (dbUser) {
+          await userService.updatePassword(dbUser.id, hashedPassword);
+          logger.info({ targetUsername, changedBy: currentUser.username }, 'Password updated successfully');
+          return reply.send({
+            success: true,
+            message: `Password updated for user: ${targetUsername}`,
+          });
+        } else {
+          return reply.send({
+            success: true,
+            message: 'User not in database. Update LEFORGE_ADMIN_PASSWORD environment variable and restart.',
+            hash: hashedPassword,
+          });
+        }
+      } catch (error) {
+        logger.error({ error, targetUsername }, 'Failed to update password');
+        return reply.send({
+          success: true,
+          message: 'Could not update database. Use this hash in LEFORGE_ADMIN_PASSWORD:',
+          hash: hashedPassword,
+        });
+      }
+    }
+  );
 }
 
 // =============================================================================

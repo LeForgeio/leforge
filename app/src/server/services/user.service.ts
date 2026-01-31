@@ -315,6 +315,17 @@ class UserService {
   }
 
   /**
+   * Update user password directly (with pre-hashed password)
+   */
+  async updatePassword(id: string, hashedPassword: string): Promise<void> {
+    await databaseService.query(
+      'UPDATE users SET password_hash = $1, updated_at = NOW() WHERE id = $2',
+      [hashedPassword, id]
+    );
+    logger.info({ userId: id }, 'Password updated');
+  }
+
+  /**
    * Get user count
    */
   async getUserCount(): Promise<number> {

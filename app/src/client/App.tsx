@@ -13,6 +13,7 @@ import Integrations from './pages/Integrations';
 import SSLSettings from './pages/SSLSettings';
 import AdminUsers from './pages/AdminUsers';
 import AdminSettings from './pages/AdminSettings';
+import AdminApiKeys from './pages/AdminApiKeys';
 import Login from './pages/Login';
 import { useThemeStore } from './store';
 import { Toaster } from './components/ui/toaster';
@@ -134,6 +135,11 @@ export default function App() {
           <Route path="admin/settings" element={
             <RequireRole roles={['admin']}>
               <AdminSettings />
+            </RequireRole>
+          } />
+          <Route path="admin/api-keys" element={
+            <RequireRole roles={['admin']}>
+              <AdminApiKeys />
             </RequireRole>
           } />
           <Route path="*" element={<NotFound />} />

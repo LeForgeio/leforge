@@ -20,6 +20,7 @@ const navItems = [
 
 const adminItems = [
   { path: '/admin/users', label: 'User Management', icon: Users },
+  { path: '/admin/api-keys', label: 'API Key Management', icon: Key },
   { path: '/admin/settings', label: 'System Settings', icon: Settings },
 ];
 

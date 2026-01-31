@@ -16,7 +16,7 @@
 #   docker compose -f docker-compose.unified.yml -f docker-compose.qdrant.yml up -d
 # ===========================================
 
-name: LeForge
+name: leforge
 
 services:
   # ===========================================
@@ -24,11 +24,11 @@ services:
   # Includes: Node.js + PostgreSQL + Redis
   # ===========================================
 
-  LeForge:
+  leforge:
     build:
       context: ./app
       dockerfile: Dockerfile
-    container_name: LeForge-app
+    container_name: leforge-app
     environment:
       NODE_ENV: production
       PORT: 4000
@@ -45,7 +45,7 @@ services:
       REDIS_PORT: 6379
       REDIS_PASSWORD: ""
       # Network for spawned plugin containers
-      DOCKER_NETWORK: LeForge-network
+      DOCKER_NETWORK: leforge-network
       # Port range for dynamic plugin allocation
       PLUGIN_PORT_RANGE_START: 4001
       PLUGIN_PORT_RANGE_END: 4999
@@ -53,10 +53,10 @@ services:
       # ===========================================
       # Authentication
       # ===========================================
-      # Set LEFORGE_ADMIN_PASSWORD to enable authentication
-      # Leave empty/unset to disable authentication
+      # Default credentials: admin / admin
+      # Change LEFORGE_ADMIN_PASSWORD in production!
       LEFORGE_ADMIN_USER: ${LEFORGE_ADMIN_USER:-admin}
-      LEFORGE_ADMIN_PASSWORD: ${LEFORGE_ADMIN_PASSWORD:-}
+      LEFORGE_ADMIN_PASSWORD: ${LEFORGE_ADMIN_PASSWORD:-admin}
       # JWT secret - MUST be set in production for security
       # Generate with: openssl rand -hex 64
       LEFORGE_JWT_SECRET: ${LEFORGE_JWT_SECRET:-}
@@ -64,6 +64,8 @@ services:
       LEFORGE_JWT_EXPIRES_IN: ${LEFORGE_JWT_EXPIRES_IN:-24h}
       # Auth mode: 'local', 'oidc', or 'both'
       LEFORGE_AUTH_MODE: ${LEFORGE_AUTH_MODE:-local}
+      # Secure cookies - set to 'true' only if using HTTPS
+      LEFORGE_SECURE_COOKIES: ${LEFORGE_SECURE_COOKIES:-false}
       # ===========================================
       # OIDC/SSO Configuration (Optional)
       # ===========================================
@@ -86,7 +88,7 @@ services:
       - "5432:5432"   # PostgreSQL exposed for plugins/debugging
       - "6379:6379"   # Redis exposed for plugin containers
     networks:
-      - LeForge-network
+      - leforge-network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:4000/health"]
       interval: 30s
@@ -100,9 +102,9 @@ services:
 # ===========================================
 
 networks:
-  LeForge-network:
+  leforge-network:
     driver: bridge
-    name: LeForge-network
+    name: leforge-network
 
 # ===========================================
 # Volumes
@@ -110,8 +112,8 @@ networks:
 
 volumes:
   postgres_data:
-    name: LeForge-postgres-data
+    name: leforge-postgres-data
   redis_data:
-    name: LeForge-redis-data
+    name: leforge-redis-data
   plugin_data:
-    name: LeForge-plugin-data
+    name: leforge-plugin-data

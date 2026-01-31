@@ -90,6 +90,34 @@ docker compose -f docker-compose.unified.yml -f docker-compose.qdrant.yml up -d
 | MCP Endpoint | http://localhost:4000/mcp | AI Agent protocol |
 | Health Check | http://localhost:4000/api/v1/health | Service status |
 
+## 🔄 Updating LeForge
+
+Updates preserve all your data including users, plugins, and settings:
+
+```bash
+# PowerShell (Windows)
+./update.ps1
+
+# Bash (Linux/Mac)
+./update.sh
+
+# Or manually with Docker Compose
+docker compose -f docker-compose.unified.yml build
+docker compose -f docker-compose.unified.yml up -d
+```
+
+**⚠️ Never use `docker compose down -v`** — this deletes all volumes and data!
+
+### What's Preserved
+
+| Data | Volume | Description |
+|------|--------|-------------|
+| Users & Settings | `leforge-postgres-data` | Accounts, API keys, plugin configs |
+| Sessions & Cache | `leforge-redis-data` | Active sessions, cached data |
+| Plugin Data | `leforge-plugin-data` | Uploaded files, plugin storage |
+
+Plugin containers are managed separately and are not affected by core app updates.
+
 ## 🤖 MCP Protocol (AI Agents)
 
 LeForge implements the **Model Context Protocol (MCP)** — the open standard for AI agents:
