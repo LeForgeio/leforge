@@ -448,7 +448,7 @@ function UsageStatsPanel({ keyId }: { keyId: string }) {
           <div className="space-y-1">
             {usage.requestsByDay.slice(0, 7).map((day, index) => {
               const maxCount = Math.max(...usage.requestsByDay.map((d) => d.count));
-              const width = maxCount > 0 ? (day.count / maxCount) * 100 : 0;
+              const widthPercent = maxCount > 0 ? (day.count / maxCount) * 100 : 0;
               return (
                 <div key={index} className="flex items-center gap-2 text-xs">
                   <span className="w-20 text-muted-foreground">
@@ -459,10 +459,21 @@ function UsageStatsPanel({ keyId }: { keyId: string }) {
                     })}
                   </span>
                   <div className="flex-1 h-4 bg-muted rounded-sm overflow-hidden">
-                    {/* Dynamic width percentage for data visualization - inline style required */}
                     <div
-                      className="h-full bg-primary/60 rounded-sm transition-all"
-                      style={{ width: `${width}%` }}
+                      className={cn(
+                        'h-full bg-primary/60 rounded-sm transition-all',
+                        widthPercent === 0 && 'w-0',
+                        widthPercent > 0 && widthPercent <= 10 && 'w-[10%]',
+                        widthPercent > 10 && widthPercent <= 20 && 'w-[20%]',
+                        widthPercent > 20 && widthPercent <= 30 && 'w-[30%]',
+                        widthPercent > 30 && widthPercent <= 40 && 'w-[40%]',
+                        widthPercent > 40 && widthPercent <= 50 && 'w-[50%]',
+                        widthPercent > 50 && widthPercent <= 60 && 'w-[60%]',
+                        widthPercent > 60 && widthPercent <= 70 && 'w-[70%]',
+                        widthPercent > 70 && widthPercent <= 80 && 'w-[80%]',
+                        widthPercent > 80 && widthPercent <= 90 && 'w-[90%]',
+                        widthPercent > 90 && 'w-full'
+                      )}
                     />
                   </div>
                   <span className="w-12 text-right">{day.count}</span>
