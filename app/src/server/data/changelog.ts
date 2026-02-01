@@ -18,6 +18,21 @@ export interface Release {
 
 export const changelog: Release[] = [
   {
+    version: '1.3.0',
+    date: '2026-02-01',
+    changes: [
+      { type: 'feature', description: 'Agent Runtime: Create and deploy AI agents with tool-calling capabilities' },
+      { type: 'feature', description: 'Agent chat interface with streaming responses and tool execution visualization' },
+      { type: 'feature', description: 'Install progress terminal: Real-time streaming of Docker image pull and container creation' },
+      { type: 'feature', description: 'Ollama integration as ForgeHook plugin with GPU support and model volume persistence' },
+      { type: 'feature', description: 'Install Ollama prompt on Agents page when local LLM unavailable' },
+      { type: 'improvement', description: 'LLM endpoints return availability status instead of 503 errors' },
+      { type: 'improvement', description: 'Marketplace install dialog expands to show terminal during installation' },
+      { type: 'fix', description: 'Fixed cloudflared tunnel 502 errors with container network alias' },
+      { type: 'fix', description: 'Fixed dropdown menu transparency with --popover CSS variables' },
+    ],
+  },
+  {
     version: '1.2.0',
     date: '2026-01-20',
     changes: [
