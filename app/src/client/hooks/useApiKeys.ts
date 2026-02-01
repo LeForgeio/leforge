@@ -115,7 +115,9 @@ async function fetchApiKeys(baseUrl: string): Promise<{ keys: ApiKey[] }> {
     throw new Error(error.error?.message || 'Failed to fetch API keys');
   }
 
-  return response.json();
+  // Server returns { apiKeys: [...] }, client expects { keys: [...] }
+  const data = await response.json();
+  return { keys: data.apiKeys || [] };
 }
 
 async function fetchApiKey(baseUrl: string, keyId: string): Promise<{ key: ApiKey }> {
@@ -130,7 +132,9 @@ async function fetchApiKey(baseUrl: string, keyId: string): Promise<{ key: ApiKe
     throw new Error(error.error?.message || 'Failed to fetch API key');
   }
 
-  return response.json();
+  // Server returns { apiKey: {...} }, client expects { key: {...} }
+  const data = await response.json();
+  return { key: data.apiKey };
 }
 
 async function createApiKey(baseUrl: string, input: CreateApiKeyInput): Promise<{ key: ApiKeyWithPlainKey }> {
@@ -172,7 +176,9 @@ async function updateApiKey(baseUrl: string, keyId: string, input: UpdateApiKeyI
     throw new Error(error.error?.message || 'Failed to update API key');
   }
 
-  return response.json();
+  // Server returns { apiKey: {...} }, client expects { key: {...} }
+  const data = await response.json();
+  return { key: data.apiKey };
 }
 
 async function deleteApiKey(baseUrl: string, keyId: string): Promise<void> {
