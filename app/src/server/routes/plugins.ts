@@ -1,4 +1,5 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
+import { v4 as uuidv4 } from 'uuid';
 import { dockerService } from '../services/docker.service.js';
 import { embeddedPluginService } from '../services/embedded-plugin.service.js';
 import { gatewayService } from '../services/gateway.service.js';
@@ -13,6 +14,7 @@ interface InstallBody {
   config?: Record<string, unknown>;
   environment?: Record<string, string>;
   autoStart?: boolean;
+  installId?: string; // Optional client-provided installId for progress tracking
 }
 
 interface PluginParams {
@@ -41,7 +43,69 @@ interface UpdateUploadBody {
   manifest?: ForgeHookManifest;
 }
 
+interface InstallProgressParams {
+  installId: string;
+}
+
 export async function pluginRoutes(fastify: FastifyInstance) {
+  // ============================================================================
+  // Install Progress SSE Stream
+  // ============================================================================
+  fastify.get<{ Params: InstallProgressParams }>(
+    '/api/v1/plugins/install/:installId/progress',
+    async (request, reply) => {
+      const { installId } = request.params;
+
+      // Set up SSE headers
+      reply.raw.writeHead(200, {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+        'Access-Control-Allow-Origin': '*',
+      });
+
+      // Send initial connection event
+      reply.raw.write(`data: ${JSON.stringify({ type: 'connected', installId, timestamp: new Date() })}\n\n`);
+
+      // Subscribe to progress events
+      const unsubscribe = dockerService.onInstallProgress(installId, (progress) => {
+        try {
+          reply.raw.write(`data: ${JSON.stringify({ type: 'progress', ...progress })}\n\n`);
+          
+          // Close stream on complete or error
+          if (progress.phase === 'complete' || progress.phase === 'error') {
+            setTimeout(() => {
+              reply.raw.end();
+            }, 100);
+          }
+        } catch {
+          // Client disconnected
+          unsubscribe();
+        }
+      });
+
+      // Handle client disconnect
+      request.raw.on('close', () => {
+        unsubscribe();
+      });
+
+      // Keep connection alive with heartbeat
+      const heartbeat = setInterval(() => {
+        try {
+          reply.raw.write(`: heartbeat\n\n`);
+        } catch {
+          clearInterval(heartbeat);
+          unsubscribe();
+        }
+      }, 30000);
+
+      // Clean up on close
+      request.raw.on('close', () => {
+        clearInterval(heartbeat);
+      });
+    }
+  );
+
   // ============================================================================
   // List Plugins
   // ============================================================================
@@ -126,7 +190,10 @@ export async function pluginRoutes(fastify: FastifyInstance) {
   fastify.post<{ Body: InstallBody }>(
     '/api/v1/plugins/install',
     async (request, reply) => {
-      const { manifest, manifestUrl, config, environment, autoStart } = request.body;
+      const { manifest, manifestUrl, config, environment, autoStart, installId: clientInstallId } = request.body;
+
+      // Generate installId for progress tracking if not provided
+      const installId = clientInstallId || uuidv4();
 
       if (!manifest && !manifestUrl) {
         return reply.status(400).send({
@@ -159,7 +226,7 @@ export async function pluginRoutes(fastify: FastifyInstance) {
           });
         }
 
-        logger.info({ forgehookId: manifest.id, runtime: manifest.runtime }, 'Installing plugin');
+        logger.info({ forgehookId: manifest.id, runtime: manifest.runtime, installId }, 'Installing plugin');
 
         let plugin;
 
@@ -185,6 +252,7 @@ export async function pluginRoutes(fastify: FastifyInstance) {
             config,
             environment,
             autoStart,
+            installId, // Pass installId for progress tracking
           });
         }
 
@@ -197,6 +265,7 @@ export async function pluginRoutes(fastify: FastifyInstance) {
           runtime: plugin.runtime,
           hostPort: plugin.hostPort,
           gatewayUrl: plugin.gatewayUrl,
+          installId, // Return installId for client to connect to progress stream
           message: 'Plugin installed successfully',
         });
 

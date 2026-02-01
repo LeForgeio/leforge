@@ -51,6 +51,7 @@ interface MarketplaceInstallBody {
   config?: Record<string, unknown>;
   environment?: Record<string, string>;
   autoStart?: boolean;
+  installId?: string; // For progress tracking via SSE
 }
 
 export async function marketplaceRoutes(fastify: FastifyInstance) {
@@ -138,7 +139,7 @@ export async function marketplaceRoutes(fastify: FastifyInstance) {
   fastify.post<{ Body: MarketplaceInstallBody }>(
     '/api/v1/marketplace/install',
     async (request, reply) => {
-      const { pluginId, config, environment, autoStart } = request.body;
+      const { pluginId, config, environment, autoStart, installId } = request.body;
 
       if (!pluginId) {
         return reply.status(400).send({
@@ -217,12 +218,13 @@ export async function marketplaceRoutes(fastify: FastifyInstance) {
           plugin = await embeddedPluginService.installPlugin(manifest, moduleCode, config);
         } else {
           // Container-based plugin - use Docker service
-          logger.info({ pluginId, name: manifest.name }, 'Installing container plugin');
+          logger.info({ pluginId, name: manifest.name, installId }, 'Installing container plugin');
           plugin = await dockerService.installPlugin({
             manifest,
             config,
             environment,
             autoStart: autoStart ?? true,
+            installId, // Pass for progress tracking
           });
         }
 
@@ -235,6 +237,7 @@ export async function marketplaceRoutes(fastify: FastifyInstance) {
           runtime: manifest.runtime || 'container',
           hostPort: plugin.hostPort,
           source: marketplacePlugin.source,
+          installId, // Return for progress tracking
           message: 'Plugin installed from marketplace',
         });
       } catch (error) {

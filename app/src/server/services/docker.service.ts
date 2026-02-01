@@ -12,10 +12,24 @@ import {
 } from '../types/index.js';
 import { databaseService } from './database.service.js';
 
+// Install progress tracking
+export interface InstallProgress {
+  installId: string;
+  pluginId: string;
+  pluginName: string;
+  phase: 'starting' | 'pulling' | 'creating' | 'configuring' | 'starting_container' | 'complete' | 'error';
+  message: string;
+  progress?: number; // 0-100 for pull progress
+  layer?: string;
+  error?: string;
+  timestamp: Date;
+}
+
 export class DockerService extends EventEmitter {
   private docker: Docker;
   private plugins: Map<string, PluginInstance> = new Map();
   private usedPorts: Set<number> = new Set();
+  private installProgress: Map<string, InstallProgress[]> = new Map();
 
   constructor() {
     super();
@@ -240,30 +254,174 @@ export class DockerService extends EventEmitter {
   // Image Management
   // ==========================================================================
 
-  async pullImage(repository: string, tag: string = 'latest'): Promise<void> {
+  /**
+   * Emit install progress event
+   */
+  private emitInstallProgress(progress: InstallProgress): void {
+    // Store progress log
+    const logs = this.installProgress.get(progress.installId) || [];
+    logs.push(progress);
+    this.installProgress.set(progress.installId, logs);
+    
+    // Emit for SSE streaming
+    this.emit('install:progress', progress);
+    
+    logger.debug({ 
+      installId: progress.installId, 
+      phase: progress.phase, 
+      message: progress.message 
+    }, 'Install progress');
+  }
+
+  /**
+   * Get install progress logs for an install job
+   */
+  getInstallProgress(installId: string): InstallProgress[] {
+    return this.installProgress.get(installId) || [];
+  }
+
+  /**
+   * Clear install progress logs (call after install complete)
+   */
+  clearInstallProgress(installId: string): void {
+    this.installProgress.delete(installId);
+  }
+
+  /**
+   * Subscribe to install progress events for a specific installId
+   * Returns an unsubscribe function
+   */
+  onInstallProgress(installId: string, callback: (progress: InstallProgress) => void): () => void {
+    // Send any existing progress logs first
+    const existingLogs = this.installProgress.get(installId) || [];
+    for (const log of existingLogs) {
+      callback(log);
+    }
+
+    // Listen for new progress events
+    const handler = (progress: InstallProgress) => {
+      if (progress.installId === installId) {
+        callback(progress);
+      }
+    };
+    
+    this.on('install:progress', handler);
+    
+    return () => {
+      this.off('install:progress', handler);
+    };
+  }
+
+  async pullImage(repository: string, tag: string = 'latest', installId?: string, pluginName?: string): Promise<void> {
     const imageRef = `${repository}:${tag}`;
     logger.info({ image: imageRef }, 'Pulling image');
+
+    if (installId) {
+      this.emitInstallProgress({
+        installId,
+        pluginId: '',
+        pluginName: pluginName || repository,
+        phase: 'pulling',
+        message: `Pulling image ${imageRef}...`,
+        timestamp: new Date(),
+      });
+    }
 
     return new Promise((resolve, reject) => {
       this.docker.pull(imageRef, (err: Error | null, stream: NodeJS.ReadableStream) => {
         if (err) {
           logger.error({ error: err, image: imageRef }, 'Failed to pull image');
+          if (installId) {
+            this.emitInstallProgress({
+              installId,
+              pluginId: '',
+              pluginName: pluginName || repository,
+              phase: 'error',
+              message: `Failed to pull image: ${err.message}`,
+              error: err.message,
+              timestamp: new Date(),
+            });
+          }
           return reject(err);
         }
+
+        // Track layer progress for overall percentage
+        const layerProgress: Map<string, { current: number; total: number }> = new Map();
 
         this.docker.modem.followProgress(
           stream,
           (error: Error | null) => {
             if (error) {
               logger.error({ error, image: imageRef }, 'Image pull failed');
+              if (installId) {
+                this.emitInstallProgress({
+                  installId,
+                  pluginId: '',
+                  pluginName: pluginName || repository,
+                  phase: 'error',
+                  message: `Image pull failed: ${error.message}`,
+                  error: error.message,
+                  timestamp: new Date(),
+                });
+              }
               reject(error);
             } else {
               logger.info({ image: imageRef }, 'Image pulled successfully');
+              if (installId) {
+                this.emitInstallProgress({
+                  installId,
+                  pluginId: '',
+                  pluginName: pluginName || repository,
+                  phase: 'pulling',
+                  message: `Image ${imageRef} pulled successfully`,
+                  progress: 100,
+                  timestamp: new Date(),
+                });
+              }
               resolve();
             }
           },
-          (event: { status: string; progress?: string }) => {
+          (event: { id?: string; status: string; progress?: string; progressDetail?: { current?: number; total?: number } }) => {
             logger.debug({ image: imageRef, status: event.status }, 'Pull progress');
+            
+            if (installId) {
+              // Track layer progress
+              if (event.id && event.progressDetail?.total) {
+                layerProgress.set(event.id, {
+                  current: event.progressDetail.current || 0,
+                  total: event.progressDetail.total,
+                });
+              }
+              
+              // Calculate overall progress
+              let totalBytes = 0;
+              let downloadedBytes = 0;
+              layerProgress.forEach(({ current, total }) => {
+                totalBytes += total;
+                downloadedBytes += current;
+              });
+              const overallProgress = totalBytes > 0 ? Math.round((downloadedBytes / totalBytes) * 100) : 0;
+              
+              // Format message
+              let message = event.status;
+              if (event.id) {
+                message = `${event.id}: ${event.status}`;
+              }
+              if (event.progress) {
+                message += ` ${event.progress}`;
+              }
+              
+              this.emitInstallProgress({
+                installId,
+                pluginId: '',
+                pluginName: pluginName || repository,
+                phase: 'pulling',
+                message,
+                progress: overallProgress,
+                layer: event.id,
+                timestamp: new Date(),
+              });
+            }
           }
         );
       });
@@ -430,16 +588,27 @@ export class DockerService extends EventEmitter {
   // Plugin Lifecycle
   // ==========================================================================
 
-  async installPlugin(request: InstallPluginRequest): Promise<PluginInstance> {
+  async installPlugin(request: InstallPluginRequest & { installId?: string }): Promise<PluginInstance> {
     const manifest = request.manifest;
     if (!manifest) {
       throw new Error('Manifest is required');
     }
 
     const pluginId = uuidv4();
+    const installId = request.installId || uuidv4();
     const containerName = `${config.plugins.containerPrefix}${manifest.id}`;
 
-    logger.info({ pluginId, forgehookId: manifest.id }, 'Installing plugin');
+    logger.info({ pluginId, forgehookId: manifest.id, installId }, 'Installing plugin');
+
+    // Emit starting progress
+    this.emitInstallProgress({
+      installId,
+      pluginId,
+      pluginName: manifest.name,
+      phase: 'starting',
+      message: `Starting installation of ${manifest.name}...`,
+      timestamp: new Date(),
+    });
 
     const plugin: PluginInstance = {
       id: pluginId,
@@ -459,6 +628,15 @@ export class DockerService extends EventEmitter {
     this.emitEvent('plugin:installing', pluginId);
 
     try {
+      // Network setup
+      this.emitInstallProgress({
+        installId,
+        pluginId,
+        pluginName: manifest.name,
+        phase: 'configuring',
+        message: 'Setting up network...',
+        timestamp: new Date(),
+      });
       await this.ensureNetwork(config.plugins.networkName);
 
       if (!manifest.image) {
@@ -466,9 +644,31 @@ export class DockerService extends EventEmitter {
       }
 
       const imageRef = `${manifest.image.repository}:${manifest.image.tag || 'latest'}`;
+      
+      // Pull image if needed
       if (!await this.imageExists(manifest.image.repository, manifest.image.tag)) {
-        await this.pullImage(manifest.image.repository, manifest.image.tag);
+        await this.pullImage(manifest.image.repository, manifest.image.tag, installId, manifest.name);
+      } else {
+        this.emitInstallProgress({
+          installId,
+          pluginId,
+          pluginName: manifest.name,
+          phase: 'pulling',
+          message: `Image ${imageRef} already exists locally`,
+          progress: 100,
+          timestamp: new Date(),
+        });
       }
+
+      // Volume setup
+      this.emitInstallProgress({
+        installId,
+        pluginId,
+        pluginName: manifest.name,
+        phase: 'configuring',
+        message: 'Creating volumes...',
+        timestamp: new Date(),
+      });
 
       const volumeBinds: string[] = [];
       if (manifest.volumes) {
@@ -476,8 +676,26 @@ export class DockerService extends EventEmitter {
           await this.createVolume(vol.name);
           const volumeName = `${config.plugins.volumePrefix}${vol.name}`;
           volumeBinds.push(`${volumeName}:${vol.containerPath}${vol.readOnly ? ':ro' : ''}`);
+          this.emitInstallProgress({
+            installId,
+            pluginId,
+            pluginName: manifest.name,
+            phase: 'configuring',
+            message: `Created volume: ${vol.name}`,
+            timestamp: new Date(),
+          });
         }
       }
+
+      // Environment setup
+      this.emitInstallProgress({
+        installId,
+        pluginId,
+        pluginName: manifest.name,
+        phase: 'configuring',
+        message: 'Configuring environment...',
+        timestamp: new Date(),
+      });
 
       const env: string[] = [
         `PORT=${manifest.port}`,
@@ -520,6 +738,16 @@ export class DockerService extends EventEmitter {
         }
       }
 
+      // Create container
+      this.emitInstallProgress({
+        installId,
+        pluginId,
+        pluginName: manifest.name,
+        phase: 'creating',
+        message: 'Creating container...',
+        timestamp: new Date(),
+      });
+
       const container = await this.docker.createContainer({
         name: containerName,
         Image: imageRef,
@@ -545,6 +773,15 @@ export class DockerService extends EventEmitter {
         } : undefined,
       });
 
+      this.emitInstallProgress({
+        installId,
+        pluginId,
+        pluginName: manifest.name,
+        phase: 'creating',
+        message: `Container created: ${container.id.substring(0, 12)}`,
+        timestamp: new Date(),
+      });
+
       plugin.containerId = container.id;
       plugin.status = 'installed';
 
@@ -557,14 +794,43 @@ export class DockerService extends EventEmitter {
       logger.info({ pluginId, containerId: container.id }, 'Plugin installed');
 
       if (request.autoStart !== false) {
+        this.emitInstallProgress({
+          installId,
+          pluginId,
+          pluginName: manifest.name,
+          phase: 'starting',
+          message: 'Starting container...',
+          timestamp: new Date(),
+        });
         await this.startPlugin(pluginId);
       }
+
+      // Complete!
+      this.emitInstallProgress({
+        installId,
+        pluginId,
+        pluginName: manifest.name,
+        phase: 'complete',
+        message: `${manifest.name} installed successfully!`,
+        progress: 100,
+        timestamp: new Date(),
+      });
 
       return plugin;
 
     } catch (error) {
       plugin.status = 'error';
       plugin.error = error instanceof Error ? error.message : 'Unknown error';
+
+      // Emit error progress
+      this.emitInstallProgress({
+        installId,
+        pluginId,
+        pluginName: manifest.name,
+        phase: 'error',
+        message: plugin.error,
+        timestamp: new Date(),
+      });
 
       await databaseService.updatePlugin(pluginId, {
         status: 'error',

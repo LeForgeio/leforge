@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { 
   Package, 
   Download, 
@@ -28,6 +28,7 @@ import {
   Power,
   Globe,
   FolderGit2,
+  Terminal,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -78,6 +79,21 @@ import {
   ForgeHookCategory, 
   CATEGORY_INFO,
 } from '@/types/forgehook';
+
+// Install progress event type from SSE stream
+interface InstallProgressEvent {
+  type: 'connected' | 'progress';
+  installId: string;
+  pluginId?: string;
+  pluginName?: string;
+  phase?: 'starting' | 'pulling' | 'extracting' | 'configuring' | 'creating' | 'complete' | 'error';
+  message?: string;
+  progress?: number;
+  layer?: string;
+  current?: number;
+  total?: number;
+  timestamp?: string;
+}
 
 // Icon mapping
 const iconMap: Record<string, React.ElementType> = {
@@ -321,6 +337,12 @@ export default function Marketplace() {
     sourceType: 'http' as 'http' | 'github',
   });
   
+  // Install progress state
+  const [installProgress, setInstallProgress] = useState<InstallProgressEvent[]>([]);
+  const [isInstalling, setIsInstalling] = useState(false);
+  const [currentInstallId, setCurrentInstallId] = useState<string | null>(null);
+  const terminalRef = useRef<HTMLDivElement>(null);
+  
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   
@@ -346,29 +368,91 @@ export default function Marketplace() {
   
   const installedIds = new Set(installedData?.plugins.map(p => p.forgehookId) || []);
   
+  // Auto-scroll terminal
+  useEffect(() => {
+    if (terminalRef.current) {
+      terminalRef.current.scrollTop = terminalRef.current.scrollHeight;
+    }
+  }, [installProgress]);
+  
+  // SSE subscription for install progress
+  useEffect(() => {
+    if (!currentInstallId || !isInstalling) return;
+    
+    const eventSource = new EventSource(`/api/v1/plugins/install/${currentInstallId}/progress`);
+    
+    eventSource.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data) as InstallProgressEvent;
+        setInstallProgress(prev => [...prev, data]);
+        
+        // Close on complete or error
+        if (data.phase === 'complete' || data.phase === 'error') {
+          eventSource.close();
+          setIsInstalling(false);
+          
+          if (data.phase === 'complete') {
+            toast({
+              title: 'Plugin Installed',
+              description: data.message || 'Plugin has been installed successfully.',
+            });
+          } else if (data.phase === 'error') {
+            toast({
+              title: 'Installation Failed',
+              description: data.message || 'Unknown error',
+              variant: 'destructive',
+            });
+          }
+        }
+      } catch (e) {
+        console.error('Failed to parse SSE event:', e);
+      }
+    };
+    
+    eventSource.onerror = () => {
+      eventSource.close();
+      setIsInstalling(false);
+    };
+    
+    return () => {
+      eventSource.close();
+    };
+  }, [currentInstallId, isInstalling, toast]);
+  
   // Handlers
   const handleInstall = async () => {
     if (!installDialog) return;
+    
+    // Generate install ID for progress tracking
+    const installId = crypto.randomUUID();
+    setCurrentInstallId(installId);
+    setInstallProgress([]);
+    setIsInstalling(true);
     
     try {
       await installFromMarketplace.mutateAsync({
         pluginId: installDialog.id,
         sourceId: installDialog.source.id,
         autoStart: true,
+        installId, // Pass install ID for progress tracking
       });
       
-      toast({
-        title: 'Plugin Installed',
-        description: `${installDialog.manifest.name} has been installed and started.`,
-      });
-      
-      setInstallDialog(null);
+      // Success toast is handled by SSE completion event
     } catch (error) {
+      setIsInstalling(false);
       toast({
         title: 'Installation Failed',
         description: error instanceof Error ? error.message : 'Unknown error',
         variant: 'destructive',
       });
+    }
+  };
+  
+  const handleCloseInstallDialog = () => {
+    if (!isInstalling) {
+      setInstallDialog(null);
+      setInstallProgress([]);
+      setCurrentInstallId(null);
     }
   };
   
@@ -723,61 +807,162 @@ export default function Marketplace() {
       </Tabs>
       
       {/* Install Confirmation Dialog */}
-      <Dialog open={!!installDialog} onOpenChange={() => setInstallDialog(null)}>
-        <DialogContent>
+      <Dialog open={!!installDialog} onOpenChange={handleCloseInstallDialog}>
+        <DialogContent className={cn(
+          "transition-all duration-300",
+          isInstalling ? "sm:max-w-3xl" : "sm:max-w-md"
+        )}>
           <DialogHeader>
-            <DialogTitle>Install {installDialog?.manifest.name}?</DialogTitle>
+            <DialogTitle>
+              {isInstalling ? `Installing ${installDialog?.manifest.name}...` : `Install ${installDialog?.manifest.name}?`}
+            </DialogTitle>
             <DialogDescription>
-              This will download and start the plugin container.
+              {isInstalling 
+                ? 'Please wait while the plugin is being installed.'
+                : 'This will download and start the plugin container.'
+              }
             </DialogDescription>
           </DialogHeader>
           
           {installDialog && (
-            <div className="space-y-4 py-4">
-              <div className="flex items-center gap-4">
-                <div className="p-3 rounded-lg bg-primary/10">
-                  {(() => {
-                    const Icon = getIcon(installDialog.manifest.icon);
-                    return <Icon className="w-8 h-8 text-primary" />;
-                  })()}
+            <div className={cn(
+              "py-4",
+              isInstalling ? "flex gap-4" : ""
+            )}>
+              {/* Plugin info panel */}
+              <div className={cn(
+                "space-y-4",
+                isInstalling ? "w-1/3 shrink-0" : ""
+              )}>
+                <div className="flex items-center gap-4">
+                  <div className="p-3 rounded-lg bg-primary/10">
+                    {(() => {
+                      const Icon = getIcon(installDialog.manifest.icon);
+                      return <Icon className="w-8 h-8 text-primary" />;
+                    })()}
+                  </div>
+                  <div>
+                    <h4 className="font-semibold">{installDialog.manifest.name}</h4>
+                    <p className="text-sm text-muted-foreground">
+                      v{installDialog.manifest.version} • {installDialog.source.name}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h4 className="font-semibold">{installDialog.manifest.name}</h4>
-                  <p className="text-sm text-muted-foreground">
-                    v{installDialog.manifest.version} • {installDialog.source.name}
-                  </p>
-                </div>
+                
+                {!isInstalling && (
+                  <>
+                    <p className="text-sm">{installDialog.manifest.description}</p>
+                    
+                    <div className="text-sm space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Port:</span>
+                        <span>{installDialog.manifest.port}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Memory:</span>
+                        <span>{installDialog.manifest.resources?.memory || '512m'}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Dependencies:</span>
+                        <span>{installDialog.manifest.dependencies?.services?.join(', ') || 'None'}</span>
+                      </div>
+                    </div>
+                  </>
+                )}
+                
+                {isInstalling && (
+                  <div className="text-sm space-y-1">
+                    {installProgress.find(p => p.phase === 'complete') ? (
+                      <div className="flex items-center gap-2 text-green-600">
+                        <CheckCircle className="w-4 h-4" />
+                        <span>Installation complete!</span>
+                      </div>
+                    ) : installProgress.find(p => p.phase === 'error') ? (
+                      <div className="flex items-center gap-2 text-red-600">
+                        <AlertCircle className="w-4 h-4" />
+                        <span>Installation failed</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                        <RefreshCw className="w-4 h-4 animate-spin" />
+                        <span>{installProgress[installProgress.length - 1]?.phase || 'Starting...'}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
               
-              <p className="text-sm">{installDialog.manifest.description}</p>
-              
-              <div className="text-sm space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Port:</span>
-                  <span>{installDialog.manifest.port}</span>
+              {/* Terminal panel - only shown during installation */}
+              {isInstalling && (
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-2 text-sm text-muted-foreground">
+                    <Terminal className="w-4 h-4" />
+                    <span>Installation Progress</span>
+                  </div>
+                  <div 
+                    ref={terminalRef}
+                    className="bg-zinc-900 text-zinc-100 rounded-lg p-4 h-64 overflow-y-auto font-mono text-xs leading-relaxed"
+                  >
+                    {installProgress.map((event, index) => (
+                      <div 
+                        key={index} 
+                        className={cn(
+                          "flex gap-2",
+                          event.phase === 'error' && "text-red-400",
+                          event.phase === 'complete' && "text-green-400",
+                          event.phase === 'pulling' && "text-blue-400",
+                          event.phase === 'extracting' && "text-yellow-400"
+                        )}
+                      >
+                        <span className="text-zinc-500 shrink-0">
+                          {event.timestamp 
+                            ? new Date(event.timestamp).toLocaleTimeString()
+                            : '--:--:--'
+                          }
+                        </span>
+                        <span className="text-zinc-400">[{event.phase || event.type}]</span>
+                        <span className="break-all">
+                          {event.message}
+                          {event.progress !== undefined && event.progress < 100 && (
+                            <span className="text-zinc-500 ml-2">({event.progress.toFixed(0)}%)</span>
+                          )}
+                        </span>
+                      </div>
+                    ))}
+                    {installProgress.length === 0 && (
+                      <div className="text-zinc-500">Connecting to install stream...</div>
+                    )}
+                  </div>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Memory:</span>
-                  <span>{installDialog.manifest.resources?.memory || '512m'}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Dependencies:</span>
-                  <span>{installDialog.manifest.dependencies?.services?.join(', ') || 'None'}</span>
-                </div>
-              </div>
+              )}
             </div>
           )}
           
           <DialogFooter>
-            <Button variant="outline" onClick={() => setInstallDialog(null)}>
-              Cancel
-            </Button>
             <Button 
-              onClick={handleInstall} 
-              disabled={installFromMarketplace.isPending}
+              variant="outline" 
+              onClick={handleCloseInstallDialog}
+              disabled={isInstalling && !installProgress.find(p => p.phase === 'complete' || p.phase === 'error')}
             >
-              {installFromMarketplace.isPending ? 'Installing...' : 'Install & Start'}
+              {installProgress.find(p => p.phase === 'complete') ? 'Close' : 'Cancel'}
             </Button>
+            {!isInstalling && (
+              <Button 
+                onClick={handleInstall} 
+                disabled={installFromMarketplace.isPending}
+              >
+                Install & Start
+              </Button>
+            )}
+            {installProgress.find(p => p.phase === 'complete') && (
+              <Button onClick={() => {
+                setInstallDialog(null);
+                setInstallProgress([]);
+                setCurrentInstallId(null);
+              }}>
+                Done
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>

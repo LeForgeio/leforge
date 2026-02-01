@@ -188,6 +188,7 @@ async function installFromMarketplace(data: {
   config?: Record<string, unknown>;
   environment?: Record<string, string>;
   autoStart?: boolean;
+  installId?: string; // For progress tracking via SSE
 }): Promise<unknown> {
   const response = await fetch(`${API_BASE}/marketplace/install`, {
     method: 'POST',
