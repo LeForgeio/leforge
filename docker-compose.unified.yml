@@ -89,7 +89,11 @@ services:
       - "5432:5432"   # PostgreSQL exposed for plugins/debugging
       - "6379:6379"   # Redis exposed for plugin containers
     networks:
-      - leforge-network
+      leforge-network:
+      # Cloudflare Tunnel network - cloudflared routes app.leforge.io to leforge-app:4000
+      LeForge-backend:
+        aliases:
+          - leforge-app
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:4000/health"]
       interval: 30s
@@ -106,6 +110,9 @@ networks:
   leforge-network:
     driver: bridge
     name: leforge-network
+  # External network for Cloudflare Tunnel (cloudflared container)
+  LeForge-backend:
+    external: true
 
 # ===========================================
 # Volumes
