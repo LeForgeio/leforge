@@ -746,14 +746,14 @@ export default function AdminApiKeys() {
       <div className="grid grid-cols-4 gap-4">
         <Card>
           <CardContent className="pt-6">
-            <div className="text-2xl font-bold">{keysData?.keys.length || 0}</div>
+            <div className="text-2xl font-bold">{keysData?.keys?.length || 0}</div>
             <div className="text-sm text-muted-foreground">Total Keys</div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-6">
             <div className="text-2xl font-bold text-green-600">
-              {keysData?.keys.filter((k) => k.isActive && (!k.expiresAt || new Date(k.expiresAt) > now)).length || 0}
+              {(keysData?.keys ?? []).filter((k) => k.isActive && (!k.expiresAt || new Date(k.expiresAt) > now)).length || 0}
             </div>
             <div className="text-sm text-muted-foreground">Active</div>
           </CardContent>
@@ -761,7 +761,7 @@ export default function AdminApiKeys() {
         <Card>
           <CardContent className="pt-6">
             <div className="text-2xl font-bold text-yellow-600">
-              {keysData?.keys.filter((k) => k.expiresAt && new Date(k.expiresAt) < now).length || 0}
+              {(keysData?.keys ?? []).filter((k) => k.expiresAt && new Date(k.expiresAt) < now).length || 0}
             </div>
             <div className="text-sm text-muted-foreground">Expired</div>
           </CardContent>
@@ -769,7 +769,7 @@ export default function AdminApiKeys() {
         <Card>
           <CardContent className="pt-6">
             <div className="text-2xl font-bold text-muted-foreground">
-              {keysData?.keys.filter((k) => !k.isActive).length || 0}
+              {(keysData?.keys ?? []).filter((k) => !k.isActive).length || 0}
             </div>
             <div className="text-sm text-muted-foreground">Inactive</div>
           </CardContent>
