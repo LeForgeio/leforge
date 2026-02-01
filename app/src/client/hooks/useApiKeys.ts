@@ -147,7 +147,15 @@ async function createApiKey(baseUrl: string, input: CreateApiKeyInput): Promise<
     throw new Error(error.error?.message || 'Failed to create API key');
   }
 
-  return response.json();
+  // Server returns { apiKey: {...}, key: "plain-text-key" }
+  // Client needs { key: { ...apiKey, key: "plain-text-key" } }
+  const data = await response.json();
+  return {
+    key: {
+      ...data.apiKey,
+      key: data.key,
+    },
+  };
 }
 
 async function updateApiKey(baseUrl: string, keyId: string, input: UpdateApiKeyInput): Promise<{ key: ApiKey }> {
@@ -194,7 +202,15 @@ async function rotateApiKey(baseUrl: string, keyId: string): Promise<{ key: ApiK
     throw new Error(error.error?.message || 'Failed to rotate API key');
   }
 
-  return response.json();
+  // Server returns { apiKey: {...}, key: "plain-text-key" }
+  // Client needs { key: { ...apiKey, key: "plain-text-key" } }
+  const data = await response.json();
+  return {
+    key: {
+      ...data.apiKey,
+      key: data.key,
+    },
+  };
 }
 
 async function fetchApiKeyUsage(baseUrl: string, keyId: string): Promise<{ usage: ApiKeyUsageStats }> {
