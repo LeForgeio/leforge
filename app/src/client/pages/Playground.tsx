@@ -40,9 +40,9 @@ interface PlaygroundEndpoint {
 }
 
 function pluginToService(plugin: InstalledPlugin): PlaygroundService {
-  // Always use the LeForge proxy path - plugins are accessed via /api/v1/{pluginId}
-  // The plugin's manifest basePath is for internal container routing, not external access
-  const basePath = `/api/v1/${plugin.forgehookId}`;
+  // Use the LeForge proxy path: /api/v1/plugins/{pluginId}/proxy
+  // This routes through the proxy handler which forwards to the container
+  const basePath = `/api/v1/plugins/${plugin.forgehookId}/proxy`;
   const endpoints: PlaygroundEndpoint[] = (plugin.manifest?.endpoints || []).map(ep => ({
     method: ep.method,
     path: ep.path,
