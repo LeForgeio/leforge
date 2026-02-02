@@ -123,6 +123,7 @@ export async function pluginRoutes(fastify: FastifyInstance) {
       status: plugin.status,
       runtime: plugin.runtime || 'container',
       hostPort: plugin.hostPort ?? 0,
+      assignedPort: plugin.hostPort ?? 0, // Alias for backwards compatibility
       gatewayUrl: plugin.gatewayUrl,
       healthStatus: plugin.healthStatus,
       error: plugin.error,
