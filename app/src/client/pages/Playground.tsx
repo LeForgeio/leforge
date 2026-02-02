@@ -455,10 +455,10 @@ export default function Playground() {
                         API Key:
                       </Label>
                       <Select
-                        value={selectedApiKeyId}
+                        value={selectedApiKeyId || 'none'}
                         onValueChange={(keyId) => {
-                          setSelectedApiKeyId(keyId);
-                          if (!keyId) {
+                          setSelectedApiKeyId(keyId === 'none' ? '' : keyId);
+                          if (keyId === 'none') {
                             setApiKeyValue('');
                           }
                         }}
@@ -467,7 +467,7 @@ export default function Playground() {
                           <SelectValue placeholder="Select key..." />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">
+                          <SelectItem value="none">
                             <span className="text-muted-foreground">None</span>
                           </SelectItem>
                           {apiKeys.map((key) => (
