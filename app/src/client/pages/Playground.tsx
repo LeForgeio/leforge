@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Play, ChevronDown, Save, Trash2, FolderOpen, Terminal, Code2, Loader2, Plug } from 'lucide-react';
+import { Play, ChevronDown, Save, Trash2, FolderOpen, Terminal, Code2, Loader2, Plug, Key } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,6 +18,7 @@ import {
   generatePythonCode,
 } from '@/lib/api';
 import { useInstalledPlugins } from '@/hooks/usePlugins';
+import { useApiKeys } from '@/hooks/useApiKeys';
 import type { InstalledPlugin } from '@/types/forgehook';
 import { useSavedRequestsStore, useSettingsStore, type SavedRequest } from '@/store';
 import { useToast } from '@/hooks/use-toast';
@@ -72,6 +73,10 @@ export default function Playground() {
   // Fetch installed plugins
   const { data: pluginsData, isLoading: pluginsLoading } = useInstalledPlugins();
   
+  // Fetch API keys
+  const { data: apiKeysData } = useApiKeys();
+  const apiKeys = apiKeysData?.keys || [];
+  
   // Convert running plugins to services
   const services = useMemo(() => {
     if (!pluginsData?.plugins) return [];
@@ -87,6 +92,8 @@ export default function Playground() {
   const [path, setPath] = useState<string>('');
   const [requestBody, setRequestBody] = useState<string>('');
   const [headers, setHeaders] = useState<string>('');
+  const [selectedApiKeyId, setSelectedApiKeyId] = useState<string>('');
+  const [apiKeyValue, setApiKeyValue] = useState<string>('');
   const [response, setResponse] = useState<{ status: number; statusText: string; data: unknown; duration: number; headers: Record<string, string> } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -166,9 +173,14 @@ export default function Playground() {
 
     try {
       const body = requestBody ? JSON.parse(requestBody) : undefined;
-      const customHeaders = headers ? JSON.parse(headers) : undefined;
+      let customHeaders = headers ? JSON.parse(headers) : {};
       
-      const result = await executeApiCall(method, path, body, customHeaders);
+      // Add API key header if provided
+      if (apiKeyValue) {
+        customHeaders = { ...customHeaders, 'X-API-Key': apiKeyValue };
+      }
+      
+      const result = await executeApiCall(method, path, body, Object.keys(customHeaders).length > 0 ? customHeaders : undefined);
       setResponse(result);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Request failed';
@@ -181,13 +193,22 @@ export default function Playground() {
 
   const getGeneratedCode = () => {
     const body = requestBody ? JSON.parse(requestBody) : undefined;
+    let codeHeaders = headers ? JSON.parse(headers) : {};
+    
+    // Add API key header if provided
+    if (apiKeyValue) {
+      codeHeaders = { ...codeHeaders, 'X-API-Key': apiKeyValue };
+    }
+    
+    const headersToUse = Object.keys(codeHeaders).length > 0 ? codeHeaders : undefined;
+    
     switch (activeCodeTab) {
       case 'curl':
-        return generateCurlCommand(method, path, body);
+        return generateCurlCommand(method, path, body, headersToUse);
       case 'javascript':
-        return generateJavaScriptCode(method, path, body);
+        return generateJavaScriptCode(method, path, body, headersToUse);
       case 'python':
-        return generatePythonCode(method, path, body);
+        return generatePythonCode(method, path, body, headersToUse);
     }
   };
 
@@ -426,14 +447,70 @@ export default function Playground() {
                     spellCheck={false}
                   />
                 </TabsContent>
-                <TabsContent value="headers" className="mt-2">
+                <TabsContent value="headers" className="mt-2 space-y-3">
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Label className="text-xs text-muted-foreground whitespace-nowrap">
+                        <Key className="w-3 h-3 inline mr-1" />
+                        API Key:
+                      </Label>
+                      <Select
+                        value={selectedApiKeyId}
+                        onValueChange={(keyId) => {
+                          setSelectedApiKeyId(keyId);
+                          if (!keyId) {
+                            setApiKeyValue('');
+                          }
+                        }}
+                      >
+                        <SelectTrigger className="w-48 h-8 text-xs">
+                          <SelectValue placeholder="Select key..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="">
+                            <span className="text-muted-foreground">None</span>
+                          </SelectItem>
+                          {apiKeys.map((key) => (
+                            <SelectItem key={key.id} value={key.id}>
+                              <div className="flex items-center gap-2">
+                                <span>{key.name}</span>
+                                <span className="text-muted-foreground text-[10px] font-mono">{key.prefix}...</span>
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {apiKeys.length === 0 && (
+                        <Button variant="link" size="sm" className="text-xs px-0" asChild>
+                          <a href="#/admin/api-keys">Create API Key</a>
+                        </Button>
+                      )}
+                    </div>
+                    {selectedApiKeyId && (
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="password"
+                          value={apiKeyValue}
+                          onChange={(e) => setApiKeyValue(e.target.value)}
+                          className="flex-1 h-8 text-xs font-mono"
+                          placeholder="Paste your full API key (fhk_...)"
+                        />
+                        {apiKeyValue && (
+                          <span className="text-xs text-green-500">Ready to use</span>
+                        )}
+                      </div>
+                    )}
+                  </div>
                   <textarea
                     value={headers}
                     onChange={(e) => setHeaders(e.target.value)}
-                    className="w-full h-40 p-3 bg-muted/50 rounded-lg font-mono text-sm resize-none focus:outline-none focus:ring-2 focus:ring-ring"
-                    placeholder='Custom headers (JSON)\n{"Authorization": "Bearer ..."}'
+                    className="w-full h-24 p-3 bg-muted/50 rounded-lg font-mono text-sm resize-none focus:outline-none focus:ring-2 focus:ring-ring"
+                    placeholder='Additional headers (JSON)\n{"Custom-Header": "value"}'
                     spellCheck={false}
                   />
+                  <p className="text-[10px] text-muted-foreground">
+                    The API key will be sent as X-API-Key header. Additional headers are merged automatically.
+                  </p>
                 </TabsContent>
               </Tabs>
             </CardContent>

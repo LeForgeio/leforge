@@ -244,15 +244,30 @@ export function generateCurlCommand(
 export function generateJavaScriptCode(
   method: string,
   url: string,
-  body?: Record<string, unknown>
+  body?: Record<string, unknown>,
+  headers?: Record<string, string>
 ): string {
   const baseUrl = getBaseUrl();
   const apiKey = useAuthStore.getState().apiKey;
   
+  // Build headers object
+  const headerLines: string[] = ["'Content-Type': 'application/json'"];
+  if (apiKey) {
+    headerLines.push(`'X-API-Key': '${apiKey}'`);
+  }
+  if (headers) {
+    Object.entries(headers).forEach(([key, value]) => {
+      // Skip if already added via apiKey
+      if (key !== 'X-API-Key' || !apiKey) {
+        headerLines.push(`'${key}': '${value}'`);
+      }
+    });
+  }
+  
   return `const response = await fetch('${baseUrl}${url}', {
   method: '${method.toUpperCase()}',
   headers: {
-    'Content-Type': 'application/json',${apiKey ? `\n    'X-API-Key': '${apiKey}',` : ''}
+    ${headerLines.join(',\n    ')},
   },${body ? `\n  body: JSON.stringify(${JSON.stringify(body, null, 4).split('\n').join('\n  ')}),` : ''}
 });
 
@@ -263,17 +278,32 @@ console.log(data);`;
 export function generatePythonCode(
   method: string,
   url: string,
-  body?: Record<string, unknown>
+  body?: Record<string, unknown>,
+  headers?: Record<string, string>
 ): string {
   const baseUrl = getBaseUrl();
   const apiKey = useAuthStore.getState().apiKey;
+  
+  // Build headers object
+  const headerLines: string[] = ["'Content-Type': 'application/json'"];
+  if (apiKey) {
+    headerLines.push(`'X-API-Key': '${apiKey}'`);
+  }
+  if (headers) {
+    Object.entries(headers).forEach(([key, value]) => {
+      // Skip if already added via apiKey
+      if (key !== 'X-API-Key' || !apiKey) {
+        headerLines.push(`'${key}': '${value}'`);
+      }
+    });
+  }
   
   return `import requests
 
 response = requests.${method.toLowerCase()}(
     '${baseUrl}${url}',
     headers={
-        'Content-Type': 'application/json',${apiKey ? `\n        'X-API-Key': '${apiKey}',` : ''}
+        ${headerLines.join(',\n        ')},
     },${body ? `\n    json=${JSON.stringify(body, null, 4).split('\n').join('\n    ')},` : ''}
 )
 
