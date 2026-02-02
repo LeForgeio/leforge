@@ -20,18 +20,22 @@ LeForge uses a **single container architecture**:
 │  │  - MCP Server (AI agent protocol)               │  │
 │  │  - Web UI                                       │  │
 │  ├─────────────────────────────────────────────────┤  │
-│  │  PostgreSQL (plugin state, API keys)            │  │
+│  │  PostgreSQL + pgvector (data + vector search)   │  │
 │  ├─────────────────────────────────────────────────┤  │
 │  │  Redis (caching, sessions)                      │  │
+│  ├─────────────────────────────────────────────────┤  │
+│  │  Mosquitto (MQTT broker for events/plugins)     │  │
 │  └─────────────────────────────────────────────────┘  │
 └───────────────────────────────────────────────────────┘
 ```
 
 Managed via `supervisord`:
-- Priority 10: PostgreSQL initialization
+- Priority 5: PostgreSQL initialization
 - Priority 10: PostgreSQL server
-- Priority 15: Redis server  
-- Priority 20: Node.js application
+- Priority 10: Redis server
+- Priority 10: Mosquitto MQTT broker
+- Priority 15: PostgreSQL setup (user/db/extensions)
+- Priority 50: Node.js application
 
 ## Repository Structure
 
@@ -88,8 +92,10 @@ AI agents connect via `/mcp` endpoint and can:
 |-----------|------------|
 | Backend | Fastify 5 + TypeScript |
 | Frontend | React 19 + Vite + TailwindCSS |
-| Database | PostgreSQL 15 (embedded in container) |
-| Cache | Redis 7 (embedded in container) |
+| Database | PostgreSQL 18 + pgvector 0.8.1 (embedded) |
+| Vector Search | pgvector (HNSW + IVFFlat indexes) |
+| Cache | Redis 8.4 (embedded in container) |
+| MQTT Broker | Mosquitto 2.0.22 (embedded) |
 | Process Mgmt | supervisord |
 | AI Protocol | Model Context Protocol (MCP) |
 | Container | Docker |
@@ -124,30 +130,89 @@ curl -X POST http://localhost:4000/api/v1/invoke/formula-engine/evaluate \
 
 ## Deployment
 
-### Docker Naming Conventions
+### Single Container Philosophy
 
-**IMPORTANT**: All Docker resources use lowercase `leforge` prefix consistently:
+**CRITICAL**: LeForge core is ONE container. Everything else is a plugin container.
+
+```
+┌─────────────────────────────────────────┐
+│         LeForge (single container)      │
+│  ├── Node.js (Fastify + React)          │
+│  ├── PostgreSQL + pgvector (embedded)   │
+│  └── Redis (embedded)                   │
+└─────────────────────────────────────────┘
+        │
+        ▼ (spawns plugin containers as needed)
+┌───────────────┐ ┌───────────────┐
+│ math-service  │ │ ollama-local  │  ...
+└───────────────┘ └───────────────┘
+```
+
+**NO separate PostgreSQL or Redis containers** - they run inside the LeForge container via supervisord.
+
+### Docker Naming Conventions
 
 | Resource | Name | Notes |
 |----------|------|-------|
-| Service | `leforge` | In docker-compose.unified.yml |
-| Container | `leforge` | Single main container |
+| Service | `leforge` | In docker-compose.yml |
+| Container | `leforge` | Single core container |
 | Image | `leforge:latest` | Built image tag |
 | Network | `leforge-network` | Bridge network |
-| Volume (PostgreSQL) | `leforge-postgres-data` | Database persistence |
-| Volume (Redis) | `leforge-redis-data` | Cache persistence |
-| Volume (Plugins) | `leforge-plugin-data` | Plugin data |
+| Volume (App Data) | `leforge-data` | Application data, logs |
+| Volume (Database) | `leforge-embedded-postgres` | PostgreSQL data (CRITICAL) |
 
-Never use: `LeForge-app`, `leforge-app`, `LeForge-postgres`, etc.
+Never use: `leforge-postgres` (separate container), `leforge-redis` (separate container).
+
+### Port Mapping
+
+#### Current Port Allocations
+
+| Port | Service | Protocol | Purpose |
+|------|---------|----------|---------|
+| 4000 | Node.js API | HTTP | Main application, Web UI, REST API, MCP endpoint |
+| 5432 | PostgreSQL | TCP | Database (exposed for debugging/external tools) |
+| 6379 | Redis | TCP | Cache/sessions (exposed for plugin containers) |
+| 1883 | Mosquitto | MQTT | MQTT broker TCP (plugins/external clients) |
+| 9001 | Mosquitto | WebSocket | MQTT broker WebSocket (browser clients) |
+
+#### Plugin Port Range
+
+| Range | Purpose |
+|-------|---------|
+| 4001-4999 | Dynamic ForgeHook plugin containers |
+
+Current plugin allocations:
+- 4001: math-service
+- 4002: crypto-service
+- 4004: data-transform-service
+- 4005: image-service
+- 4006: pdf-service
+- 4007: ocr-service
+- 4008: ollama-local
+- 4010: streaming-file-service
+
+#### Future Port Reservations
+
+| Port | Planned Service | Status |
+|------|-----------------|--------|
+| 8443 | HTTPS/TLS API | Planned |
+| 8883 | MQTT TLS | Planned |
+| 9443 | WebSocket TLS | Planned |
+| 3000 | Dev server (Vite) | Development only |
+
+#### Network Security Notes
+- **Production**: Consider NOT exposing 5432, 6379 externally
+- **Development**: All ports exposed for debugging convenience
+- **Cloudflare Tunnel**: Routes `app.leforge.io` → `leforge-app:4000` internally
 
 ### Quick Start
 ```bash
-docker run -d -p 4000:4000 --name leforge leforge:latest
-```
+# Create required volumes first
+docker volume create leforge-data
+docker volume create leforge-embedded-postgres
 
-### Docker Compose
-```bash
-docker compose -f docker-compose.unified.yml up -d
+# Run LeForge
+docker compose up -d
 
 # Check status
 docker ps --filter "name=leforge"
@@ -156,9 +221,9 @@ docker ps --filter "name=leforge"
 docker logs leforge
 ```
 
-### With Qdrant (Vector Search)
+### Rebuild After Code Changes
 ```bash
-docker compose -f docker-compose.unified.yml -f docker-compose.qdrant.yml up -d
+docker compose up -d --build leforge
 ```
 
 ## Common Tasks
@@ -188,4 +253,180 @@ docker compose -f docker-compose.unified.yml -f docker-compose.qdrant.yml up -d
 
 4. **Embedded Plugins**: Preferred for lightweight operations (zero network latency).
 
-5. **Optional Qdrant**: Only needed for vector search / RAG applications.
+5. **Embedded Vector Search**: pgvector is built into PostgreSQL - no external Qdrant needed for most use cases.
+
+## Critical: Data Persistence
+
+### Embedded PostgreSQL Volume (REQUIRED)
+LeForge uses an **embedded PostgreSQL** inside the container (via supervisord), NOT the external postgres container. You MUST mount a volume to `/var/lib/postgresql/data` or **all data will be lost on restart**:
+
+```yaml
+volumes:
+  - leforge_postgres:/var/lib/postgresql/data  # CRITICAL for data persistence
+```
+
+### Required Volumes
+
+| Volume | Mount Point | Purpose |
+|--------|-------------|---------|
+| `leforge-data` | `/app/data` | Application data, logs |
+| `leforge-embedded-postgres` | `/var/lib/postgresql/data` | **User data, API keys, plugins** |
+
+### Mark Volumes as External
+To prevent accidental deletion with `docker compose down -v`, mark volumes as external:
+
+```yaml
+volumes:
+  leforge_data:
+    name: leforge-data
+    external: true
+  leforge_postgres:
+    name: leforge-embedded-postgres
+    external: true
+```
+
+### Embedded DB Credentials
+- User: `leforge`
+- Password: `${POSTGRES_PASSWORD}` (env var, default: `leforge_dev_password`)
+- Database: `leforge`
+- Host: `localhost` (within container)
+
+## Security Configuration
+
+### Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `POSTGRES_PASSWORD` | `leforge_dev_password` | PostgreSQL password |
+| `REDIS_PASSWORD` | (empty) | Redis password (empty = no auth) |
+| `MQTT_USERNAME` | (empty) | MQTT username (empty = anonymous) |
+| `MQTT_PASSWORD` | (empty) | MQTT password |
+| `LEFORGE_JWT_SECRET` | (auto-generated) | JWT signing secret |
+| `LEFORGE_ADMIN_PASSWORD` | `admin` | Admin user password |
+| `LEFORGE_SECURE_COOKIES` | `false` | Set `true` for HTTPS |
+
+### Authentication
+- **Password Hashing**: bcrypt with cost factor 12
+- **JWT**: 64-byte crypto-random secret (auto-generated if not set)
+- **RBAC**: Role-based permissions (admin, user, guest)
+
+### Production Deployment Checklist
+```bash
+# Generate secure values
+openssl rand -base64 32  # For passwords
+openssl rand -hex 64     # For JWT secret
+
+# Required environment variables for production
+POSTGRES_PASSWORD=<generated>
+REDIS_PASSWORD=<generated>
+MQTT_USERNAME=leforge
+MQTT_PASSWORD=<generated>
+LEFORGE_JWT_SECRET=<generated>
+LEFORGE_ADMIN_PASSWORD=<generated>
+LEFORGE_SECURE_COOKIES=true
+```
+
+### MQTT Broker (Mosquitto)
+- **TCP Port**: 1883 (internal/plugin communication)
+- **WebSocket Port**: 9001 (browser clients)
+- **Authentication**: Anonymous by default; set `MQTT_USERNAME` + `MQTT_PASSWORD` to enable password auth
+- **Runtime Config**: `docker-entrypoint.sh` generates password file if credentials provided
+
+### Security Documentation
+See `docs/security.md` for comprehensive security guide including:
+- Password policies and hashing
+- JWT configuration
+- Database security
+- Network security
+- SSL/TLS setup
+- API key management
+
+## Networking Notes
+
+### Cloudflare Tunnel Setup
+The LeForge container needs a network alias for cloudflared to resolve:
+
+```yaml
+networks:
+  leforge-network:
+    aliases:
+      - leforge-app  # Required for cloudflared tunnel
+```
+
+### Plugin Container Communication
+When proxying to plugin containers, use Docker network DNS (not localhost):
+
+```typescript
+// CORRECT: Use container name over Docker network
+const url = `http://${plugin.containerName}:${plugin.manifest.port}${path}`;
+
+// WRONG: localhost doesn't work from inside container
+const url = `http://localhost:${plugin.hostPort}${path}`;
+```
+
+### ForgeHook Plugin Healthchecks
+ForgeHook containers are Python-based and don't have curl. Use Python urllib:
+
+```yaml
+healthcheck:
+  test: ["CMD-SHELL", "python3 -c \"import urllib.request; urllib.request.urlopen('http://localhost:PORT/health')\""]
+```
+
+## Vector Search with pgvector
+
+LeForge includes **pgvector 0.8.1** compiled into the embedded PostgreSQL database, providing native vector similarity search without external dependencies.
+
+### Why pgvector over Qdrant?
+- **Zero additional containers** - runs inside existing PostgreSQL
+- **ACID transactions** - vectors and metadata in same transaction
+- **Simpler architecture** - no network hops for vector operations
+- **Cost effective** - no separate vector DB to manage
+
+### Supported Index Types
+| Index | Best For | Notes |
+|-------|----------|-------|
+| HNSW | Most use cases | Fast queries, higher memory |
+| IVFFlat | Large datasets | Lower memory, requires training |
+
+### Usage Examples
+
+```sql
+-- Enable extension (auto-enabled on LeForge startup)
+CREATE EXTENSION IF NOT EXISTS vector;
+
+-- Create table with embeddings
+CREATE TABLE documents (
+  id SERIAL PRIMARY KEY,
+  content TEXT,
+  embedding vector(1536)  -- OpenAI ada-002 dimensions
+);
+
+-- Create HNSW index for cosine similarity
+CREATE INDEX ON documents USING hnsw (embedding vector_cosine_ops);
+
+-- Insert with embedding
+INSERT INTO documents (content, embedding) 
+VALUES ('Hello world', '[0.1, 0.2, ...]'::vector);
+
+-- Find 10 most similar documents
+SELECT id, content, embedding <=> query_embedding AS distance
+FROM documents
+ORDER BY embedding <=> '[0.1, 0.2, ...]'::vector
+LIMIT 10;
+```
+
+### Distance Operators
+| Operator | Function | Use Case |
+|----------|----------|----------|
+| `<->` | L2 distance | Euclidean similarity |
+| `<=>` | Cosine distance | Text embeddings (OpenAI, etc.) |
+| `<#>` | Inner product | Normalized vectors |
+
+### Embedding Dimensions by Model
+| Model | Dimensions |
+|-------|------------|
+| OpenAI text-embedding-ada-002 | 1536 |
+| OpenAI text-embedding-3-small | 1536 |
+| OpenAI text-embedding-3-large | 3072 |
+| Ollama nomic-embed-text | 768 |
+| Ollama mxbai-embed-large | 1024 |

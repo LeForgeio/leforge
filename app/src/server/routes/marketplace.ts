@@ -182,40 +182,66 @@ export async function marketplaceRoutes(fastify: FastifyInstance) {
         if (manifest.runtime === 'embedded') {
           logger.info({ pluginId, name: manifest.name }, 'Installing embedded plugin');
           
+          // Emit progress events for embedded plugins (they install quickly but we need SSE feedback)
+          const emitProgress = (phase: string, message: string, error?: string) => {
+            if (installId) {
+              dockerService.emit('install:progress', {
+                installId,
+                pluginId,
+                pluginName: manifest.name,
+                phase,
+                message,
+                error,
+                timestamp: new Date(),
+              });
+            }
+          };
+          
+          emitProgress('downloading', `Fetching ${manifest.name} bundle...`);
+          
           // For embedded plugins, we need to fetch the bundled JS code
           // The bundle URL is constructed from the registry source
           let moduleCode: string;
           
-          if (marketplacePlugin.bundleUrl) {
-            // Use explicit bundle URL from registry entry
-            const bundleResponse = await fetch(marketplacePlugin.bundleUrl);
-            if (!bundleResponse.ok) {
-              throw new Error(`Failed to fetch plugin bundle: ${bundleResponse.status}`);
-            }
-            moduleCode = await bundleResponse.text();
-          } else {
-            // Construct bundle URL from registry source base URL
-            // Registry URL format: .../registry.json, plugin at: .../plugins/{id}/index.js
-            const source = await marketplaceService.getSource(marketplacePlugin.sourceId);
-            if (!source?.url) {
-              throw new Error('Cannot determine plugin bundle URL - source not found');
+          try {
+            if (marketplacePlugin.bundleUrl) {
+              // Use explicit bundle URL from registry entry
+              const bundleResponse = await fetch(marketplacePlugin.bundleUrl);
+              if (!bundleResponse.ok) {
+                throw new Error(`Failed to fetch plugin bundle: ${bundleResponse.status}`);
+              }
+              moduleCode = await bundleResponse.text();
+            } else {
+              // Construct bundle URL from registry source base URL
+              // Registry URL format: .../registry.json, plugin at: .../plugins/{id}/index.js
+              const source = await marketplaceService.getSource(marketplacePlugin.sourceId);
+              if (!source?.url) {
+                throw new Error('Cannot determine plugin bundle URL - source not found');
+              }
+              
+              // Get base URL from registry URL (remove registry.json)
+              const baseUrl = source.url.replace(/\/[^/]+$/, '');
+              const bundleUrl = `${baseUrl}/plugins/${pluginId}/index.js`;
+              
+              logger.debug({ bundleUrl }, 'Fetching embedded plugin bundle');
+              
+              const bundleResponse = await fetch(bundleUrl);
+              if (!bundleResponse.ok) {
+                throw new Error(`Failed to fetch plugin bundle from ${bundleUrl}: ${bundleResponse.status}`);
+              }
+              moduleCode = await bundleResponse.text();
             }
             
-            // Get base URL from registry URL (remove registry.json)
-            const baseUrl = source.url.replace(/\/[^/]+$/, '');
-            const bundleUrl = `${baseUrl}/plugins/${pluginId}/index.js`;
+            emitProgress('installing', `Loading ${manifest.name} module...`);
             
-            logger.debug({ bundleUrl }, 'Fetching embedded plugin bundle');
+            // Install using embedded plugin service
+            plugin = await embeddedPluginService.installPlugin(manifest, moduleCode, config);
             
-            const bundleResponse = await fetch(bundleUrl);
-            if (!bundleResponse.ok) {
-              throw new Error(`Failed to fetch plugin bundle from ${bundleUrl}: ${bundleResponse.status}`);
-            }
-            moduleCode = await bundleResponse.text();
+            emitProgress('complete', `${manifest.name} installed successfully`);
+          } catch (error) {
+            emitProgress('error', error instanceof Error ? error.message : 'Installation failed', error instanceof Error ? error.message : 'Unknown error');
+            throw error;
           }
-          
-          // Install using embedded plugin service
-          plugin = await embeddedPluginService.installPlugin(manifest, moduleCode, config);
         } else {
           // Container-based plugin - use Docker service
           logger.info({ pluginId, name: manifest.name, installId }, 'Installing container plugin');

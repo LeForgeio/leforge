@@ -1,4 +1,4 @@
-import Fastify, { FastifyInstance } from 'fastify';
+import Fastify, { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import cors from '@fastify/cors';
 import fastifyStatic from '@fastify/static';
 import websocket from '@fastify/websocket';
@@ -77,10 +77,72 @@ export async function buildApp(): Promise<FastifyInstance> {
       root: staticPath,
       prefix: '/',
       wildcard: false,
+      // Don't automatically serve index.html - we handle it with auth check
+      index: false,
+    });
+
+    // Helper to check if a route is a protected SPA route
+    const isProtectedSpaRoute = (url: string): boolean => {
+      // Public SPA routes
+      const publicSpaRoutes = ['/login'];
+      if (publicSpaRoutes.some(route => url === route || url.startsWith(route + '?') || url.startsWith(route + '/'))) {
+        return false;
+      }
+      // API and WebSocket routes are handled separately
+      if (url.startsWith('/api/') || url.startsWith('/ws/')) {
+        return false;
+      }
+      // Static assets are public
+      if (url.match(/\.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot|map)(\?.*)?$/)) {
+        return false;
+      }
+      // Everything else is protected SPA route
+      return true;
+    };
+
+    // Helper to check session and redirect if needed
+    const checkSessionAndServe = async (request: FastifyRequest, reply: FastifyReply): Promise<boolean> => {
+      if (!authService.isAuthEnabled()) {
+        return false; // Auth disabled, allow access
+      }
+
+      if (!isProtectedSpaRoute(request.url)) {
+        return false; // Public route, allow access
+      }
+
+      // Check session
+      const token = request.cookies?.[config.auth.sessionCookieName] ||
+        (request.headers.authorization?.startsWith('Bearer ') && 
+         !request.headers.authorization.includes('fhk_') 
+          ? request.headers.authorization.substring(7) 
+          : null);
+
+      if (!token) {
+        reply.redirect('/login');
+        return true; // Handled
+      }
+
+      const user = authService.getUserFromToken(token);
+      if (!user) {
+        reply.clearCookie(config.auth.sessionCookieName, { path: '/' });
+        reply.redirect('/login');
+        return true; // Handled
+      }
+
+      return false; // Authenticated, continue to serve
+    };
+
+    // Explicit handler for root path with auth check
+    app.get('/', async (request: FastifyRequest, reply: FastifyReply) => {
+      const handled = await checkSessionAndServe(request, reply);
+      if (!handled) {
+        return reply.sendFile('index.html');
+      }
     });
 
     // Serve index.html for SPA routing (non-API routes)
-    app.setNotFoundHandler((request, reply) => {
+    // With server-side auth check for protected routes
+    app.setNotFoundHandler(async (request, reply) => {
       // API routes return 404
       if (request.url.startsWith('/api/') || request.url.startsWith('/ws/')) {
         return reply.status(404).send({
@@ -91,8 +153,11 @@ export async function buildApp(): Promise<FastifyInstance> {
         });
       }
 
-      // SPA routes serve index.html
-      return reply.sendFile('index.html');
+      // Check auth for protected SPA routes
+      const handled = await checkSessionAndServe(request, reply);
+      if (!handled) {
+        return reply.sendFile('index.html');
+      }
     });
   } else {
     logger.warn({ staticPath }, 'Static files directory not found - frontend not available');
@@ -133,6 +198,11 @@ export async function buildApp(): Promise<FastifyInstance> {
 
     // Invoke endpoints use API key auth, not session auth
     if (request.url.startsWith('/api/v1/invoke') || request.url.startsWith('/api/v1/nintex')) {
+      return;
+    }
+
+    // LLM provider status checks should be public (for UI to show availability)
+    if (request.url.startsWith('/api/v1/llm/models/') || request.url.startsWith('/api/v1/llm/providers')) {
       return;
     }
 

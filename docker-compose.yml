@@ -1,52 +1,23 @@
 # ===========================================
-# LeForge - Minimal 2-Container Setup
+# LeForge - Single Container Architecture
 # ===========================================
-# The simplest deployment: just PostgreSQL + LeForge App
-# 
-# Features:
-#   - Embedded API gateway (no Kong required)
-#   - In-memory rate limiting and caching
-#   - All gateway features built into the app
+# Everything runs in one container:
+#   - Node.js app (Fastify + React)
+#   - Embedded PostgreSQL + pgvector
+#   - Embedded Redis
+#   - Supervisord process manager
+#
+# Additional containers are ONLY for plugins.
 #
 # Usage:
-#   docker compose -f docker-compose.minimal.yml up -d
-#
-# Optional add-ons (for specific plugins):
-#   # Add Redis for distributed caching/rate limiting:
-#   docker compose -f docker-compose.minimal.yml -f docker-compose.redis.yml up -d
-#
-#   # Add Qdrant for vector search plugins:
-#   docker compose -f docker-compose.minimal.yml -f docker-compose.qdrant.yml up -d
+#   docker compose up -d
 # ===========================================
 
 name: leforge
 
 services:
   # ===========================================
-  # PostgreSQL - The only required dependency
-  # ===========================================
-  postgres:
-    image: postgres:16-alpine
-    container_name: leforge-postgres
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER:-leforge}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-leforge_password}
-      POSTGRES_DB: ${POSTGRES_DB:-leforge}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "${POSTGRES_PORT:-5432}:5432"
-    networks:
-      - leforge-network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-leforge}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    restart: unless-stopped
-
-  # ===========================================
-  # LeForge App - All-in-one backend + frontend + gateway
+  # LeForge Core - All-in-one container
   # ===========================================
   leforge:
     build:
@@ -56,14 +27,14 @@ services:
     container_name: leforge
     environment:
       NODE_ENV: ${NODE_ENV:-production}
-      PORT: 3000
+      PORT: 4000
       
-      # PostgreSQL (required) - use container hostname
-      POSTGRES_HOST: postgres
+      # Embedded PostgreSQL (inside container via supervisord)
+      POSTGRES_HOST: localhost
       POSTGRES_PORT: 5432
-      POSTGRES_USER: ${POSTGRES_USER:-leforge}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-leforge_password}
-      POSTGRES_DB: ${POSTGRES_DB:-leforge}
+      POSTGRES_USER: leforge
+      POSTGRES_PASSWORD: leforge_password
+      POSTGRES_DB: leforge
       
       # Docker socket for plugin container management
       DOCKER_SOCKET_PATH: /var/run/docker.sock
@@ -87,23 +58,23 @@ services:
       # Logging
       LOG_LEVEL: ${LOG_LEVEL:-info}
       
-      # Optional services (disabled by default)
-      REDIS_ENABLED: "false"
-      QDRANT_ENABLED: "false"
+      # Local LLM Gateway URLs (Docker network hostnames for plugin containers)
+      OLLAMA_URL: "http://forgehook-ollama-local:11434"
+      LMSTUDIO_URL: "http://forgehook-lm-studio:1234/v1"
       
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - leforge_data:/app/data
+      - leforge_postgres:/var/lib/postgresql/data
     ports:
-      - "${APP_PORT:-3000}:3000"
-      - "${APP_HTTPS_PORT:-3443}:3443"
+      - "${APP_PORT:-4000}:4000"
+      - "${APP_HTTPS_PORT:-4443}:4443"
     networks:
-      - leforge-network
-    depends_on:
-      postgres:
-        condition: service_healthy
+      leforge-network:
+        aliases:
+          - leforge-app
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:4000/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -121,7 +92,9 @@ networks:
 # Volumes
 # ===========================================
 volumes:
-  postgres_data:
-    name: leforge-postgres-data
   leforge_data:
     name: leforge-data
+    external: true
+  leforge_postgres:
+    name: leforge-embedded-postgres
+    external: true

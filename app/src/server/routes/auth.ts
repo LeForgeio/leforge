@@ -1,5 +1,6 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { authService, User } from '../services/auth.service.js';
+import { ANONYMOUS_USER_ID } from '../middleware/auth.js';
 import { logger } from '../utils/logger.js';
 import { config } from '../config/index.js';
 
@@ -120,7 +121,7 @@ export async function authRoutes(app: FastifyInstance): Promise<void> {
         authenticated: true,
         authEnabled: false,
         user: {
-          id: 'anonymous',
+          id: ANONYMOUS_USER_ID,
           username: 'anonymous',
           displayName: 'Anonymous',
           role: 'admin',

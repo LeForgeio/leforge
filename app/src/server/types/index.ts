@@ -127,7 +127,8 @@ export interface ForgeHookEnvVar {
 
 export interface ForgeHookVolume {
   name: string;
-  containerPath: string;
+  containerPath?: string;
+  path?: string; // Alias for containerPath
   description?: string;
   readOnly?: boolean;
 }

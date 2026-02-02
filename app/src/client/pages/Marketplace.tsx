@@ -318,6 +318,7 @@ export default function Marketplace() {
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<ForgeHookCategory | 'all'>('all');
   const [selectedSource, setSelectedSource] = useState<string>('all');
+  const [installStatus, setInstallStatus] = useState<'all' | 'installed' | 'not-installed' | 'updates'>('all');
   const [activeTab, setActiveTab] = useState('browse');
   
   // Dialogs
@@ -367,6 +368,30 @@ export default function Marketplace() {
   const refreshAllSources = useRefreshAllSources();
   
   const installedIds = new Set(installedData?.plugins.map(p => p.forgehookId) || []);
+  
+  // Create version map for update detection
+  const installedVersions = new Map(
+    installedData?.plugins.map(p => [p.forgehookId, p.version]) || []
+  );
+  
+  // Filter plugins based on install status
+  const filteredPlugins = marketplace?.plugins.filter(plugin => {
+    const isInstalled = installedIds.has(plugin.id);
+    const installedVersion = installedVersions.get(plugin.id);
+    const hasUpdate = isInstalled && installedVersion && plugin.manifest.version !== installedVersion;
+    
+    switch (installStatus) {
+      case 'installed':
+        return isInstalled;
+      case 'not-installed':
+        return !isInstalled;
+      case 'updates':
+        return hasUpdate;
+      case 'all':
+      default:
+        return true;
+    }
+  }) || [];
   
   // Auto-scroll terminal
   useEffect(() => {
@@ -631,6 +656,18 @@ export default function Marketplace() {
               </SelectContent>
             </Select>
             
+            <Select value={installStatus} onValueChange={(v) => setInstallStatus(v as 'all' | 'installed' | 'not-installed' | 'updates')}>
+              <SelectTrigger className="w-40">
+                <SelectValue placeholder="All Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="installed">Installed</SelectItem>
+                <SelectItem value="not-installed">Not Installed</SelectItem>
+                <SelectItem value="updates">Updates Available</SelectItem>
+              </SelectContent>
+            </Select>
+            
             <div className="flex gap-2">
               {categories.map((category) => (
                 <Button
@@ -680,7 +717,7 @@ export default function Marketplace() {
             <h2 className="text-xl font-semibold mb-4">
               {selectedCategory === 'all' ? 'All Plugins' : `${CATEGORY_INFO[selectedCategory].label} Plugins`}
               <span className="text-muted-foreground font-normal ml-2">
-                ({marketplace?.plugins.length || 0})
+                ({filteredPlugins.length})
               </span>
             </h2>
             
@@ -703,19 +740,19 @@ export default function Marketplace() {
                   </Card>
                 ))}
               </div>
-            ) : !marketplace?.plugins.length ? (
+            ) : !filteredPlugins.length ? (
               <Card>
                 <CardContent className="py-12 text-center">
                   <Package className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
                   <h3 className="font-semibold">No plugins found</h3>
                   <p className="text-muted-foreground">
-                    Try adjusting your search or add more registry sources
+                    Try adjusting your search or filters
                   </p>
                 </CardContent>
               </Card>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {marketplace.plugins.map((plugin) => (
+                {filteredPlugins.map((plugin) => (
                   <PluginCard
                     key={`${plugin.source.id}-${plugin.id}`}
                     plugin={plugin}

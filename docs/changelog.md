@@ -9,6 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Embedded MQTT Broker**: Mosquitto 2.0.22 built into unified container
+  - Ports: 1883 (MQTT), 9001 (WebSocket)
+  - Authentication via LEFORGE_MQTT_USER/LEFORGE_MQTT_PASSWORD env vars
+  - Persistent sessions and message queue support
+
+- **Security Hardening** (docs/security.md):
+  - PostgreSQL password now via POSTGRES_PASSWORD env var (not hardcoded)
+  - Redis password support via REDIS_PASSWORD env var
+  - MQTT authentication via docker-entrypoint.sh password file generation
+  - Server-side session validation for SPA routes (302 redirects for unauthenticated)
+
+- **Service Account Support**: Migration 011 adds service accounts for machine-to-machine auth
+
 - **QR Code & Barcode Generation**: Built-in core utilities for generating QR codes and barcodes
   - Pure TypeScript implementation (no external dependencies)
   - Output formats: SVG, Base64 PNG, raw matrix
@@ -17,6 +30,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - REST API endpoints at `/api/v1/utils/qr/*` and `/api/v1/utils/barcode/*`
 
 ### Changed
+
+- **Unified Container**: PostgreSQL 18, Redis 8.4, Mosquitto 2.0.22, Node.js 20 in single container
+- **Auth Middleware**: Server-side session checks prevent SPA route access without valid JWT
+- **Docker Entrypoint**: New docker-entrypoint.sh for runtime credential configuration
 
 - **UI Rebrand**: Stainless.com-inspired design refresh
   - Dark theme now default with proper hydration
@@ -33,8 +50,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - QR code generation array bounds error in finder pattern placement
 
+### Security
+
+- Passwords no longer hardcoded in Dockerfile or supervisord.conf
+- All sensitive values configurable via environment variables
+- Session cookie (httpOnly, secure in production) for JWT storage
+- bcrypt cost factor 12 for password hashing
+
 ### Documentation
 
+- Added comprehensive security documentation (docs/security.md)
+- Updated CLAUDE.md with port mappings and security configuration
 - Updated getting-started.md to reflect unified single-container architecture (port 4000)
 - Updated architecture.md with current single-container design and MCP protocol
 - Rewrote leforge-website README from Next.js boilerplate to project documentation

@@ -169,8 +169,9 @@ export async function pluginInvokeRoutes(fastify: FastifyInstance): Promise<void
         });
       }
 
-      // Proxy to container
-      const targetUrl = `http://localhost:${plugin.hostPort}${plugin.manifest.basePath || ''}/${path}`;
+      // Proxy to container using Docker network
+      // Use container name:internal_port instead of localhost:hostPort
+      const targetUrl = `http://${plugin.containerName}:${plugin.manifest.port}${plugin.manifest.basePath || ''}/${path}`;
       
       const response = await fetch(targetUrl, {
         method: request.method,
@@ -249,8 +250,8 @@ async function handleContainerInvocation(
     });
   }
 
-  // Call the container endpoint
-  const targetUrl = `http://localhost:${plugin.hostPort}${plugin.manifest.basePath || ''}${endpoint.path}`;
+  // Call the container endpoint using Docker network
+  const targetUrl = `http://${plugin.containerName}:${plugin.manifest.port}${plugin.manifest.basePath || ''}${endpoint.path}`;
   
   try {
     const response = await fetch(targetUrl, {

@@ -66,8 +66,22 @@ ENV NODE_ENV=production
 # - openssl for SSL certs
 # - redis for embedded caching/queuing
 # - postgresql for embedded database
+# - mosquitto for embedded MQTT broker
 # - supervisor to manage multiple processes
-RUN apk add --no-cache curl docker-cli openssl redis supervisor postgresql postgresql-contrib
+# - git, build-base, postgresql-dev for building pgvector
+RUN apk add --no-cache curl docker-cli openssl redis supervisor postgresql postgresql-contrib \
+    mosquitto mosquitto-clients \
+    git build-base postgresql-dev && \
+    # Build and install pgvector extension (master has PG18 support)
+    cd /tmp && \
+    git clone https://github.com/pgvector/pgvector.git && \
+    cd pgvector && \
+    make && \
+    make install && \
+    cd / && \
+    rm -rf /tmp/pgvector && \
+    # Clean up build dependencies
+    apk del git build-base postgresql-dev
 
 # Copy package files and install production dependencies only
 COPY package*.json ./
@@ -86,19 +100,29 @@ COPY registry ./dist/registry
 # Copy supervisord configuration
 COPY supervisord.conf /etc/supervisord.conf
 
-# Create directories for Redis, PostgreSQL, and supervisor
-RUN mkdir -p /var/lib/redis /var/lib/postgresql/data /var/log/supervisor /var/run/supervisor /run/postgresql && \
+# Copy mosquitto configuration
+COPY mosquitto.conf /etc/mosquitto/mosquitto.conf
+
+# Copy entrypoint script
+COPY docker-entrypoint.sh /docker-entrypoint.sh
+
+# Create directories for Redis, PostgreSQL, Mosquitto, and supervisor
+RUN mkdir -p /var/lib/redis /var/lib/postgresql/data /var/log/supervisor /var/run/supervisor /run/postgresql \
+    /var/lib/mosquitto /var/log/mosquitto /etc/mosquitto /var/run/mosquitto && \
     addgroup -g 1001 -S nodejs && \
     adduser -S nodejs -u 1001 && \
     chown -R nodejs:nodejs /app /var/lib/redis /var/log/supervisor /var/run/supervisor && \
-    chown -R postgres:postgres /var/lib/postgresql /run/postgresql
+    chown -R postgres:postgres /var/lib/postgresql /run/postgresql && \
+    chown -R mosquitto:mosquitto /var/lib/mosquitto /var/log/mosquitto /var/run/mosquitto && \
+    chmod +x /docker-entrypoint.sh
 
-# Expose ports (HTTP, HTTPS, Redis, and PostgreSQL for plugin containers)
-EXPOSE 3000 3443 6379 5432
+# Expose ports (HTTP, HTTPS, Redis, PostgreSQL, and MQTT for plugin containers)
+# 4000 = HTTP, 1883 = MQTT TCP, 9001 = MQTT WebSocket
+EXPOSE 4000 6379 5432 1883 9001
 
-# Health check (checks Node app, Redis, and PostgreSQL)
+# Health check (checks Node app, Redis, PostgreSQL, and MQTT PID file)
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
-  CMD curl -f http://localhost:3000/health && redis-cli ping && pg_isready -U leforge || exit 1
+  CMD curl -f http://localhost:4000/health && redis-cli ping && pg_isready -U leforge && test -f /var/run/mosquitto/mosquitto.pid || exit 1
 
-# Start supervisord (manages Node.js, Redis, and PostgreSQL)
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisord.conf"]
+# Entrypoint handles runtime configuration (MQTT auth, etc.)
+ENTRYPOINT ["/docker-entrypoint.sh"]

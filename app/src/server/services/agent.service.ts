@@ -56,6 +56,9 @@ class AgentService {
     const slug = this.generateSlug(data.name);
     const config: AgentConfig = { ...DEFAULT_AGENT_CONFIG, ...data.config };
 
+    // Debug: log the createdBy value
+    logger.info({ createdBy, createdByType: typeof createdBy, createdByIsNull: createdBy === null, createdByIsUndefined: createdBy === undefined, createdByIsEmpty: createdBy === '' }, 'Creating agent with createdBy');
+
     const result = await databaseService.query(
       `INSERT INTO agents (name, slug, description, model, provider, system_prompt, tools, config, is_public, created_by)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)

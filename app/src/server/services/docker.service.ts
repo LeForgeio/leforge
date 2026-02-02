@@ -11,6 +11,7 @@ import {
   InstallPluginRequest,
 } from '../types/index.js';
 import { databaseService } from './database.service.js';
+import { registryService } from './registry.service.js';
 
 // Install progress tracking
 export interface InstallProgress {
@@ -115,7 +116,10 @@ export class DockerService extends EventEmitter {
             { containerName, containerId: containerInfo.Id },
             'Found orphaned ForgeHook container (not in database)'
           );
-          await this.adoptOrphanedContainer(containerInfo);
+          const adoptedPluginId = await this.adoptOrphanedContainer(containerInfo);
+          if (adoptedPluginId) {
+            seenPluginIds.add(adoptedPluginId);
+          }
         }
       }
 
@@ -142,7 +146,7 @@ export class DockerService extends EventEmitter {
     }
   }
 
-  private async adoptOrphanedContainer(containerInfo: Docker.ContainerInfo): Promise<void> {
+  private async adoptOrphanedContainer(containerInfo: Docker.ContainerInfo): Promise<string | undefined> {
     const containerName = containerInfo.Names[0].substring(1);
     const forgehookId = containerName.replace(config.plugins.containerPrefix, '');
 
@@ -156,13 +160,17 @@ export class DockerService extends EventEmitter {
 
       if (!hostPort) {
         logger.warn({ containerName }, 'Cannot adopt container - no port binding found');
-        return;
+        return undefined;
       }
+
+      // Try to find manifest from registry
+      const registryPlugin = registryService.getPlugin(forgehookId);
+      const registryManifest = registryPlugin?.manifest;
 
       const plugin: PluginInstance = {
         id: uuidv4(),
         forgehookId,
-        manifest: {
+        manifest: registryManifest || {
           id: forgehookId,
           name: forgehookId,
           version: 'unknown',
@@ -188,14 +196,58 @@ export class DockerService extends EventEmitter {
         this.usedPorts.add(plugin.hostPort);
       }
 
-      logger.info({ pluginId: plugin.id, forgehookId }, 'Adopted orphaned container');
+      logger.info({ pluginId: plugin.id, forgehookId, hasManifest: !!registryManifest }, 'Adopted orphaned container');
 
       if (plugin.status === 'running') {
         this.monitorHealth(plugin.id);
       }
+
+      return plugin.id;
     } catch (error) {
       logger.error({ error, containerName }, 'Failed to adopt orphaned container');
+      return undefined;
     }
+  }
+
+  /**
+   * Resync all installed plugins with registry manifests
+   * Updates manifest data (endpoints, descriptions, etc.) from registry
+   */
+  async resyncPluginsWithRegistry(): Promise<{ updated: number; skipped: number }> {
+    const plugins = await databaseService.listPlugins();
+    let updated = 0;
+    let skipped = 0;
+
+    for (const plugin of plugins) {
+      const registryPlugin = registryService.getPlugin(plugin.forgehookId);
+      if (registryPlugin?.manifest) {
+        // Update the plugin manifest while preserving runtime-specific data
+        const updatedManifest = {
+          ...registryPlugin.manifest,
+          // Preserve any runtime-specific port that might differ
+          port: plugin.manifest.port || registryPlugin.manifest.port,
+        };
+
+        await databaseService.updatePlugin(plugin.id, {
+          manifest: updatedManifest,
+        });
+
+        // Update in-memory cache
+        const cached = this.plugins.get(plugin.id);
+        if (cached) {
+          cached.manifest = updatedManifest;
+        }
+
+        logger.info({ pluginId: plugin.id, forgehookId: plugin.forgehookId }, 'Plugin manifest resynced from registry');
+        updated++;
+      } else {
+        logger.debug({ pluginId: plugin.id, forgehookId: plugin.forgehookId }, 'Plugin not found in registry, skipping');
+        skipped++;
+      }
+    }
+
+    logger.info({ updated, skipped }, 'Plugin registry resync complete');
+    return { updated, skipped };
   }
 
   // ==========================================================================
@@ -675,7 +727,8 @@ export class DockerService extends EventEmitter {
         for (const vol of manifest.volumes) {
           await this.createVolume(vol.name);
           const volumeName = `${config.plugins.volumePrefix}${vol.name}`;
-          volumeBinds.push(`${volumeName}:${vol.containerPath}${vol.readOnly ? ':ro' : ''}`);
+          const mountPath = vol.containerPath || vol.path;
+          volumeBinds.push(`${volumeName}:${mountPath}${vol.readOnly ? ':ro' : ''}`);
           this.emitInstallProgress({
             installId,
             pluginId,
@@ -766,7 +819,7 @@ export class DockerService extends EventEmitter {
           NanoCpus: this.parseCpu(manifest.resources?.cpu || '1'),
         },
         Healthcheck: manifest.healthCheck ? {
-          Test: ['CMD', 'curl', '-f', `http://localhost:${manifest.port}${manifest.healthCheck.path || '/health'}`],
+          Test: ['CMD-SHELL', `python3 -c "import urllib.request; urllib.request.urlopen('http://localhost:${manifest.port}${manifest.healthCheck.path || '/health'}')" 2>/dev/null || wget --spider -q http://localhost:${manifest.port}${manifest.healthCheck.path || '/health'} 2>/dev/null || curl -sf http://localhost:${manifest.port}${manifest.healthCheck.path || '/health'} >/dev/null`],
           Interval: (manifest.healthCheck.interval || 30) * 1000000000,
           Timeout: (manifest.healthCheck.timeout || 10) * 1000000000,
           Retries: manifest.healthCheck.retries || 3,
@@ -930,7 +983,8 @@ export class DockerService extends EventEmitter {
           if (manifest.volumes) {
             for (const vol of manifest.volumes) {
               const volumeName = `${config.plugins.volumePrefix}${vol.name}`;
-              volumeBinds.push(`${volumeName}:${vol.containerPath}${vol.readOnly ? ':ro' : ''}`);
+              const mountPath = vol.containerPath || vol.path;
+              volumeBinds.push(`${volumeName}:${mountPath}${vol.readOnly ? ':ro' : ''}`);
             }
           }
 
@@ -952,7 +1006,7 @@ export class DockerService extends EventEmitter {
               NanoCpus: this.parseCpu(manifest.resources?.cpu || '1'),
             },
             Healthcheck: manifest.healthCheck ? {
-              Test: ['CMD', 'curl', '-f', `http://localhost:${manifest.port}${manifest.healthCheck.path || '/health'}`],
+              Test: ['CMD-SHELL', `python3 -c "import urllib.request; urllib.request.urlopen('http://localhost:${manifest.port}${manifest.healthCheck.path || '/health'}')" 2>/dev/null || wget --spider -q http://localhost:${manifest.port}${manifest.healthCheck.path || '/health'} 2>/dev/null || curl -sf http://localhost:${manifest.port}${manifest.healthCheck.path || '/health'} >/dev/null`],
               Interval: (manifest.healthCheck.interval || 30) * 1000000000,
               Timeout: (manifest.healthCheck.timeout || 10) * 1000000000,
               Retries: manifest.healthCheck.retries || 3,
@@ -1231,7 +1285,8 @@ export class DockerService extends EventEmitter {
       if (newManifest.volumes) {
         for (const vol of newManifest.volumes) {
           const volumeName = `${config.plugins.volumePrefix}${vol.name}`;
-          volumeBinds.push(`${volumeName}:${vol.containerPath}${vol.readOnly ? ':ro' : ''}`);
+          const mountPath = vol.containerPath || vol.path;
+          volumeBinds.push(`${volumeName}:${mountPath}${vol.readOnly ? ':ro' : ''}`);
         }
       }
 
@@ -1253,7 +1308,7 @@ export class DockerService extends EventEmitter {
           NanoCpus: this.parseCpu(newManifest.resources?.cpu || '1'),
         },
         Healthcheck: newManifest.healthCheck ? {
-          Test: ['CMD', 'curl', '-f', `http://localhost:${newManifest.port}${newManifest.healthCheck.path || '/health'}`],
+          Test: ['CMD-SHELL', `python3 -c "import urllib.request; urllib.request.urlopen('http://localhost:${newManifest.port}${newManifest.healthCheck.path || '/health'}')" 2>/dev/null || wget --spider -q http://localhost:${newManifest.port}${newManifest.healthCheck.path || '/health'} 2>/dev/null || curl -sf http://localhost:${newManifest.port}${newManifest.healthCheck.path || '/health'} >/dev/null`],
           Interval: (newManifest.healthCheck.interval || 30) * 1000000000,
           Timeout: (newManifest.healthCheck.timeout || 10) * 1000000000,
           Retries: newManifest.healthCheck.retries || 3,

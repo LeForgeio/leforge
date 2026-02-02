@@ -20,6 +20,7 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { agentService } from '../services/agent.service.js';
 import { llmService } from '../services/llm.service.js';
+import { userService } from '../services/user.service.js';
 import { logger } from '../utils/logger.js';
 import {
   CreateAgentRequest,
@@ -80,10 +81,13 @@ export async function agentRoutes(fastify: FastifyInstance) {
       const { includePrivate, limit, offset } = request.query;
       
       // If authenticated, can see private agents
-      const canSeePrivate = !!(request as any).apiKey || !!(request as any).user;
+      const isAuthenticated = !!(request as any).apiKey || !!(request as any).user;
+      
+      // Default to showing private agents if authenticated, unless explicitly disabled
+      const showPrivate = includePrivate !== false && isAuthenticated;
       
       const agents = await agentService.listAgents({
-        includePrivate: includePrivate && canSeePrivate,
+        includePrivate: showPrivate,
         limit: limit ? parseInt(String(limit)) : undefined,
         offset: offset ? parseInt(String(offset)) : undefined,
       });
@@ -146,8 +150,34 @@ export async function agentRoutes(fastify: FastifyInstance) {
       }
 
       try {
-        const createdBy = (request as any).apiKey?.id || (request as any).user?.id;
-        const agent = await agentService.createAgent(body, createdBy);
+        // Determine the owner:
+        // 1. Use explicitly provided owner_id if set
+        // 2. Fall back to current user ID
+        // 3. Fall back to API key creator's user ID
+        // 4. Use undefined if none available
+        let ownerId: string | undefined = undefined;
+        
+        if (body.owner_id) {
+          // Validate the owner exists
+          const owner = await userService.getUserById(body.owner_id);
+          if (!owner) {
+            return reply.status(400).send({
+              error: {
+                code: 'VALIDATION_ERROR',
+                message: 'Invalid owner_id: user not found',
+              },
+            });
+          }
+          ownerId = body.owner_id;
+        } else {
+          // Use current user or API key creator
+          const userId = (request as any).user?.id;
+          const apiKeyCreator = (request as any).apiKey?.createdBy;
+          ownerId = (userId && userId.trim()) || (apiKeyCreator && apiKeyCreator.trim()) || undefined;
+        }
+        
+        logger.info({ ownerId, explicitOwner: !!body.owner_id }, 'Agent creation - resolved owner');
+        const agent = await agentService.createAgent(body, ownerId);
         
         return reply.status(201).send({
           agent,
@@ -506,6 +536,92 @@ export async function agentRoutes(fastify: FastifyInstance) {
           error: {
             code: 'INTERNAL_ERROR',
             message: 'Failed to create sample agents',
+          },
+        });
+      }
+    }
+  );
+
+  // ===========================================================================
+  // User/Owner Management Endpoints
+  // ===========================================================================
+
+  /**
+   * GET /api/v1/agents/owners
+   * Get users available for agent ownership (both regular and service users)
+   */
+  fastify.get(
+    '/api/v1/agents/owners',
+    async (_request: FastifyRequest, reply: FastifyReply) => {
+      try {
+        const users = await userService.getUsersForAgentOwnership();
+        return reply.send({
+          users: users.map(u => ({
+            id: u.id,
+            username: u.username,
+            displayName: u.displayName,
+            isServiceAccount: u.isServiceAccount,
+            role: u.role,
+          })),
+        });
+      } catch (error) {
+        logger.error({ error }, 'Failed to get owners list');
+        return reply.status(500).send({
+          error: {
+            code: 'INTERNAL_ERROR',
+            message: 'Failed to get owners list',
+          },
+        });
+      }
+    }
+  );
+
+  /**
+   * POST /api/v1/agents/service-users
+   * Create a service user for agent ownership
+   */
+  fastify.post<{ Body: { name: string; description?: string } }>(
+    '/api/v1/agents/service-users',
+    async (request: FastifyRequest<{ Body: { name: string; description?: string } }>, reply: FastifyReply) => {
+      const { name, description } = request.body;
+
+      if (!name || typeof name !== 'string' || name.trim().length === 0) {
+        return reply.status(400).send({
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: 'Service user name is required',
+          },
+        });
+      }
+
+      try {
+        const serviceUser = await userService.createServiceUser(name.trim(), description);
+        return reply.status(201).send({
+          user: {
+            id: serviceUser.id,
+            username: serviceUser.username,
+            displayName: serviceUser.displayName,
+            isServiceAccount: serviceUser.isServiceAccount,
+            role: serviceUser.role,
+          },
+        });
+      } catch (error) {
+        const err = error as Error;
+        
+        if (err.message.includes('duplicate') || err.message.includes('unique')) {
+          return reply.status(409).send({
+            error: {
+              code: 'CONFLICT',
+              message: 'A service user with this name already exists',
+            },
+          });
+        }
+        
+        logger.error({ error: err }, 'Failed to create service user');
+        return reply.status(500).send({
+          error: {
+            code: 'INTERNAL_ERROR',
+            message: 'Failed to create service user',
           },
         });
       }

@@ -4,6 +4,9 @@ import { config } from '../config/index.js';
 import { logger } from '../utils/logger.js';
 import { userService, UserRole, ROLE_PERMISSIONS } from './user.service.js';
 
+// Well-known UUID for the system/admin user
+export const SYSTEM_USER_ID = '00000000-0000-0000-0000-000000000001';
+
 // =============================================================================
 // Types
 // =============================================================================
@@ -126,7 +129,7 @@ class AuthService {
 
       if (passwordMatch) {
         const user: User = {
-          id: 'admin',
+          id: SYSTEM_USER_ID,
           username: config.auth.adminUser,
           displayName: 'Administrator',
           role: 'admin',

@@ -86,10 +86,16 @@ export async function apiKeysRoutes(fastify: FastifyInstance) {
     async (request: FastifyRequest<{ Querystring: ListKeysQuery }>, reply: FastifyReply) => {
       const { includeRevoked, includeExpired } = request.query;
       
+      // For admin users or config-based auth (non-UUID id like 'admin'), show all keys
+      // For regular users with UUID ids, filter by createdBy
+      const isUuid = request.user?.id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(request.user.id);
+      const isAdmin = request.user?.role === 'admin';
+      
       const keys = await apiKeyService.listApiKeys({
         includeRevoked: includeRevoked === true || includeRevoked === 'true' as unknown as boolean,
         includeExpired: includeExpired === true || includeExpired === 'true' as unknown as boolean,
-        createdBy: request.user?.id,
+        // Only filter by createdBy for non-admin users with valid UUID
+        createdBy: (!isAdmin && isUuid) ? request.user?.id : undefined,
       });
       
       // Add status to each key
@@ -178,7 +184,9 @@ export async function apiKeysRoutes(fastify: FastifyInstance) {
         metadata: body.metadata,
       };
 
-      const result = await apiKeyService.createApiKey(createRequest, request.user?.id);
+      // Only pass user ID if it's a valid UUID (not for config-based auth like 'admin')
+      const isValidUuid = request.user?.id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(request.user.id);
+      const result = await apiKeyService.createApiKey(createRequest, isValidUuid ? request.user?.id : undefined);
       
       return reply.status(201).send({
         apiKey: {

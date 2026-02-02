@@ -1,5 +1,5 @@
 import { EventEmitter } from 'events';
-import { randomUUID } from 'crypto';
+import { randomUUID, randomBytes, createHash, createHmac } from 'crypto';
 import * as vm from 'vm';
 import { logger } from '../utils/logger.js';
 import {
@@ -658,9 +658,48 @@ export class EmbeddedPluginService extends EventEmitter {
       setInterval: undefined,
       setImmediate: undefined,
 
+      // Safe crypto subset
+      crypto: {
+        randomBytes: (size: number) => randomBytes(size),
+        randomUUID: () => randomUUID(),
+        createHash: (algorithm: string) => createHash(algorithm),
+        createHmac: (algorithm: string, key: string | Buffer) => createHmac(algorithm, key),
+      },
+
+      // Safe Uint8Array
+      Uint8Array,
+      Uint16Array,
+      Uint32Array,
+      Int8Array,
+      Int16Array,
+      Int32Array,
+      Float32Array,
+      Float64Array,
+      ArrayBuffer,
+      DataView,
+      Buffer: {
+        from: (data: unknown, encoding?: string) => Buffer.from(data as never, encoding as never),
+        alloc: (size: number) => Buffer.alloc(size),
+        allocUnsafe: (size: number) => Buffer.allocUnsafe(size),
+        concat: (buffers: Buffer[]) => Buffer.concat(buffers),
+        isBuffer: (obj: unknown) => Buffer.isBuffer(obj),
+      },
+
+      // Limited require (only allows specific safe modules)
+      require: (moduleName: string) => {
+        if (moduleName === 'crypto') {
+          return {
+            randomBytes: (size: number) => randomBytes(size),
+            randomUUID: () => randomUUID(),
+            createHash: (algorithm: string) => createHash(algorithm),
+            createHmac: (algorithm: string, key: string | Buffer) => createHmac(algorithm, key),
+          };
+        }
+        throw new Error(`Module '${moduleName}' is not available in embedded plugins`);
+      },
+
       // Explicitly undefined dangerous globals
       process: undefined,
-      require: undefined,
       global: undefined,
       globalThis: undefined,
       eval: undefined,

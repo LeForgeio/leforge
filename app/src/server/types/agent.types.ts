@@ -133,6 +133,7 @@ export interface CreateAgentRequest {
   tools: string[];
   config?: Partial<AgentConfig>;
   is_public?: boolean;
+  owner_id?: string;  // User ID to own this agent (defaults to current user)
 }
 
 export interface UpdateAgentRequest {

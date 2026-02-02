@@ -45,7 +45,19 @@
                                         "file":  "packages/date-utils-1.0.0.fhk",
                                         "size":  "12KB",
                                         "runtime":  "embedded"
-                                    }
+                                    },
+                     "timezone-utils":  {
+                                            "version":  "1.0.0",
+                                            "file":  "packages/timezone-utils-1.0.0.fhk",
+                                            "size":  "15KB",
+                                            "runtime":  "embedded"
+                                        },
+                     "unit-converter":  {
+                                            "version":  "1.0.0",
+                                            "file":  "packages/unit-converter-1.0.0.fhk",
+                                            "size":  "18KB",
+                                            "runtime":  "embedded"
+                                        }
                  },
     "plugins":  [
                     {
@@ -372,6 +384,144 @@
                                                                          "defaultTimezone":  "UTC"
                                                                      }
                                                     },
+                                         "resources":  {
+                                                           "memory":  "32Mi",
+                                                           "cpu":  "0.1"
+                                                       }
+                                     }
+                    },
+                    {
+                        "id":  "timezone-utils",
+                        "verified":  true,
+                        "featured":  true,
+                        "repository":  "https://github.com/LeForgeio/registry/tree/main/plugins/timezone-utils",
+                        "manifest":  {
+                                         "$schema":  "https://leforge.io/schemas/forgehook-v1.json",
+                                         "id":  "timezone-utils",
+                                         "name":  "Timezone Utilities",
+                                         "version":  "1.0.0",
+                                         "description":  "Convert times across timezones. Give it a time and get an array of times back in multiple zones. Supports 60+ major cities and all IANA timezones.",
+                                         "author":  {
+                                                        "name":  "LeForge Team",
+                                                        "url":  "https://leforge.io"
+                                                    },
+                                         "license":  "MIT",
+                                         "icon":  "globe",
+                                         "category":  "utility",
+                                         "tags":  ["timezone", "time", "convert", "world", "clock", "meeting", "schedule", "embedded", "offline"],
+                                         "runtime":  "embedded",
+                                         "embedded":  {
+                                                          "entrypoint":  "index.js",
+                                                          "exports":  ["convert", "convertSingle", "now", "listTimezones", "getTimezoneInfo", "timeDifference", "findMeetingTime"],
+                                                          "timeout":  1000,
+                                                          "memoryLimit":  32
+                                                      },
+                                         "endpoints":  [
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/convert",
+                                                               "description":  "Convert time to multiple timezones"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/convertSingle",
+                                                               "description":  "Convert time to a single timezone"
+                                                           },
+                                                           {
+                                                               "method":  "GET",
+                                                               "path":  "/now",
+                                                               "description":  "Get current time in multiple timezones"
+                                                           },
+                                                           {
+                                                               "method":  "GET",
+                                                               "path":  "/listTimezones",
+                                                               "description":  "List all available timezones"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/getTimezoneInfo",
+                                                               "description":  "Get info about a timezone"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/timeDifference",
+                                                               "description":  "Calculate time difference between zones"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/findMeetingTime",
+                                                               "description":  "Find meeting time across timezones"
+                                                           }
+                                                       ],
+                                         "resources":  {
+                                                           "memory":  "32Mi",
+                                                           "cpu":  "0.1"
+                                                       }
+                                     }
+                    },
+                    {
+                        "id":  "unit-converter",
+                        "verified":  true,
+                        "featured":  true,
+                        "repository":  "https://github.com/LeForgeio/registry/tree/main/plugins/unit-converter",
+                        "manifest":  {
+                                         "$schema":  "https://leforge.io/schemas/forgehook-v1.json",
+                                         "id":  "unit-converter",
+                                         "name":  "Unit Converter",
+                                         "version":  "1.0.0",
+                                         "description":  "Convert between units of measurement. Supports length (miles, km, meters, yards), weight (pounds, kg, ounces), volume, temperature, area, speed, and data sizes.",
+                                         "author":  {
+                                                        "name":  "LeForge Team",
+                                                        "url":  "https://leforge.io"
+                                                    },
+                                         "license":  "MIT",
+                                         "icon":  "ruler",
+                                         "category":  "utility",
+                                         "tags":  ["unit", "converter", "length", "weight", "volume", "temperature", "measurement", "embedded", "offline"],
+                                         "runtime":  "embedded",
+                                         "embedded":  {
+                                                          "entrypoint":  "index.js",
+                                                          "exports":  ["convert", "convertMultiple", "convertLength", "convertWeight", "convertVolume", "convertTemperature", "convertSpeed", "convertData", "convertArea", "listUnits", "parseUnit"],
+                                                          "timeout":  1000,
+                                                          "memoryLimit":  32
+                                                      },
+                                         "endpoints":  [
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/convert",
+                                                               "description":  "Convert a value between two units"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/convertMultiple",
+                                                               "description":  "Convert a value to multiple units"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/convertLength",
+                                                               "description":  "Convert length to common units"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/convertWeight",
+                                                               "description":  "Convert weight to common units"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/convertVolume",
+                                                               "description":  "Convert volume to common units"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/convertTemperature",
+                                                               "description":  "Convert temperature between scales"
+                                                           },
+                                                           {
+                                                               "method":  "GET",
+                                                               "path":  "/listUnits",
+                                                               "description":  "List available units by category"
+                                                           }
+                                                       ],
                                          "resources":  {
                                                            "memory":  "32Mi",
                                                            "cpu":  "0.1"

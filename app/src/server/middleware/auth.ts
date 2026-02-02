@@ -1,9 +1,12 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { apiKeyService, ApiKey, ApiKeyValidationResult } from '../services/api-key.service.js';
 import { integrationsService } from '../services/integrations.service.js';
-import { authService, User, UserRole, ROLE_PERMISSIONS } from '../services/auth.service.js';
+import { authService, User, UserRole, ROLE_PERMISSIONS, SYSTEM_USER_ID } from '../services/auth.service.js';
 import { config } from '../config/index.js';
 import { logger } from '../utils/logger.js';
+
+// Re-export for backwards compatibility
+export const ANONYMOUS_USER_ID = SYSTEM_USER_ID;
 
 // Extend FastifyRequest to include validated API key and user
 declare module 'fastify' {
@@ -102,7 +105,7 @@ export async function requireSession(
   // If auth is disabled, allow all requests
   if (!authService.isAuthEnabled()) {
     request.user = {
-      id: 'anonymous',
+      id: ANONYMOUS_USER_ID,
       username: 'anonymous',
       displayName: 'Anonymous',
       role: 'admin',
@@ -156,7 +159,7 @@ export async function optionalSession(
   // If auth is disabled, set anonymous user
   if (!authService.isAuthEnabled()) {
     request.user = {
-      id: 'anonymous',
+      id: ANONYMOUS_USER_ID,
       username: 'anonymous',
       displayName: 'Anonymous',
       role: 'admin',

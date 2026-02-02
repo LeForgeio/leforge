@@ -18,6 +18,7 @@ export interface DbUser {
   auth_provider: 'local' | 'oidc';
   oidc_subject: string | null;
   is_active: boolean;
+  is_service_account: boolean;
   last_login_at: Date | null;
   created_at: Date;
   updated_at: Date;
@@ -31,6 +32,7 @@ export interface User {
   role: UserRole;
   authProvider: 'local' | 'oidc';
   isActive: boolean;
+  isServiceAccount: boolean;
   lastLoginAt?: Date;
   createdAt: Date;
   updatedAt: Date;
@@ -44,6 +46,7 @@ export interface CreateUserInput {
   role?: UserRole;
   authProvider?: 'local' | 'oidc';
   oidcSubject?: string;
+  isServiceAccount?: boolean;
 }
 
 export interface UpdateUserInput {
@@ -116,6 +119,7 @@ class UserService {
       role: row.role,
       authProvider: row.auth_provider,
       isActive: row.is_active,
+      isServiceAccount: row.is_service_account,
       lastLoginAt: row.last_login_at || undefined,
       createdAt: row.created_at,
       updatedAt: row.updated_at,
@@ -217,20 +221,21 @@ class UserService {
       role = 'user',
       authProvider = 'local',
       oidcSubject,
+      isServiceAccount = false,
     } = input;
 
     // Hash password if provided
     const passwordHash = password ? await this.hashPassword(password) : null;
 
     const result = await databaseService.query(
-      `INSERT INTO users (username, display_name, email, password_hash, role, auth_provider, oidc_subject)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)
+      `INSERT INTO users (username, display_name, email, password_hash, role, auth_provider, oidc_subject, is_service_account)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
        RETURNING *`,
-      [username, displayName, email, passwordHash, role, authProvider, oidcSubject]
+      [username, displayName, email, passwordHash, role, authProvider, oidcSubject, isServiceAccount]
     );
 
     const user = this.toUser(result.rows[0] as DbUser);
-    logger.info({ username, role }, 'User created');
+    logger.info({ username, role, isServiceAccount }, 'User created');
     return user;
   }
 
@@ -370,6 +375,57 @@ class UserService {
    */
   getPermissions(role: UserRole): (typeof ROLE_PERMISSIONS)[UserRole] {
     return ROLE_PERMISSIONS[role] || ROLE_PERMISSIONS.user;
+  }
+
+  // ===========================================================================
+  // Service Account Methods
+  // ===========================================================================
+
+  /**
+   * Get all service users
+   */
+  async getServiceUsers(): Promise<User[]> {
+    const result = await databaseService.query(
+      'SELECT * FROM users WHERE is_service_account = true ORDER BY username'
+    );
+    return (result.rows as DbUser[]).map((row: DbUser) => this.toUser(row));
+  }
+
+  /**
+   * Get all non-service users (regular users)
+   */
+  async getRegularUsers(): Promise<User[]> {
+    const result = await databaseService.query(
+      'SELECT * FROM users WHERE is_service_account = false ORDER BY created_at DESC'
+    );
+    return (result.rows as DbUser[]).map((row: DbUser) => this.toUser(row));
+  }
+
+  /**
+   * Create a service user for an agent or integration
+   */
+  async createServiceUser(name: string, description?: string): Promise<User> {
+    // Generate a unique username for the service account
+    const username = `svc_${name.toLowerCase().replace(/[^a-z0-9]/g, '_')}`;
+    const displayName = description || `Service: ${name}`;
+
+    return this.createUser({
+      username,
+      displayName,
+      role: 'user', // Service accounts get minimal permissions
+      authProvider: 'local',
+      isServiceAccount: true,
+    });
+  }
+
+  /**
+   * Get users available for agent ownership (both regular and service users)
+   */
+  async getUsersForAgentOwnership(): Promise<User[]> {
+    const result = await databaseService.query(
+      'SELECT * FROM users WHERE is_active = true ORDER BY is_service_account, username'
+    );
+    return (result.rows as DbUser[]).map((row: DbUser) => this.toUser(row));
   }
 }
 

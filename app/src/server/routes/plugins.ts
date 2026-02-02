@@ -941,4 +941,29 @@ export async function pluginRoutes(fastify: FastifyInstance) {
       }
     }
   );
+
+  // ==========================================================================
+  // Resync plugins with registry
+  // ==========================================================================
+  fastify.post(
+    '/resync',
+    async (request, reply) => {
+      try {
+        const result = await dockerService.resyncPluginsWithRegistry();
+        return reply.send({
+          success: true,
+          ...result,
+          message: `Resynced ${result.updated} plugins with registry (${result.skipped} not found in registry)`,
+        });
+      } catch (error) {
+        logger.error({ error }, 'Failed to resync plugins with registry');
+        return reply.status(500).send({
+          error: {
+            code: 'RESYNC_FAILED',
+            message: error instanceof Error ? error.message : 'Failed to resync plugins',
+          },
+        });
+      }
+    }
+  );
 }

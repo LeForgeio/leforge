@@ -18,6 +18,19 @@ export interface Release {
 
 export const changelog: Release[] = [
   {
+    version: '1.4.0',
+    date: '2026-02-02',
+    changes: [
+      { type: 'feature', description: 'Embedded MQTT broker (Mosquitto 2.0.22) with WebSocket support' },
+      { type: 'feature', description: 'Service account support for machine-to-machine authentication' },
+      { type: 'security', description: 'PostgreSQL, Redis, and MQTT passwords via environment variables' },
+      { type: 'security', description: 'Server-side session validation for all SPA routes' },
+      { type: 'security', description: 'Comprehensive security documentation (docs/security.md)' },
+      { type: 'improvement', description: 'Docker entrypoint script for runtime credential configuration' },
+      { type: 'improvement', description: 'Updated CLAUDE.md with port mappings and security config' },
+    ],
+  },
+  {
     version: '1.3.0',
     date: '2026-02-01',
     changes: [
