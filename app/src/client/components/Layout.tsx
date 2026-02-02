@@ -37,7 +37,7 @@ function LeForgeLogo({ collapsed = false }: { collapsed?: boolean }) {
       </div>
       {!collapsed && (
         <span className="text-lg font-semibold tracking-tight">
-          Flow<span className="text-gradient">Forge</span>
+          Le<span className="text-gradient">Forge</span>
         </span>
       )}
     </Link>
