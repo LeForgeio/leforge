@@ -1,4 +1,4 @@
-{
+﻿{
     "version":  "1.1.0",
     "registry":  {
                      "name":  "LeForge Official Registry",
@@ -146,9 +146,9 @@
                         "manifest":  {
                                          "$schema":  "https://leforge.io/schemas/forgehook-v1.json",
                                          "id":  "qrcode-utils",
-                                         "name":  "QR Code & Barcode Generator",
+                                         "name":  "QR Code \u0026 Barcode Generator",
                                          "version":  "1.0.0",
-                                         "description":  "Generate QR codes and barcodes (Code128, EAN-13, UPC-A) with multiple output formats (SVG, Base64 PNG, matrix). Pure TypeScript implementation - zero external dependencies. Built into LeForge core.",
+                                         "description":  "Generate QR codes and barcodes locally without external APIs using pure JavaScript",
                                          "author":  {
                                                         "name":  "LeForge Team",
                                                         "url":  "https://leforge.io"
@@ -160,45 +160,62 @@
                                          "tags":  [
                                                       "qrcode",
                                                       "barcode",
-                                                      "code128",
-                                                      "ean13",
-                                                      "upca",
+                                                      "generator",
                                                       "svg",
-                                                      "core",
-                                                      "built-in"
+                                                      "utilities"
                                                   ],
                                          "runtime":  "core",
                                          "basePath":  "/api/v1/utils",
                                          "endpoints":  [
                                                            {
                                                                "method":  "POST",
-                                                               "path":  "/qr",
-                                                               "description":  "Generate QR code as SVG"
+                                                               "path":  "/generateQRMatrix",
+                                                               "description":  "Generate QR code as a 2D matrix of modules"
                                                            },
                                                            {
                                                                "method":  "POST",
-                                                               "path":  "/qr/base64",
-                                                               "description":  "Generate QR code as Base64 PNG"
+                                                               "path":  "/generateQRSvg",
+                                                               "description":  "Generate QR code as SVG markup"
                                                            },
                                                            {
                                                                "method":  "POST",
-                                                               "path":  "/qr/matrix",
-                                                               "description":  "Generate QR code as raw matrix"
+                                                               "path":  "/generateQRDataUrl",
+                                                               "description":  "Generate QR code as base64 data URL"
                                                            },
                                                            {
                                                                "method":  "POST",
-                                                               "path":  "/barcode/code128",
-                                                               "description":  "Generate Code128 barcode"
+                                                               "path":  "/generateQRAscii",
+                                                               "description":  "Generate QR code as ASCII art"
                                                            },
                                                            {
                                                                "method":  "POST",
-                                                               "path":  "/barcode/ean13",
+                                                               "path":  "/generateCode128",
+                                                               "description":  "Generate Code 128 barcode"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/generateCode39",
+                                                               "description":  "Generate Code 39 barcode"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/generateEAN13",
                                                                "description":  "Generate EAN-13 barcode"
                                                            },
                                                            {
                                                                "method":  "POST",
-                                                               "path":  "/barcode/upca",
+                                                               "path":  "/generateUPCA",
                                                                "description":  "Generate UPC-A barcode"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/generateBarcodeSvg",
+                                                               "description":  "Generate barcode as SVG markup"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/generateBarcodeDataUrl",
+                                                               "description":  "Generate barcode as base64 data URL"
                                                            }
                                                        ],
                                          "resources":  {
@@ -217,7 +234,7 @@
                                          "id":  "string-utils",
                                          "name":  "String Utilities",
                                          "version":  "1.0.0",
-                                         "description":  "Lightweight string manipulation utilities including slugify, camelCase, truncate, sanitize HTML, and more. Runs embedded without Docker overhead.",
+                                         "description":  "Lightweight string manipulation utilities for case conversion, formatting, and sanitization",
                                          "author":  {
                                                         "name":  "LeForge Team",
                                                         "url":  "https://leforge.io"
@@ -229,12 +246,8 @@
                                          "tags":  [
                                                       "string",
                                                       "text",
-                                                      "utility",
-                                                      "slugify",
-                                                      "camelcase",
-                                                      "sanitize",
-                                                      "embedded",
-                                                      "lightweight"
+                                                      "formatting",
+                                                      "utilities"
                                                   ],
                                          "runtime":  "embedded",
                                          "embedded":  {
@@ -257,9 +270,7 @@
                                                                           "padRight",
                                                                           "removeWhitespace",
                                                                           "normalizeWhitespace"
-                                                                      ],
-                                                          "timeout":  1000,
-                                                          "memoryLimit":  32
+                                                                      ]
                                                       },
                                          "endpoints":  [
                                                            {
@@ -295,7 +306,7 @@
                                                            {
                                                                "method":  "POST",
                                                                "path":  "/sanitizeHtml",
-                                                               "description":  "Remove HTML tags from string"
+                                                               "description":  "Remove all HTML tags from string"
                                                            },
                                                            {
                                                                "method":  "POST",
@@ -304,18 +315,48 @@
                                                            },
                                                            {
                                                                "method":  "POST",
+                                                               "path":  "/unescapeHtml",
+                                                               "description":  "Unescape HTML entities"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
                                                                "path":  "/capitalize",
-                                                               "description":  "Capitalize first letter"
+                                                               "description":  "Capitalize first letter of string"
                                                            },
                                                            {
                                                                "method":  "POST",
                                                                "path":  "/titleCase",
-                                                               "description":  "Convert to Title Case"
+                                                               "description":  "Convert string to Title Case"
                                                            },
                                                            {
                                                                "method":  "POST",
                                                                "path":  "/wordCount",
-                                                               "description":  "Count words in string"
+                                                               "description":  "Count words in a string"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/reverse",
+                                                               "description":  "Reverse a string"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/padLeft",
+                                                               "description":  "Pad string on the left to specified length"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/padRight",
+                                                               "description":  "Pad string on the right to specified length"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/removeWhitespace",
+                                                               "description":  "Remove all whitespace from string"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/normalizeWhitespace",
+                                                               "description":  "Normalize whitespace (collapse multiple spaces)"
                                                            }
                                                        ],
                                          "config":  {
@@ -353,7 +394,7 @@
                                          "id":  "date-utils",
                                          "name":  "Date Utilities",
                                          "version":  "1.0.0",
-                                         "description":  "Lightweight date and time manipulation utilities including formatting, parsing, relative time, and date math. Runs embedded without Docker overhead.",
+                                         "description":  "Lightweight date manipulation and formatting utilities for parsing, formatting, and calculating dates",
                                          "author":  {
                                                         "name":  "LeForge Team",
                                                         "url":  "https://leforge.io"
@@ -365,12 +406,9 @@
                                          "tags":  [
                                                       "date",
                                                       "time",
-                                                      "datetime",
-                                                      "format",
-                                                      "parse",
-                                                      "utility",
-                                                      "embedded",
-                                                      "lightweight"
+                                                      "formatting",
+                                                      "parsing",
+                                                      "utilities"
                                                   ],
                                          "runtime":  "embedded",
                                          "embedded":  {
@@ -397,30 +435,43 @@
                                                                           "isBetween",
                                                                           "getWeekday",
                                                                           "getDaysInMonth"
-                                                                      ],
-                                                          "timeout":  1000,
-                                                          "memoryLimit":  32
+                                                                      ]
                                                       },
                                          "endpoints":  [
                                                            {
                                                                "method":  "POST",
                                                                "path":  "/format",
-                                                               "description":  "Format a date to string"
+                                                               "description":  "Format a date with a specified pattern"
                                                            },
                                                            {
                                                                "method":  "POST",
                                                                "path":  "/parse",
-                                                               "description":  "Parse a date string"
+                                                               "description":  "Parse a string into a Date object"
                                                            },
                                                            {
-                                                               "method":  "GET",
+                                                               "method":  "POST",
                                                                "path":  "/now",
-                                                               "description":  "Get current date/time"
+                                                               "description":  "Get current date/time in various formats"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/toISO",
+                                                               "description":  "Convert date to ISO 8601 format"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/toUnix",
+                                                               "description":  "Convert date to Unix timestamp"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/fromUnix",
+                                                               "description":  "Convert Unix timestamp to date"
                                                            },
                                                            {
                                                                "method":  "POST",
                                                                "path":  "/relativeTime",
-                                                               "description":  "Get human-readable relative time"
+                                                               "description":  "Get relative time string (e.g., \u00272 hours ago\u0027)"
                                                            },
                                                            {
                                                                "method":  "POST",
@@ -429,18 +480,68 @@
                                                            },
                                                            {
                                                                "method":  "POST",
+                                                               "path":  "/addHours",
+                                                               "description":  "Add hours to a date"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/addMinutes",
+                                                               "description":  "Add minutes to a date"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/addMonths",
+                                                               "description":  "Add months to a date"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/addYears",
+                                                               "description":  "Add years to a date"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
                                                                "path":  "/diff",
-                                                               "description":  "Calculate difference between dates"
+                                                               "description":  "Calculate difference between two dates"
                                                            },
                                                            {
                                                                "method":  "POST",
                                                                "path":  "/startOf",
-                                                               "description":  "Get start of day/week/month/year"
+                                                               "description":  "Get start of period (day, week, month, year)"
                                                            },
                                                            {
                                                                "method":  "POST",
                                                                "path":  "/endOf",
-                                                               "description":  "Get end of day/week/month/year"
+                                                               "description":  "Get end of period (day, week, month, year)"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/isValid",
+                                                               "description":  "Check if a date is valid"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/isBefore",
+                                                               "description":  "Check if date A is before date B"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/isAfter",
+                                                               "description":  "Check if date A is after date B"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/isBetween",
+                                                               "description":  "Check if date is between two other dates"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/getWeekday",
+                                                               "description":  "Get day of week for a date"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/getDaysInMonth",
+                                                               "description":  "Get number of days in a month"
                                                            }
                                                        ],
                                          "config":  {
@@ -478,7 +579,7 @@
                                          "id":  "timezone-utils",
                                          "name":  "Timezone Utilities",
                                          "version":  "1.0.0",
-                                         "description":  "Convert times across timezones. Give it a time and get an array of times back in multiple zones. Supports 60+ major cities and all IANA timezones.",
+                                         "description":  "Convert times across multiple timezones with business hours and meeting time support",
                                          "author":  {
                                                         "name":  "LeForge Team",
                                                         "url":  "https://leforge.io"
@@ -486,49 +587,61 @@
                                          "license":  "MIT",
                                          "icon":  "globe",
                                          "category":  "utility",
-                                         "tags":  ["timezone", "time", "convert", "world", "clock", "meeting", "schedule", "embedded", "offline"],
+                                         "tags":  [
+                                                      "timezone",
+                                                      "time",
+                                                      "conversion",
+                                                      "meeting",
+                                                      "utilities"
+                                                  ],
                                          "runtime":  "embedded",
                                          "embedded":  {
                                                           "entrypoint":  "index.js",
-                                                          "exports":  ["convert", "convertSingle", "now", "listTimezones", "getTimezoneInfo", "timeDifference", "findMeetingTime"],
-                                                          "timeout":  1000,
-                                                          "memoryLimit":  32
+                                                          "exports":  [
+                                                                          "convert",
+                                                                          "convertSingle",
+                                                                          "now",
+                                                                          "listTimezones",
+                                                                          "getTimezoneInfo",
+                                                                          "timeDifference",
+                                                                          "findMeetingTime"
+                                                                      ]
                                                       },
                                          "endpoints":  [
                                                            {
                                                                "method":  "POST",
                                                                "path":  "/convert",
-                                                               "description":  "Convert time to multiple timezones"
+                                                               "description":  "Convert time from one timezone to another"
                                                            },
                                                            {
                                                                "method":  "POST",
                                                                "path":  "/convertSingle",
-                                                               "description":  "Convert time to a single timezone"
+                                                               "description":  "Convert a single time to target timezone"
                                                            },
                                                            {
-                                                               "method":  "GET",
+                                                               "method":  "POST",
                                                                "path":  "/now",
-                                                               "description":  "Get current time in multiple timezones"
+                                                               "description":  "Get current time in specified timezone"
                                                            },
                                                            {
-                                                               "method":  "GET",
+                                                               "method":  "POST",
                                                                "path":  "/listTimezones",
-                                                               "description":  "List all available timezones"
+                                                               "description":  "List all supported timezones"
                                                            },
                                                            {
                                                                "method":  "POST",
                                                                "path":  "/getTimezoneInfo",
-                                                               "description":  "Get info about a timezone"
+                                                               "description":  "Get detailed info about a timezone"
                                                            },
                                                            {
                                                                "method":  "POST",
                                                                "path":  "/timeDifference",
-                                                               "description":  "Calculate time difference between zones"
+                                                               "description":  "Calculate time difference between timezones"
                                                            },
                                                            {
                                                                "method":  "POST",
                                                                "path":  "/findMeetingTime",
-                                                               "description":  "Find meeting time across timezones"
+                                                               "description":  "Find optimal meeting time across timezones"
                                                            }
                                                        ],
                                          "resources":  {
@@ -547,7 +660,7 @@
                                          "id":  "unit-converter",
                                          "name":  "Unit Converter",
                                          "version":  "1.0.0",
-                                         "description":  "Convert between units of measurement. Supports length (miles, km, meters, yards), weight (pounds, kg, ounces), volume, temperature, area, speed, and data sizes.",
+                                         "description":  "Convert between units of length, weight, volume, temperature, speed, data, and area",
                                          "author":  {
                                                         "name":  "LeForge Team",
                                                         "url":  "https://leforge.io"
@@ -555,49 +668,84 @@
                                          "license":  "MIT",
                                          "icon":  "ruler",
                                          "category":  "utility",
-                                         "tags":  ["unit", "converter", "length", "weight", "volume", "temperature", "measurement", "embedded", "offline"],
+                                         "tags":  [
+                                                      "units",
+                                                      "conversion",
+                                                      "measurement",
+                                                      "utilities"
+                                                  ],
                                          "runtime":  "embedded",
                                          "embedded":  {
                                                           "entrypoint":  "index.js",
-                                                          "exports":  ["convert", "convertMultiple", "convertLength", "convertWeight", "convertVolume", "convertTemperature", "convertSpeed", "convertData", "convertArea", "listUnits", "parseUnit"],
-                                                          "timeout":  1000,
-                                                          "memoryLimit":  32
+                                                          "exports":  [
+                                                                          "convert",
+                                                                          "convertMultiple",
+                                                                          "convertLength",
+                                                                          "convertWeight",
+                                                                          "convertVolume",
+                                                                          "convertTemperature",
+                                                                          "convertSpeed",
+                                                                          "convertData",
+                                                                          "convertArea",
+                                                                          "listUnits",
+                                                                          "parseUnit"
+                                                                      ]
                                                       },
                                          "endpoints":  [
                                                            {
                                                                "method":  "POST",
                                                                "path":  "/convert",
-                                                               "description":  "Convert a value between two units"
+                                                               "description":  "Convert value between any compatible units"
                                                            },
                                                            {
                                                                "method":  "POST",
                                                                "path":  "/convertMultiple",
-                                                               "description":  "Convert a value to multiple units"
+                                                               "description":  "Convert to multiple target units at once"
                                                            },
                                                            {
                                                                "method":  "POST",
                                                                "path":  "/convertLength",
-                                                               "description":  "Convert length to common units"
+                                                               "description":  "Convert length units (meters, feet, miles, etc.)"
                                                            },
                                                            {
                                                                "method":  "POST",
                                                                "path":  "/convertWeight",
-                                                               "description":  "Convert weight to common units"
+                                                               "description":  "Convert weight units (kg, lb, oz, etc.)"
                                                            },
                                                            {
                                                                "method":  "POST",
                                                                "path":  "/convertVolume",
-                                                               "description":  "Convert volume to common units"
+                                                               "description":  "Convert volume units (liters, gallons, etc.)"
                                                            },
                                                            {
                                                                "method":  "POST",
                                                                "path":  "/convertTemperature",
-                                                               "description":  "Convert temperature between scales"
+                                                               "description":  "Convert temperature (Celsius, Fahrenheit, Kelvin)"
                                                            },
                                                            {
-                                                               "method":  "GET",
+                                                               "method":  "POST",
+                                                               "path":  "/convertSpeed",
+                                                               "description":  "Convert speed units (mph, km/h, m/s, etc.)"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/convertData",
+                                                               "description":  "Convert data units (bytes, KB, MB, GB, etc.)"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/convertArea",
+                                                               "description":  "Convert area units (sq meters, acres, etc.)"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
                                                                "path":  "/listUnits",
-                                                               "description":  "List available units by category"
+                                                               "description":  "List all supported units by category"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/parseUnit",
+                                                               "description":  "Parse and normalize a unit string"
                                                            }
                                                        ],
                                          "resources":  {
@@ -1935,7 +2083,20 @@
                                          "repository":  "https://github.com/LeForgeio/registry",
                                          "icon":  "table",
                                          "category":  "data",
-                                         "tags":  ["excel", "formulas", "spreadsheet", "functions", "math", "financial", "lookup", "text", "dates", "vlookup", "calculations", "embedded"],
+                                         "tags":  [
+                                                      "excel",
+                                                      "formulas",
+                                                      "spreadsheet",
+                                                      "functions",
+                                                      "math",
+                                                      "financial",
+                                                      "lookup",
+                                                      "text",
+                                                      "dates",
+                                                      "vlookup",
+                                                      "calculations",
+                                                      "embedded"
+                                                  ],
                                          "runtime":  "embedded",
                                          "embedded":  {
                                                           "entrypoint":  "index.js",
@@ -2012,7 +2173,14 @@
                                          "author":  "LeForge",
                                          "license":  "MIT",
                                          "category":  "ai",
-                                         "tags":  ["ai", "llm", "local", "inference", "azure", "foundry"],
+                                         "tags":  [
+                                                      "ai",
+                                                      "llm",
+                                                      "local",
+                                                      "inference",
+                                                      "azure",
+                                                      "foundry"
+                                                  ],
                                          "runtime":  "gateway",
                                          "gateway":  {
                                                          "baseUrl":  "${FOUNDRY_LOCAL_URL:-http://localhost:5272}",
@@ -2061,7 +2229,13 @@
                                          "author":  "LeForge",
                                          "license":  "MIT",
                                          "category":  "ai",
-                                         "tags":  ["ai", "llm", "local", "lm-studio", "openai-compatible"],
+                                         "tags":  [
+                                                      "ai",
+                                                      "llm",
+                                                      "local",
+                                                      "lm-studio",
+                                                      "openai-compatible"
+                                                  ],
                                          "runtime":  "gateway",
                                          "gateway":  {
                                                          "baseUrl":  "${LM_STUDIO_URL:-http://localhost:1234}",
@@ -2115,7 +2289,15 @@
                                          "license":  "MIT",
                                          "icon":  "bot",
                                          "category":  "ai",
-                                         "tags":  ["llm", "ai", "local", "ollama", "inference", "agent-runtime", "required"],
+                                         "tags":  [
+                                                      "llm",
+                                                      "ai",
+                                                      "local",
+                                                      "ollama",
+                                                      "inference",
+                                                      "agent-runtime",
+                                                      "required"
+                                                  ],
                                          "runtime":  "container",
                                          "image":  {
                                                        "repository":  "ollama/ollama",
@@ -2189,7 +2371,18 @@
                                          "license":  "MIT",
                                          "icon":  "server",
                                          "category":  "integration",
-                                         "tags":  ["on-prem", "database", "sql-server", "postgresql", "mysql", "api", "ldap", "active-directory", "hybrid-cloud", "connector"],
+                                         "tags":  [
+                                                      "on-prem",
+                                                      "database",
+                                                      "sql-server",
+                                                      "postgresql",
+                                                      "mysql",
+                                                      "api",
+                                                      "ldap",
+                                                      "active-directory",
+                                                      "hybrid-cloud",
+                                                      "connector"
+                                                  ],
                                          "runtime":  "container",
                                          "image":  {
                                                        "repository":  "leforge/onprem-connector",
@@ -2289,7 +2482,20 @@
                                          "license":  "MIT",
                                          "icon":  "cloud-upload",
                                          "category":  "data",
-                                         "tags":  ["files", "streaming", "upload", "download", "s3", "azure", "gcs", "chunked", "resumable", "large-files", "transcoding", "pdf"],
+                                         "tags":  [
+                                                      "files",
+                                                      "streaming",
+                                                      "upload",
+                                                      "download",
+                                                      "s3",
+                                                      "azure",
+                                                      "gcs",
+                                                      "chunked",
+                                                      "resumable",
+                                                      "large-files",
+                                                      "transcoding",
+                                                      "pdf"
+                                                  ],
                                          "runtime":  "container",
                                          "image":  {
                                                        "repository":  "leforge/streaming-file-service",
@@ -2409,11 +2615,38 @@
                                          "license":  "MIT",
                                          "icon":  "check-circle",
                                          "category":  "utility",
-                                         "tags":  ["validation", "email", "phone", "url", "iban", "vat", "credit-card", "embedded", "offline"],
+                                         "tags":  [
+                                                      "validation",
+                                                      "email",
+                                                      "phone",
+                                                      "url",
+                                                      "iban",
+                                                      "vat",
+                                                      "credit-card",
+                                                      "embedded",
+                                                      "offline"
+                                                  ],
                                          "runtime":  "embedded",
                                          "embedded":  {
                                                           "entrypoint":  "index.js",
-                                                          "exports":  ["isEmail", "isPhone", "isURL", "isUUID", "isIBAN", "isVATNumber", "isCreditCard", "getCreditCardType", "isPostalCode", "isIPv4", "isIPv6", "isMACAddress", "isHexColor", "isJSON", "isBase64", "validateAll"],
+                                                          "exports":  [
+                                                                          "isEmail",
+                                                                          "isPhone",
+                                                                          "isURL",
+                                                                          "isUUID",
+                                                                          "isIBAN",
+                                                                          "isVATNumber",
+                                                                          "isCreditCard",
+                                                                          "getCreditCardType",
+                                                                          "isPostalCode",
+                                                                          "isIPv4",
+                                                                          "isIPv6",
+                                                                          "isMACAddress",
+                                                                          "isHexColor",
+                                                                          "isJSON",
+                                                                          "isBase64",
+                                                                          "validateAll"
+                                                                      ],
                                                           "timeout":  1000,
                                                           "memoryLimit":  32
                                                       },
@@ -2479,7 +2712,7 @@
                                          "id":  "content-filter",
                                          "name":  "Content Filter",
                                          "version":  "1.0.0",
-                                         "description":  "Profanity filtering and content moderation locally. No external API calls - uses local word lists. Includes PII detection and spam analysis.",
+                                         "description":  "Filter and sanitize content for profanity, PII, and spam detection",
                                          "author":  {
                                                         "name":  "LeForge Team",
                                                         "url":  "https://leforge.io"
@@ -2487,54 +2720,116 @@
                                          "license":  "MIT",
                                          "icon":  "shield",
                                          "category":  "security",
-                                         "tags":  ["profanity", "filter", "moderation", "content", "safety", "pii", "spam", "embedded", "offline"],
+                                         "tags":  [
+                                                      "filter",
+                                                      "profanity",
+                                                      "moderation",
+                                                      "pii",
+                                                      "spam",
+                                                      "security"
+                                                  ],
                                          "runtime":  "embedded",
                                          "embedded":  {
                                                           "entrypoint":  "index.js",
-                                                          "exports":  ["containsProfanity", "findProfanity", "filterProfanity", "clean", "analyze", "rateSafety", "detectPII", "detectSpam", "sanitize", "configure", "addWords", "removeWords", "addToWhitelist"],
-                                                          "timeout":  2000,
-                                                          "memoryLimit":  64
+                                                          "exports":  [
+                                                                          "configure",
+                                                                          "addWords",
+                                                                          "removeWords",
+                                                                          "addToWhitelist",
+                                                                          "getWordLists",
+                                                                          "containsProfanity",
+                                                                          "findProfanity",
+                                                                          "filterProfanity",
+                                                                          "clean",
+                                                                          "analyze",
+                                                                          "rateSafety",
+                                                                          "detectPII",
+                                                                          "detectSpam",
+                                                                          "sanitize",
+                                                                          "testWord",
+                                                                          "censorWord"
+                                                                      ]
                                                       },
                                          "endpoints":  [
                                                            {
                                                                "method":  "POST",
-                                                               "path":  "/check",
+                                                               "path":  "/configure",
+                                                               "description":  "Configure the content filter settings"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/addWords",
+                                                               "description":  "Add words to the profanity filter list"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/removeWords",
+                                                               "description":  "Remove words from the profanity filter list"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/addToWhitelist",
+                                                               "description":  "Add words to the whitelist (ignored by filter)"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/getWordLists",
+                                                               "description":  "Get current filter and whitelist word lists"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/containsProfanity",
                                                                "description":  "Check if text contains profanity"
                                                            },
                                                            {
                                                                "method":  "POST",
-                                                               "path":  "/filter",
-                                                               "description":  "Filter/censor profanity in text"
+                                                               "path":  "/findProfanity",
+                                                               "description":  "Find all profanity words in text"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/filterProfanity",
+                                                               "description":  "Replace profanity with asterisks"
                                                            },
                                                            {
                                                                "method":  "POST",
                                                                "path":  "/clean",
-                                                               "description":  "Clean text by removing profanity"
+                                                               "description":  "Clean text by removing/replacing profanity"
                                                            },
                                                            {
                                                                "method":  "POST",
                                                                "path":  "/analyze",
-                                                               "description":  "Analyze text for profanity with details"
+                                                               "description":  "Analyze text for various content issues"
                                                            },
                                                            {
                                                                "method":  "POST",
-                                                               "path":  "/rate-safety",
-                                                               "description":  "Rate content safety (0-100)"
+                                                               "path":  "/rateSafety",
+                                                               "description":  "Rate content safety on a scale"
                                                            },
                                                            {
                                                                "method":  "POST",
-                                                               "path":  "/detect-pii",
-                                                               "description":  "Detect personal information patterns"
+                                                               "path":  "/detectPII",
+                                                               "description":  "Detect personally identifiable information"
                                                            },
                                                            {
                                                                "method":  "POST",
-                                                               "path":  "/detect-spam",
-                                                               "description":  "Check for spam patterns"
+                                                               "path":  "/detectSpam",
+                                                               "description":  "Detect spam patterns in text"
                                                            },
                                                            {
                                                                "method":  "POST",
                                                                "path":  "/sanitize",
-                                                               "description":  "Sanitize text (remove PII, filter profanity)"
+                                                               "description":  "Sanitize text by removing all flagged content"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/testWord",
+                                                               "description":  "Test if a specific word is in the filter"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/censorWord",
+                                                               "description":  "Censor a specific word with replacement chars"
                                                            }
                                                        ],
                                          "resources":  {
@@ -2553,7 +2848,7 @@
                                          "id":  "excel-utils",
                                          "name":  "Excel Utilities",
                                          "version":  "1.0.0",
-                                         "description":  "Parse and generate Excel (XLSX) and CSV files locally. Zero external dependencies - pure JavaScript implementation. Includes data manipulation functions.",
+                                         "description":  "Parse and manipulate CSV and XLSX data with filtering, sorting, and aggregation",
                                          "author":  {
                                                         "name":  "LeForge Team",
                                                         "url":  "https://leforge.io"
@@ -2561,64 +2856,139 @@
                                          "license":  "MIT",
                                          "icon":  "file-spreadsheet",
                                          "category":  "data",
-                                         "tags":  ["excel", "xlsx", "csv", "spreadsheet", "parse", "generate", "data", "embedded", "offline"],
+                                         "tags":  [
+                                                      "excel",
+                                                      "csv",
+                                                      "xlsx",
+                                                      "spreadsheet",
+                                                      "data"
+                                                  ],
                                          "runtime":  "embedded",
                                          "embedded":  {
                                                           "entrypoint":  "index.js",
-                                                          "exports":  ["parseCSV", "toCSV", "parseXLSX", "getSheetNames", "getColumn", "getRow", "filterRows", "sortRows", "groupBy", "aggregate", "pivot", "join", "mapColumns", "distinct"],
-                                                          "timeout":  5000,
-                                                          "memoryLimit":  128
+                                                          "exports":  [
+                                                                          "parseCSV",
+                                                                          "toCSV",
+                                                                          "parseXLSX",
+                                                                          "getSheetNames",
+                                                                          "getColumn",
+                                                                          "getRow",
+                                                                          "filterRows",
+                                                                          "sortRows",
+                                                                          "groupBy",
+                                                                          "aggregate",
+                                                                          "pivot",
+                                                                          "join",
+                                                                          "mapColumns",
+                                                                          "distinct",
+                                                                          "columnToIndex",
+                                                                          "indexToColumn",
+                                                                          "cellToIndex",
+                                                                          "indexToCell",
+                                                                          "getCell",
+                                                                          "setCell"
+                                                                      ]
                                                       },
                                          "endpoints":  [
                                                            {
                                                                "method":  "POST",
-                                                               "path":  "/parse-csv",
-                                                               "description":  "Parse CSV string to structured data"
+                                                               "path":  "/parseCSV",
+                                                               "description":  "Parse CSV string into array of objects"
                                                            },
                                                            {
                                                                "method":  "POST",
-                                                               "path":  "/to-csv",
-                                                               "description":  "Convert data to CSV string"
+                                                               "path":  "/toCSV",
+                                                               "description":  "Convert array of objects to CSV string"
                                                            },
                                                            {
                                                                "method":  "POST",
-                                                               "path":  "/parse-xlsx",
-                                                               "description":  "Parse XLSX file from base64"
+                                                               "path":  "/parseXLSX",
+                                                               "description":  "Parse XLSX binary data into sheet data"
                                                            },
                                                            {
                                                                "method":  "POST",
-                                                               "path":  "/get-sheets",
-                                                               "description":  "Get sheet names from XLSX"
+                                                               "path":  "/getSheetNames",
+                                                               "description":  "Get list of sheet names from XLSX"
                                                            },
                                                            {
                                                                "method":  "POST",
-                                                               "path":  "/filter",
-                                                               "description":  "Filter rows based on condition"
+                                                               "path":  "/getColumn",
+                                                               "description":  "Extract a column from data array"
                                                            },
                                                            {
                                                                "method":  "POST",
-                                                               "path":  "/sort",
-                                                               "description":  "Sort rows by column"
+                                                               "path":  "/getRow",
+                                                               "description":  "Get a specific row from data array"
                                                            },
                                                            {
                                                                "method":  "POST",
-                                                               "path":  "/group-by",
+                                                               "path":  "/filterRows",
+                                                               "description":  "Filter rows based on conditions"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/sortRows",
+                                                               "description":  "Sort rows by specified column"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/groupBy",
                                                                "description":  "Group rows by column value"
                                                            },
                                                            {
                                                                "method":  "POST",
                                                                "path":  "/aggregate",
-                                                               "description":  "Aggregate column values (sum, avg, min, max)"
+                                                               "description":  "Perform aggregations (sum, avg, count, etc.)"
                                                            },
                                                            {
                                                                "method":  "POST",
                                                                "path":  "/pivot",
-                                                               "description":  "Create pivot table"
+                                                               "description":  "Create pivot table from data"
                                                            },
                                                            {
                                                                "method":  "POST",
                                                                "path":  "/join",
-                                                               "description":  "Join two datasets"
+                                                               "description":  "Join two datasets on a key column"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/mapColumns",
+                                                               "description":  "Transform/rename columns"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/distinct",
+                                                               "description":  "Get distinct values from column"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/columnToIndex",
+                                                               "description":  "Convert column letter (A, B, AA) to index"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/indexToColumn",
+                                                               "description":  "Convert index to column letter"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/cellToIndex",
+                                                               "description":  "Convert cell reference (A1) to indices"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/indexToCell",
+                                                               "description":  "Convert indices to cell reference"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/getCell",
+                                                               "description":  "Get value at specific cell"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/setCell",
+                                                               "description":  "Set value at specific cell"
                                                            }
                                                        ],
                                          "resources":  {
@@ -2636,7 +3006,7 @@
                                          "id":  "lorem-utils",
                                          "name":  "Lorem Utilities",
                                          "version":  "1.0.0",
-                                         "description":  "Generate placeholder text, fake data, and sample content locally. No external API calls - all generated deterministically or with local randomness.",
+                                         "description":  "Generate placeholder text, fake data, and random values for testing and development",
                                          "author":  {
                                                         "name":  "LeForge Team",
                                                         "url":  "https://leforge.io"
@@ -2644,64 +3014,212 @@
                                          "license":  "MIT",
                                          "icon":  "text",
                                          "category":  "utility",
-                                         "tags":  ["lorem", "ipsum", "placeholder", "fake", "data", "generator", "random", "test", "embedded", "offline"],
+                                         "tags":  [
+                                                      "lorem",
+                                                      "ipsum",
+                                                      "faker",
+                                                      "placeholder",
+                                                      "random",
+                                                      "testing"
+                                                  ],
                                          "runtime":  "embedded",
                                          "embedded":  {
                                                           "entrypoint":  "index.js",
-                                                          "exports":  ["words", "sentences", "paragraphs", "characters", "classic", "themed", "name", "firstName", "lastName", "email", "phone", "company", "address", "city", "state", "zipCode", "fullAddress", "number", "boolean", "date", "uuid", "color", "pick", "generateArray"],
-                                                          "timeout":  1000,
-                                                          "memoryLimit":  32
+                                                          "exports":  [
+                                                                          "setSeed",
+                                                                          "resetSeed",
+                                                                          "words",
+                                                                          "sentences",
+                                                                          "paragraphs",
+                                                                          "characters",
+                                                                          "classic",
+                                                                          "themed",
+                                                                          "bacon",
+                                                                          "hipster",
+                                                                          "corporate",
+                                                                          "tech",
+                                                                          "pirate",
+                                                                          "name",
+                                                                          "firstName",
+                                                                          "lastName",
+                                                                          "email",
+                                                                          "phone",
+                                                                          "company",
+                                                                          "address",
+                                                                          "city",
+                                                                          "state",
+                                                                          "zipCode",
+                                                                          "fullAddress",
+                                                                          "number",
+                                                                          "boolean",
+                                                                          "date",
+                                                                          "uuid",
+                                                                          "color",
+                                                                          "pick",
+                                                                          "pickMultiple",
+                                                                          "generateArray"
+                                                                      ]
                                                       },
                                          "endpoints":  [
                                                            {
-                                                               "method":  "GET",
+                                                               "method":  "POST",
+                                                               "path":  "/setSeed",
+                                                               "description":  "Set random seed for reproducible output"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/resetSeed",
+                                                               "description":  "Reset random seed to default"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
                                                                "path":  "/words",
-                                                               "description":  "Generate lorem ipsum words"
+                                                               "description":  "Generate random lorem ipsum words"
                                                            },
                                                            {
-                                                               "method":  "GET",
+                                                               "method":  "POST",
                                                                "path":  "/sentences",
-                                                               "description":  "Generate lorem ipsum sentences"
+                                                               "description":  "Generate random lorem ipsum sentences"
                                                            },
                                                            {
-                                                               "method":  "GET",
+                                                               "method":  "POST",
                                                                "path":  "/paragraphs",
-                                                               "description":  "Generate lorem ipsum paragraphs"
+                                                               "description":  "Generate random lorem ipsum paragraphs"
                                                            },
                                                            {
-                                                               "method":  "GET",
-                                                               "path":  "/name",
-                                                               "description":  "Generate random full name"
+                                                               "method":  "POST",
+                                                               "path":  "/characters",
+                                                               "description":  "Generate random characters"
                                                            },
                                                            {
-                                                               "method":  "GET",
-                                                               "path":  "/email",
-                                                               "description":  "Generate random email address"
-                                                           },
-                                                           {
-                                                               "method":  "GET",
-                                                               "path":  "/phone",
-                                                               "description":  "Generate random phone number"
-                                                           },
-                                                           {
-                                                               "method":  "GET",
-                                                               "path":  "/company",
-                                                               "description":  "Generate random company name"
-                                                           },
-                                                           {
-                                                               "method":  "GET",
-                                                               "path":  "/address",
-                                                               "description":  "Generate random full address"
+                                                               "method":  "POST",
+                                                               "path":  "/classic",
+                                                               "description":  "Generate classic lorem ipsum text"
                                                            },
                                                            {
                                                                "method":  "POST",
                                                                "path":  "/themed",
-                                                               "description":  "Generate themed placeholder (bacon, hipster, corporate, tech, pirate)"
+                                                               "description":  "Generate themed placeholder text"
                                                            },
                                                            {
                                                                "method":  "POST",
-                                                               "path":  "/batch",
-                                                               "description":  "Generate array of random items"
+                                                               "path":  "/bacon",
+                                                               "description":  "Generate bacon ipsum text"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/hipster",
+                                                               "description":  "Generate hipster ipsum text"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/corporate",
+                                                               "description":  "Generate corporate buzzword text"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/tech",
+                                                               "description":  "Generate tech jargon text"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/pirate",
+                                                               "description":  "Generate pirate speak text"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/name",
+                                                               "description":  "Generate random full name"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/firstName",
+                                                               "description":  "Generate random first name"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/lastName",
+                                                               "description":  "Generate random last name"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/email",
+                                                               "description":  "Generate random email address"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/phone",
+                                                               "description":  "Generate random phone number"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/company",
+                                                               "description":  "Generate random company name"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/address",
+                                                               "description":  "Generate random street address"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/city",
+                                                               "description":  "Generate random city name"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/state",
+                                                               "description":  "Generate random state/province"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/zipCode",
+                                                               "description":  "Generate random ZIP/postal code"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/fullAddress",
+                                                               "description":  "Generate complete random address"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/number",
+                                                               "description":  "Generate random number in range"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/boolean",
+                                                               "description":  "Generate random boolean"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/date",
+                                                               "description":  "Generate random date"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/uuid",
+                                                               "description":  "Generate random UUID"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/color",
+                                                               "description":  "Generate random color"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/pick",
+                                                               "description":  "Pick random item from array"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/pickMultiple",
+                                                               "description":  "Pick multiple random items from array"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/generateArray",
+                                                               "description":  "Generate array of random values"
                                                            }
                                                        ],
                                          "resources":  {
