@@ -57,7 +57,85 @@
                                             "file":  "packages/unit-converter-1.0.0.fhk",
                                             "size":  "18KB",
                                             "runtime":  "embedded"
-                                        }
+                                        },
+                     "uuid-utils":  {
+                                        "version":  "1.0.0",
+                                        "file":  "packages/uuid-utils-1.0.0.fhk",
+                                        "size":  "10KB",
+                                        "runtime":  "embedded"
+                                    },
+                     "json-utils":  {
+                                        "version":  "1.0.0",
+                                        "file":  "packages/json-utils-1.0.0.fhk",
+                                        "size":  "12KB",
+                                        "runtime":  "embedded"
+                                    },
+                     "encoding-utils":  {
+                                            "version":  "1.0.0",
+                                            "file":  "packages/encoding-utils-1.0.0.fhk",
+                                            "size":  "8KB",
+                                            "runtime":  "embedded"
+                                        },
+                     "formula-engine":  {
+                                            "version":  "1.1.0",
+                                            "file":  "packages/formula-engine-1.1.0.fhk",
+                                            "size":  "45KB",
+                                            "runtime":  "embedded"
+                                        },
+                     "foundry-local":  {
+                                           "version":  "1.0.0",
+                                           "file":  "packages/foundry-local-1.0.0.fhk",
+                                           "size":  "5KB",
+                                           "runtime":  "gateway"
+                                       },
+                     "lm-studio":  {
+                                       "version":  "1.0.0",
+                                       "file":  "packages/lm-studio-1.0.0.fhk",
+                                       "size":  "5KB",
+                                       "runtime":  "gateway"
+                                   },
+                     "ollama-local":  {
+                                          "version":  "1.1.0",
+                                          "file":  "packages/ollama-local-1.1.0.fhk",
+                                          "size":  "500MB",
+                                          "runtime":  "container"
+                                      },
+                     "onprem-connector":  {
+                                              "version":  "1.0.0",
+                                              "file":  "packages/onprem-connector-1.0.0.fhk",
+                                              "size":  "150MB",
+                                              "runtime":  "container"
+                                          },
+                     "streaming-file-service":  {
+                                                    "version":  "1.1.0",
+                                                    "file":  "packages/streaming-file-service-1.1.0.fhk",
+                                                    "size":  "300MB",
+                                                    "runtime":  "container"
+                                                },
+                     "validation-utils":  {
+                                              "version":  "1.0.0",
+                                              "file":  "packages/validation-utils-1.0.0.fhk",
+                                              "size":  "12KB",
+                                              "runtime":  "embedded"
+                                          },
+                     "content-filter":  {
+                                            "version":  "1.0.0",
+                                            "file":  "packages/content-filter-1.0.0.fhk",
+                                            "size":  "15KB",
+                                            "runtime":  "embedded"
+                                        },
+                     "excel-utils":  {
+                                         "version":  "1.0.0",
+                                         "file":  "packages/excel-utils-1.0.0.fhk",
+                                         "size":  "25KB",
+                                         "runtime":  "embedded"
+                                     },
+                     "lorem-utils":  {
+                                         "version":  "1.0.0",
+                                         "file":  "packages/lorem-utils-1.0.0.fhk",
+                                         "size":  "20KB",
+                                         "runtime":  "embedded"
+                                     }
                  },
     "plugins":  [
                     {
@@ -1470,6 +1548,1166 @@
                                                                                "redis"
                                                                            ]
                                                           }
+                                     }
+                    },
+                    {
+                        "id":  "uuid-utils",
+                        "verified":  true,
+                        "featured":  true,
+                        "repository":  "https://github.com/LeForgeio/registry/tree/main/plugins/uuid-utils",
+                        "manifest":  {
+                                         "$schema":  "https://leforge.io/schemas/forgehook-v1.json",
+                                         "id":  "uuid-utils",
+                                         "name":  "UUID Utilities",
+                                         "version":  "1.0.0",
+                                         "description":  "Generate unique identifiers: UUID v1/v4/v5/v7, ULID, NanoID, CUID, Snowflake IDs. All generation is local with cryptographically secure randomness.",
+                                         "author":  {
+                                                        "name":  "LeForge Team",
+                                                        "url":  "https://leforge.io"
+                                                    },
+                                         "license":  "MIT",
+                                         "repository":  "https://github.com/LeForgeio/registry",
+                                         "icon":  "hash",
+                                         "category":  "utility",
+                                         "tags":  [
+                                                      "uuid",
+                                                      "guid",
+                                                      "nanoid",
+                                                      "ulid",
+                                                      "cuid",
+                                                      "snowflake",
+                                                      "identifier",
+                                                      "random",
+                                                      "embedded",
+                                                      "offline"
+                                                  ],
+                                         "runtime":  "embedded",
+                                         "embedded":  {
+                                                          "entrypoint":  "index.js",
+                                                          "exports":  [
+                                                                          "uuid",
+                                                                          "uuidv1",
+                                                                          "uuidv4",
+                                                                          "uuidv5",
+                                                                          "uuidv7",
+                                                                          "ulid",
+                                                                          "nanoid",
+                                                                          "cuid",
+                                                                          "cuid2",
+                                                                          "snowflake",
+                                                                          "randomString",
+                                                                          "randomHex",
+                                                                          "randomBase64",
+                                                                          "shortId",
+                                                                          "isValidUUID",
+                                                                          "isValidULID",
+                                                                          "parseUUID",
+                                                                          "parseULID",
+                                                                          "nil"
+                                                                      ],
+                                                          "timeout":  1000,
+                                                          "memoryLimit":  32
+                                                      },
+                                         "endpoints":  [
+                                                           {
+                                                               "method":  "GET",
+                                                               "path":  "/uuid",
+                                                               "description":  "Generate UUID v4 (random)"
+                                                           },
+                                                           {
+                                                               "method":  "GET",
+                                                               "path":  "/uuid/v1",
+                                                               "description":  "Generate UUID v1 (timestamp-based)"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/uuid/v5",
+                                                               "description":  "Generate UUID v5 (namespace + name)"
+                                                           },
+                                                           {
+                                                               "method":  "GET",
+                                                               "path":  "/uuid/v7",
+                                                               "description":  "Generate UUID v7 (sortable timestamp)"
+                                                           },
+                                                           {
+                                                               "method":  "GET",
+                                                               "path":  "/ulid",
+                                                               "description":  "Generate ULID (sortable)"
+                                                           },
+                                                           {
+                                                               "method":  "GET",
+                                                               "path":  "/nanoid",
+                                                               "description":  "Generate NanoID"
+                                                           },
+                                                           {
+                                                               "method":  "GET",
+                                                               "path":  "/cuid",
+                                                               "description":  "Generate CUID2"
+                                                           },
+                                                           {
+                                                               "method":  "GET",
+                                                               "path":  "/snowflake",
+                                                               "description":  "Generate Snowflake ID"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/random",
+                                                               "description":  "Generate custom random string"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/batch",
+                                                               "description":  "Generate multiple IDs"
+                                                           }
+                                                       ],
+                                         "resources":  {
+                                                           "memory":  "32Mi",
+                                                           "cpu":  "0.1"
+                                                       }
+                                     }
+                    },
+                    {
+                        "id":  "json-utils",
+                        "verified":  true,
+                        "featured":  true,
+                        "repository":  "https://github.com/LeForgeio/registry/tree/main/plugins/json-utils",
+                        "manifest":  {
+                                         "$schema":  "https://leforge.io/schemas/forgehook-v1.json",
+                                         "id":  "json-utils",
+                                         "name":  "JSON Utilities",
+                                         "version":  "1.0.0",
+                                         "description":  "JSON manipulation: JSONPath queries, flatten/unflatten, deep merge, diff comparison, schema validation, and safe parsing. All operations run locally.",
+                                         "author":  {
+                                                        "name":  "LeForge Team",
+                                                        "url":  "https://leforge.io"
+                                                    },
+                                         "license":  "MIT",
+                                         "repository":  "https://github.com/LeForgeio/registry",
+                                         "icon":  "braces",
+                                         "category":  "data",
+                                         "tags":  [
+                                                      "json",
+                                                      "jsonpath",
+                                                      "flatten",
+                                                      "merge",
+                                                      "diff",
+                                                      "schema",
+                                                      "validation",
+                                                      "embedded",
+                                                      "offline"
+                                                  ],
+                                         "runtime":  "embedded",
+                                         "embedded":  {
+                                                          "entrypoint":  "index.js",
+                                                          "exports":  [
+                                                                          "query",
+                                                                          "get",
+                                                                          "set",
+                                                                          "has",
+                                                                          "remove",
+                                                                          "flatten",
+                                                                          "unflatten",
+                                                                          "merge",
+                                                                          "deepMerge",
+                                                                          "diff",
+                                                                          "patch",
+                                                                          "clone",
+                                                                          "equals",
+                                                                          "validate",
+                                                                          "safeParse",
+                                                                          "stringify",
+                                                                          "format",
+                                                                          "minify",
+                                                                          "sortKeys",
+                                                                          "pick",
+                                                                          "omit",
+                                                                          "transform",
+                                                                          "filter",
+                                                                          "map",
+                                                                          "find",
+                                                                          "findAll",
+                                                                          "count",
+                                                                          "sum",
+                                                                          "groupBy",
+                                                                          "keyBy"
+                                                                      ],
+                                                          "timeout":  2000,
+                                                          "memoryLimit":  64
+                                                      },
+                                         "endpoints":  [
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/query",
+                                                               "description":  "Query JSON with JSONPath expression"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/get",
+                                                               "description":  "Get value at dot-notation path"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/set",
+                                                               "description":  "Set value at dot-notation path"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/flatten",
+                                                               "description":  "Flatten nested object to single level"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/unflatten",
+                                                               "description":  "Unflatten object to nested structure"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/merge",
+                                                               "description":  "Deep merge multiple objects"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/diff",
+                                                               "description":  "Compare two objects and return differences"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/validate",
+                                                               "description":  "Validate JSON against JSON Schema"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/format",
+                                                               "description":  "Pretty-print JSON with indentation"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/transform",
+                                                               "description":  "Transform JSON using mapping rules"
+                                                           }
+                                                       ],
+                                         "resources":  {
+                                                           "memory":  "64Mi",
+                                                           "cpu":  "0.2"
+                                                       }
+                                     }
+                    },
+                    {
+                        "id":  "encoding-utils",
+                        "verified":  true,
+                        "featured":  true,
+                        "repository":  "https://github.com/LeForgeio/registry/tree/main/plugins/encoding-utils",
+                        "manifest":  {
+                                         "$schema":  "https://leforge.io/schemas/forgehook-v1.json",
+                                         "id":  "encoding-utils",
+                                         "name":  "Encoding Utilities",
+                                         "version":  "1.0.0",
+                                         "description":  "Data encoding and decoding: Base64, Base64URL, hex, URL encoding, HTML entities, JWT decoding (without verification). All operations run locally.",
+                                         "author":  {
+                                                        "name":  "LeForge Team",
+                                                        "url":  "https://leforge.io"
+                                                    },
+                                         "license":  "MIT",
+                                         "repository":  "https://github.com/LeForgeio/registry",
+                                         "icon":  "code",
+                                         "category":  "utility",
+                                         "tags":  [
+                                                      "encoding",
+                                                      "base64",
+                                                      "hex",
+                                                      "url",
+                                                      "html",
+                                                      "jwt",
+                                                      "binary",
+                                                      "embedded",
+                                                      "offline"
+                                                  ],
+                                         "runtime":  "embedded",
+                                         "embedded":  {
+                                                          "entrypoint":  "index.js",
+                                                          "exports":  [
+                                                                          "base64Encode",
+                                                                          "base64Decode",
+                                                                          "base64UrlEncode",
+                                                                          "base64UrlDecode",
+                                                                          "hexEncode",
+                                                                          "hexDecode",
+                                                                          "urlEncode",
+                                                                          "urlDecode",
+                                                                          "htmlEncode",
+                                                                          "htmlDecode",
+                                                                          "unicodeEncode",
+                                                                          "unicodeDecode",
+                                                                          "jwtDecode",
+                                                                          "jwtHeader",
+                                                                          "jwtPayload",
+                                                                          "stringToBytes",
+                                                                          "bytesToString",
+                                                                          "utf8ToBytes",
+                                                                          "bytesToUtf8",
+                                                                          "rot13",
+                                                                          "caesar",
+                                                                          "atob",
+                                                                          "btoa"
+                                                                      ],
+                                                          "timeout":  1000,
+                                                          "memoryLimit":  32
+                                                      },
+                                         "endpoints":  [
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/base64/encode",
+                                                               "description":  "Encode string to Base64"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/base64/decode",
+                                                               "description":  "Decode Base64 to string"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/base64url/encode",
+                                                               "description":  "Encode to URL-safe Base64"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/base64url/decode",
+                                                               "description":  "Decode URL-safe Base64"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/hex/encode",
+                                                               "description":  "Encode string to hexadecimal"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/hex/decode",
+                                                               "description":  "Decode hexadecimal to string"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/url/encode",
+                                                               "description":  "URL encode string"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/url/decode",
+                                                               "description":  "URL decode string"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/html/encode",
+                                                               "description":  "Encode HTML entities"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/html/decode",
+                                                               "description":  "Decode HTML entities"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/jwt/decode",
+                                                               "description":  "Decode JWT without verification"
+                                                           }
+                                                       ],
+                                         "resources":  {
+                                                           "memory":  "32Mi",
+                                                           "cpu":  "0.1"
+                                                       }
+                                     }
+                    },
+                    {
+                        "id":  "formula-engine",
+                        "verified":  true,
+                        "featured":  true,
+                        "repository":  "https://github.com/LeForgeio/registry/tree/main/plugins/formula-engine",
+                        "manifest":  {
+                                         "$schema":  "https://leforge.io/schemas/forgehook-v1.json",
+                                         "id":  "formula-engine",
+                                         "name":  "Formula Engine",
+                                         "version":  "1.1.0",
+                                         "description":  "Comprehensive Excel-compatible formula engine with 150+ functions spanning Math/Statistics, Logical, Text, Date/Time, Financial, and Lookup categories. Pure JavaScript implementation - zero external dependencies.",
+                                         "author":  {
+                                                        "name":  "LeForge",
+                                                        "url":  "https://leforge.io"
+                                                    },
+                                         "license":  "MIT",
+                                         "repository":  "https://github.com/LeForgeio/registry",
+                                         "icon":  "table",
+                                         "category":  "data",
+                                         "tags":  ["excel", "formulas", "spreadsheet", "functions", "math", "financial", "lookup", "text", "dates", "vlookup", "calculations", "embedded"],
+                                         "runtime":  "embedded",
+                                         "embedded":  {
+                                                          "entrypoint":  "index.js",
+                                                          "sandbox":  true
+                                                      },
+                                         "endpoints":  [
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/evaluate",
+                                                               "description":  "Evaluate an Excel formula expression"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/sum",
+                                                               "description":  "Sum values in array"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/average",
+                                                               "description":  "Calculate average of values"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/vlookup",
+                                                               "description":  "Vertical lookup in table"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/xlookup",
+                                                               "description":  "Modern flexible lookup"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/pmt",
+                                                               "description":  "Calculate loan payment"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/npv",
+                                                               "description":  "Calculate net present value"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/irr",
+                                                               "description":  "Calculate internal rate of return"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/if",
+                                                               "description":  "Conditional evaluation"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/countif",
+                                                               "description":  "Count values matching criteria"
+                                                           }
+                                                       ],
+                                         "resources":  {
+                                                           "memory":  "64Mi",
+                                                           "cpu":  "0.2"
+                                                       }
+                                     }
+                    },
+                    {
+                        "id":  "foundry-local",
+                        "verified":  true,
+                        "repository":  "https://github.com/LeForgeio/registry/tree/main/plugins/foundry-local",
+                        "manifest":  {
+                                         "$schema":  "https://leforge.io/schemas/forgehook-v1.json",
+                                         "id":  "foundry-local",
+                                         "name":  "Azure Foundry Local",
+                                         "version":  "1.0.0",
+                                         "description":  "On-device AI inference using Azure Foundry Local. Provides access to local language models without cloud dependencies.",
+                                         "author":  "LeForge",
+                                         "license":  "MIT",
+                                         "category":  "ai",
+                                         "tags":  ["ai", "llm", "local", "inference", "azure", "foundry"],
+                                         "runtime":  "gateway",
+                                         "gateway":  {
+                                                         "baseUrl":  "${FOUNDRY_LOCAL_URL:-http://localhost:5272}",
+                                                         "healthCheck":  "/health",
+                                                         "timeout":  120000
+                                                     },
+                                         "basePath":  "/v1",
+                                         "endpoints":  [
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/chat/completions",
+                                                               "description":  "Generate chat completions using local AI models"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/completions",
+                                                               "description":  "Generate text completions"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/embeddings",
+                                                               "description":  "Generate text embeddings for semantic search"
+                                                           },
+                                                           {
+                                                               "method":  "GET",
+                                                               "path":  "/models",
+                                                               "description":  "List available local models"
+                                                           }
+                                                       ],
+                                         "resources":  {
+                                                           "memory":  "0Mi",
+                                                           "cpu":  "0"
+                                                       }
+                                     }
+                    },
+                    {
+                        "id":  "lm-studio",
+                        "verified":  true,
+                        "repository":  "https://github.com/LeForgeio/registry/tree/main/plugins/lm-studio",
+                        "manifest":  {
+                                         "$schema":  "https://leforge.io/schemas/forgehook-v1.json",
+                                         "id":  "lm-studio",
+                                         "name":  "LM Studio",
+                                         "version":  "1.0.0",
+                                         "description":  "Local AI inference using LM Studio. Provides an OpenAI-compatible API for running local models with a friendly GUI.",
+                                         "author":  "LeForge",
+                                         "license":  "MIT",
+                                         "category":  "ai",
+                                         "tags":  ["ai", "llm", "local", "lm-studio", "openai-compatible"],
+                                         "runtime":  "gateway",
+                                         "gateway":  {
+                                                         "baseUrl":  "${LM_STUDIO_URL:-http://localhost:1234}",
+                                                         "healthCheck":  "/v1/models",
+                                                         "timeout":  120000
+                                                     },
+                                         "basePath":  "/v1",
+                                         "endpoints":  [
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/chat/completions",
+                                                               "description":  "Generate chat completions (OpenAI-compatible)"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/completions",
+                                                               "description":  "Generate text completions (OpenAI-compatible)"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/embeddings",
+                                                               "description":  "Generate text embeddings"
+                                                           },
+                                                           {
+                                                               "method":  "GET",
+                                                               "path":  "/models",
+                                                               "description":  "List loaded models"
+                                                           }
+                                                       ],
+                                         "resources":  {
+                                                           "memory":  "0Mi",
+                                                           "cpu":  "0"
+                                                       }
+                                     }
+                    },
+                    {
+                        "id":  "ollama-local",
+                        "verified":  true,
+                        "featured":  true,
+                        "repository":  "https://github.com/LeForgeio/registry/tree/main/plugins/ollama-local",
+                        "manifest":  {
+                                         "$schema":  "https://leforge.io/schemas/forgehook-v1.json",
+                                         "id":  "ollama-local",
+                                         "name":  "Ollama",
+                                         "version":  "1.1.0",
+                                         "description":  "Local AI inference server for running open-source LLMs. Supports Llama 3.2, Mistral, Code Llama, Phi-3, Qwen, and more. Required for LeForge Agent Runtime.",
+                                         "author":  {
+                                                        "name":  "LeForge",
+                                                        "url":  "https://leforge.io"
+                                                    },
+                                         "license":  "MIT",
+                                         "icon":  "bot",
+                                         "category":  "ai",
+                                         "tags":  ["llm", "ai", "local", "ollama", "inference", "agent-runtime", "required"],
+                                         "runtime":  "container",
+                                         "image":  {
+                                                       "repository":  "ollama/ollama",
+                                                       "tag":  "latest"
+                                                   },
+                                         "port":  11434,
+                                         "basePath":  "/api",
+                                         "endpoints":  [
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/generate",
+                                                               "description":  "Generate text from a prompt using a local model"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/chat",
+                                                               "description":  "Chat with a local model using message format (supports tool calling)"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/embeddings",
+                                                               "description":  "Generate embeddings for text"
+                                                           },
+                                                           {
+                                                               "method":  "GET",
+                                                               "path":  "/tags",
+                                                               "description":  "List locally available models"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/pull",
+                                                               "description":  "Download a model from the Ollama library"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/show",
+                                                               "description":  "Show model information"
+                                                           },
+                                                           {
+                                                               "method":  "DELETE",
+                                                               "path":  "/delete",
+                                                               "description":  "Delete a local model"
+                                                           }
+                                                       ],
+                                         "resources":  {
+                                                           "memory":  "4g",
+                                                           "cpu":  "2.0"
+                                                       },
+                                         "healthCheck":  {
+                                                             "path":  "/api/tags",
+                                                             "interval":  30,
+                                                             "timeout":  10,
+                                                             "retries":  3
+                                                         }
+                                     }
+                    },
+                    {
+                        "id":  "onprem-connector",
+                        "verified":  true,
+                        "repository":  "https://github.com/LeForgeio/registry/tree/main/plugins/onprem-connector",
+                        "manifest":  {
+                                         "$schema":  "https://leforge.io/schemas/forgehook-v1.json",
+                                         "id":  "onprem-connector",
+                                         "name":  "On-Premises Connector",
+                                         "version":  "1.0.0",
+                                         "description":  "Secure gateway to on-premises databases, APIs, file shares, and Active Directory. Enables cloud workflows to access internal resources through Cloudflare Tunnel.",
+                                         "author":  {
+                                                        "name":  "LeForge",
+                                                        "url":  "https://leforge.io"
+                                                    },
+                                         "license":  "MIT",
+                                         "icon":  "server",
+                                         "category":  "integration",
+                                         "tags":  ["on-prem", "database", "sql-server", "postgresql", "mysql", "api", "ldap", "active-directory", "hybrid-cloud", "connector"],
+                                         "runtime":  "container",
+                                         "image":  {
+                                                       "repository":  "leforge/onprem-connector",
+                                                       "tag":  "1.0.0"
+                                                   },
+                                         "port":  3001,
+                                         "basePath":  "/api/v1/onprem-connector",
+                                         "endpoints":  [
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/connections",
+                                                               "description":  "Create or update a connection configuration"
+                                                           },
+                                                           {
+                                                               "method":  "GET",
+                                                               "path":  "/connections",
+                                                               "description":  "List all configured connections"
+                                                           },
+                                                           {
+                                                               "method":  "DELETE",
+                                                               "path":  "/connections/:id",
+                                                               "description":  "Delete a connection configuration"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/connections/:id/test",
+                                                               "description":  "Test a connection"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/queryDatabase",
+                                                               "description":  "Execute SQL query against on-prem database"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/executeStoredProcedure",
+                                                               "description":  "Execute stored procedure with parameters"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/callInternalApi",
+                                                               "description":  "Proxy request to internal REST API"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/listFiles",
+                                                               "description":  "List files in on-prem file share"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/readFile",
+                                                               "description":  "Read file from on-prem file share"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/writeFile",
+                                                               "description":  "Write file to on-prem file share"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/ldapSearch",
+                                                               "description":  "Search Active Directory / LDAP"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/ldapAuthenticate",
+                                                               "description":  "Authenticate user against Active Directory"
+                                                           }
+                                                       ],
+                                         "resources":  {
+                                                           "memory":  "512m",
+                                                           "cpu":  "0.5"
+                                                       },
+                                         "healthCheck":  {
+                                                             "path":  "/health",
+                                                             "interval":  30,
+                                                             "timeout":  10,
+                                                             "retries":  3
+                                                         }
+                                     }
+                    },
+                    {
+                        "id":  "streaming-file-service",
+                        "verified":  true,
+                        "featured":  true,
+                        "repository":  "https://github.com/LeForgeio/registry/tree/main/plugins/streaming-file-service",
+                        "manifest":  {
+                                         "$schema":  "https://leforge.io/schemas/forgehook-v1.json",
+                                         "id":  "streaming-file-service",
+                                         "name":  "Streaming File Service",
+                                         "version":  "1.1.0",
+                                         "description":  "Enterprise-grade large file handling with chunked uploads/downloads, resumable transfers, multi-cloud storage streaming (S3, Azure Blob, GCS), and file transformations. Handles files of any size without memory constraints.",
+                                         "author":  {
+                                                        "name":  "LeForge",
+                                                        "url":  "https://leforge.io"
+                                                    },
+                                         "license":  "MIT",
+                                         "icon":  "cloud-upload",
+                                         "category":  "data",
+                                         "tags":  ["files", "streaming", "upload", "download", "s3", "azure", "gcs", "chunked", "resumable", "large-files", "transcoding", "pdf"],
+                                         "runtime":  "container",
+                                         "image":  {
+                                                       "repository":  "leforge/streaming-file-service",
+                                                       "tag":  "latest"
+                                                   },
+                                         "port":  3020,
+                                         "basePath":  "/api/v1/files",
+                                         "endpoints":  [
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/upload/init",
+                                                               "description":  "Initialize a chunked upload session"
+                                                           },
+                                                           {
+                                                               "method":  "PUT",
+                                                               "path":  "/upload/{uploadId}/chunk/{chunkIndex}",
+                                                               "description":  "Upload a single chunk"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/upload/{uploadId}/complete",
+                                                               "description":  "Complete chunked upload"
+                                                           },
+                                                           {
+                                                               "method":  "GET",
+                                                               "path":  "/upload/{uploadId}/status",
+                                                               "description":  "Get upload progress"
+                                                           },
+                                                           {
+                                                               "method":  "GET",
+                                                               "path":  "/download/{fileId}",
+                                                               "description":  "Stream download with Range header support"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/cloud/upload",
+                                                               "description":  "Stream upload directly to cloud storage (S3/Azure/GCS)"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/cloud/download",
+                                                               "description":  "Stream download from cloud storage"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/cloud/copy",
+                                                               "description":  "Copy files between cloud providers"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/cloud/presigned-url",
+                                                               "description":  "Generate presigned URLs for direct browser uploads/downloads"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/transform/split-pdf",
+                                                               "description":  "Split large PDF into smaller files"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/transform/merge-pdf",
+                                                               "description":  "Merge multiple PDFs into one"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/transform/compress",
+                                                               "description":  "Compress files (zip, gzip, tar.gz)"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/transform/extract",
+                                                               "description":  "Extract compressed archives"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/transform/transcode",
+                                                               "description":  "Transcode video/audio files"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/checksum",
+                                                               "description":  "Calculate checksum of file"
+                                                           },
+                                                           {
+                                                               "method":  "GET",
+                                                               "path":  "/{fileId}/metadata",
+                                                               "description":  "Get file metadata"
+                                                           }
+                                                       ],
+                                         "resources":  {
+                                                           "memory":  "2g",
+                                                           "cpu":  "2.0"
+                                                       },
+                                         "healthCheck":  {
+                                                             "path":  "/health",
+                                                             "interval":  30,
+                                                             "timeout":  10,
+                                                             "retries":  3
+                                                         }
+                                     }
+                    },
+                    {
+                        "id":  "validation-utils",
+                        "verified":  true,
+                        "featured":  true,
+                        "repository":  "https://github.com/LeForgeio/registry/tree/main/plugins/validation-utils",
+                        "manifest":  {
+                                         "$schema":  "https://leforge.io/schemas/forgehook-v1.json",
+                                         "id":  "validation-utils",
+                                         "name":  "Validation Utilities",
+                                         "version":  "1.0.0",
+                                         "description":  "Comprehensive format validation utilities for emails, phones, URLs, credit cards, IBANs, VAT numbers, and more. All validation runs locally with no external API calls.",
+                                         "author":  {
+                                                        "name":  "LeForge Team",
+                                                        "url":  "https://leforge.io"
+                                                    },
+                                         "license":  "MIT",
+                                         "icon":  "check-circle",
+                                         "category":  "utility",
+                                         "tags":  ["validation", "email", "phone", "url", "iban", "vat", "credit-card", "embedded", "offline"],
+                                         "runtime":  "embedded",
+                                         "embedded":  {
+                                                          "entrypoint":  "index.js",
+                                                          "exports":  ["isEmail", "isPhone", "isURL", "isUUID", "isIBAN", "isVATNumber", "isCreditCard", "getCreditCardType", "isPostalCode", "isIPv4", "isIPv6", "isMACAddress", "isHexColor", "isJSON", "isBase64", "validateAll"],
+                                                          "timeout":  1000,
+                                                          "memoryLimit":  32
+                                                      },
+                                         "endpoints":  [
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/email",
+                                                               "description":  "Validate email address format"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/phone",
+                                                               "description":  "Validate phone number (international formats)"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/url",
+                                                               "description":  "Validate URL format"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/iban",
+                                                               "description":  "Validate IBAN with checksum verification"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/vat",
+                                                               "description":  "Validate EU VAT number format"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/credit-card",
+                                                               "description":  "Validate credit card with Luhn algorithm"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/postal-code",
+                                                               "description":  "Validate postal code by country"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/ip",
+                                                               "description":  "Validate IPv4 or IPv6 address"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/batch",
+                                                               "description":  "Validate multiple fields at once"
+                                                           }
+                                                       ],
+                                         "resources":  {
+                                                           "memory":  "32Mi",
+                                                           "cpu":  "0.1"
+                                                       }
+                                     }
+                    },
+                    {
+                        "id":  "content-filter",
+                        "verified":  true,
+                        "repository":  "https://github.com/LeForgeio/registry/tree/main/plugins/content-filter",
+                        "manifest":  {
+                                         "$schema":  "https://leforge.io/schemas/forgehook-v1.json",
+                                         "id":  "content-filter",
+                                         "name":  "Content Filter",
+                                         "version":  "1.0.0",
+                                         "description":  "Profanity filtering and content moderation locally. No external API calls - uses local word lists. Includes PII detection and spam analysis.",
+                                         "author":  {
+                                                        "name":  "LeForge Team",
+                                                        "url":  "https://leforge.io"
+                                                    },
+                                         "license":  "MIT",
+                                         "icon":  "shield",
+                                         "category":  "security",
+                                         "tags":  ["profanity", "filter", "moderation", "content", "safety", "pii", "spam", "embedded", "offline"],
+                                         "runtime":  "embedded",
+                                         "embedded":  {
+                                                          "entrypoint":  "index.js",
+                                                          "exports":  ["containsProfanity", "findProfanity", "filterProfanity", "clean", "analyze", "rateSafety", "detectPII", "detectSpam", "sanitize", "configure", "addWords", "removeWords", "addToWhitelist"],
+                                                          "timeout":  2000,
+                                                          "memoryLimit":  64
+                                                      },
+                                         "endpoints":  [
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/check",
+                                                               "description":  "Check if text contains profanity"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/filter",
+                                                               "description":  "Filter/censor profanity in text"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/clean",
+                                                               "description":  "Clean text by removing profanity"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/analyze",
+                                                               "description":  "Analyze text for profanity with details"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/rate-safety",
+                                                               "description":  "Rate content safety (0-100)"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/detect-pii",
+                                                               "description":  "Detect personal information patterns"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/detect-spam",
+                                                               "description":  "Check for spam patterns"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/sanitize",
+                                                               "description":  "Sanitize text (remove PII, filter profanity)"
+                                                           }
+                                                       ],
+                                         "resources":  {
+                                                           "memory":  "64Mi",
+                                                           "cpu":  "0.2"
+                                                       }
+                                     }
+                    },
+                    {
+                        "id":  "excel-utils",
+                        "verified":  true,
+                        "featured":  true,
+                        "repository":  "https://github.com/LeForgeio/registry/tree/main/plugins/excel-utils",
+                        "manifest":  {
+                                         "$schema":  "https://leforge.io/schemas/forgehook-v1.json",
+                                         "id":  "excel-utils",
+                                         "name":  "Excel Utilities",
+                                         "version":  "1.0.0",
+                                         "description":  "Parse and generate Excel (XLSX) and CSV files locally. Zero external dependencies - pure JavaScript implementation. Includes data manipulation functions.",
+                                         "author":  {
+                                                        "name":  "LeForge Team",
+                                                        "url":  "https://leforge.io"
+                                                    },
+                                         "license":  "MIT",
+                                         "icon":  "file-spreadsheet",
+                                         "category":  "data",
+                                         "tags":  ["excel", "xlsx", "csv", "spreadsheet", "parse", "generate", "data", "embedded", "offline"],
+                                         "runtime":  "embedded",
+                                         "embedded":  {
+                                                          "entrypoint":  "index.js",
+                                                          "exports":  ["parseCSV", "toCSV", "parseXLSX", "getSheetNames", "getColumn", "getRow", "filterRows", "sortRows", "groupBy", "aggregate", "pivot", "join", "mapColumns", "distinct"],
+                                                          "timeout":  5000,
+                                                          "memoryLimit":  128
+                                                      },
+                                         "endpoints":  [
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/parse-csv",
+                                                               "description":  "Parse CSV string to structured data"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/to-csv",
+                                                               "description":  "Convert data to CSV string"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/parse-xlsx",
+                                                               "description":  "Parse XLSX file from base64"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/get-sheets",
+                                                               "description":  "Get sheet names from XLSX"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/filter",
+                                                               "description":  "Filter rows based on condition"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/sort",
+                                                               "description":  "Sort rows by column"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/group-by",
+                                                               "description":  "Group rows by column value"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/aggregate",
+                                                               "description":  "Aggregate column values (sum, avg, min, max)"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/pivot",
+                                                               "description":  "Create pivot table"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/join",
+                                                               "description":  "Join two datasets"
+                                                           }
+                                                       ],
+                                         "resources":  {
+                                                           "memory":  "128Mi",
+                                                           "cpu":  "0.3"
+                                                       }
+                                     }
+                    },
+                    {
+                        "id":  "lorem-utils",
+                        "verified":  true,
+                        "repository":  "https://github.com/LeForgeio/registry/tree/main/plugins/lorem-utils",
+                        "manifest":  {
+                                         "$schema":  "https://leforge.io/schemas/forgehook-v1.json",
+                                         "id":  "lorem-utils",
+                                         "name":  "Lorem Utilities",
+                                         "version":  "1.0.0",
+                                         "description":  "Generate placeholder text, fake data, and sample content locally. No external API calls - all generated deterministically or with local randomness.",
+                                         "author":  {
+                                                        "name":  "LeForge Team",
+                                                        "url":  "https://leforge.io"
+                                                    },
+                                         "license":  "MIT",
+                                         "icon":  "text",
+                                         "category":  "utility",
+                                         "tags":  ["lorem", "ipsum", "placeholder", "fake", "data", "generator", "random", "test", "embedded", "offline"],
+                                         "runtime":  "embedded",
+                                         "embedded":  {
+                                                          "entrypoint":  "index.js",
+                                                          "exports":  ["words", "sentences", "paragraphs", "characters", "classic", "themed", "name", "firstName", "lastName", "email", "phone", "company", "address", "city", "state", "zipCode", "fullAddress", "number", "boolean", "date", "uuid", "color", "pick", "generateArray"],
+                                                          "timeout":  1000,
+                                                          "memoryLimit":  32
+                                                      },
+                                         "endpoints":  [
+                                                           {
+                                                               "method":  "GET",
+                                                               "path":  "/words",
+                                                               "description":  "Generate lorem ipsum words"
+                                                           },
+                                                           {
+                                                               "method":  "GET",
+                                                               "path":  "/sentences",
+                                                               "description":  "Generate lorem ipsum sentences"
+                                                           },
+                                                           {
+                                                               "method":  "GET",
+                                                               "path":  "/paragraphs",
+                                                               "description":  "Generate lorem ipsum paragraphs"
+                                                           },
+                                                           {
+                                                               "method":  "GET",
+                                                               "path":  "/name",
+                                                               "description":  "Generate random full name"
+                                                           },
+                                                           {
+                                                               "method":  "GET",
+                                                               "path":  "/email",
+                                                               "description":  "Generate random email address"
+                                                           },
+                                                           {
+                                                               "method":  "GET",
+                                                               "path":  "/phone",
+                                                               "description":  "Generate random phone number"
+                                                           },
+                                                           {
+                                                               "method":  "GET",
+                                                               "path":  "/company",
+                                                               "description":  "Generate random company name"
+                                                           },
+                                                           {
+                                                               "method":  "GET",
+                                                               "path":  "/address",
+                                                               "description":  "Generate random full address"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/themed",
+                                                               "description":  "Generate themed placeholder (bacon, hipster, corporate, tech, pirate)"
+                                                           },
+                                                           {
+                                                               "method":  "POST",
+                                                               "path":  "/batch",
+                                                               "description":  "Generate array of random items"
+                                                           }
+                                                       ],
+                                         "resources":  {
+                                                           "memory":  "32Mi",
+                                                           "cpu":  "0.1"
+                                                       }
                                      }
                     }
                 ]
